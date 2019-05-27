@@ -2,6 +2,7 @@
 	Private sNomeFile As String = ""
 	Private lDimeFile As Long = -1
 	Private dData As Date = New Date
+	Private sCategoria As Integer = -1
 
 	Public Property NomeFile As String
 		Get
@@ -9,6 +10,15 @@
 		End Get
 		Set(ByVal Value As String)
 			Me.sNomeFile = Value
+		End Set
+	End Property
+
+	Public Property Categoria As Integer
+		Get
+			Return Me.sCategoria
+		End Get
+		Set(ByVal Value As Integer)
+			Me.sCategoria = Value
 		End Set
 	End Property
 
