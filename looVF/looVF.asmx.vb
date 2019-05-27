@@ -12,6 +12,13 @@ Public Class looVF
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function CreaDirectoryVirtuale(App As String, Path As String) As String
+		Dim IIs As New IIS
+		' IIs.CreateVirtualDir("LocalHost", "looVF", "Appoggio", "C:\Appoggio")
+		Return IIs.CreateVDir("Appoggi2", "C:\Appoggio")
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaFiles() As String
 		Dim gf As New GestioneFilesDirectory
 		Dim sPathsVideo As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiVideo.txt")
