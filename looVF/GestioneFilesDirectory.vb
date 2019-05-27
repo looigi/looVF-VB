@@ -320,8 +320,8 @@ Public Class GestioneFilesDirectory
                     Conta += 1
                     If Conta = 2 Then
                         Conta = 0
-                        Application.DoEvents()
-                    End If
+						' Application.DoEvents()
+					End If
                 End If
 
                 QuanteDirRilevate += 1
@@ -580,42 +580,42 @@ Public Class GestioneFilesDirectory
         outputFile.Close()
     End Sub
 
-    Public Function SceltaFile(Optional sPercorso As String = "", Optional Filtro As String = "") As String
-        Dim Percorso As String = ""
+	' Public Function SceltaFile(Optional sPercorso As String = "", Optional Filtro As String = "") As String
+	'     Dim Percorso As String = ""
+	' 
+	'     Using obj As New OpenFileDialog
+	'         obj.CheckFileExists = False
+	'         obj.CheckPathExists = False
+	'         obj.Title = "Seleziona file"
+	'         If Filtro <> "" Then
+	'             obj.Filter = "All Files|" & Filtro
+	'         End If
+	'         If sPercorso <> "" Then
+	'             obj.InitialDirectory = sPercorso
+	'         End If
+	'         If obj.ShowDialog = Windows.Forms.DialogResult.OK Then
+	'             Percorso = IO.Directory.GetParent(obj.FileName).FullName
+	'         End If
+	'     End Using
+	' 
+	'     Return Percorso
+	' End Function
 
-        Using obj As New OpenFileDialog
-            obj.CheckFileExists = False
-            obj.CheckPathExists = False
-            obj.Title = "Seleziona file"
-            If Filtro <> "" Then
-                obj.Filter = "All Files|" & Filtro
-            End If
-            If sPercorso <> "" Then
-                obj.InitialDirectory = sPercorso
-            End If
-            If obj.ShowDialog = Windows.Forms.DialogResult.OK Then
-                Percorso = IO.Directory.GetParent(obj.FileName).FullName
-            End If
-        End Using
+	' ublic Function SceltaDirectory(Optional sPercorso As String = "") As String
+	'    Dim Percorso As String = ""
+	' 
+	'    Dim fbd As New FolderBrowserDialog()
+	' 
+	'    fbd.Description = "Scelta cartella"
+	' 
+	'    If fbd.ShowDialog() = DialogResult.OK Then
+	'        Percorso = fbd.SelectedPath
+	'    End If
+	' 
+	'    Return Percorso
+	' nd Function
 
-        Return Percorso
-    End Function
-
-    Public Function SceltaDirectory(Optional sPercorso As String = "") As String
-        Dim Percorso As String = ""
-
-        Dim fbd As New FolderBrowserDialog()
-
-        fbd.Description = "Scelta cartella"
-
-        If fbd.ShowDialog() = DialogResult.OK Then
-            Percorso = fbd.SelectedPath
-        End If
-
-        Return Percorso
-    End Function
-
-    Public Sub LockCartella(Cartella As String)
+	Public Sub LockCartella(Cartella As String)
         Try
             Dim fs As FileSystemSecurity = File.GetAccessControl(Cartella)
             fs.AddAccessRule(New FileSystemAccessRule(Environment.UserName, FileSystemRights.FullControl, AccessControlType.Deny))
