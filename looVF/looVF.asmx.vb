@@ -77,7 +77,7 @@ Public Class looVF
 					Dim sf As New StrutturaFiles
 
 					sf.Categoria = Conta
-					sf.NomeFile = Files(i).Replace(pp(1), "")
+					sf.NomeFile = Files(i).Replace(pp(1), "").Replace(";", "**PV***").Replace("§", "***COSO***")
 					sf.DimensioniFile = FileLen(Files(i))
 					sf.DataFile = FileDateTime(Files(i))
 
@@ -102,7 +102,7 @@ Public Class looVF
 					Dim sf As New StrutturaFiles
 
 					sf.Categoria = Conta
-					sf.NomeFile = Files(i).Replace(pp(1), "")
+					sf.NomeFile = Files(i).Replace(pp(1), "").Replace(";", "**PV***").Replace("§", "***COSO***")
 					sf.DimensioniFile = FileLen(Files(i))
 					sf.DataFile = FileDateTime(Files(i))
 
@@ -119,7 +119,7 @@ Public Class looVF
 		For Each p As String In PathVideo
 			If p.Trim <> "" Then
 				Dim pp() As String = p.Split(";")
-				Dim Stringa As String = "CategoriaVideo;" & pp(0) & ";§"
+				Dim Stringa As String = "CategoriaVideo;" & pp(0).Replace(";", "**PV***").Replace("§", "***COSO***") & ";§"
 				gf.ScriveTestoSuFileAperto(Stringa)
 			End If
 		Next
@@ -127,7 +127,7 @@ Public Class looVF
 		For Each p As String In PathImmagini
 			If p.Trim <> "" Then
 				Dim pp() As String = p.Split(";")
-				Dim Stringa As String = "CategoriaImmagini;" & pp(0) & ";§"
+				Dim Stringa As String = "CategoriaImmagini;" & pp(0).Replace(";", "**PV***").Replace("§", "***COSO***") & ";§"
 				gf.ScriveTestoSuFileAperto(Stringa)
 			End If
 		Next
