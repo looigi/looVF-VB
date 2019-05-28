@@ -86,6 +86,7 @@ Public Class looVF
 			End If
 		Next
 
+		Conta = 0
 		For Each p As String In PathImmagini
 			If p.Trim <> "" Then
 				Dim pp() As String = p.Split(";")
@@ -146,7 +147,7 @@ Public Class looVF
 
 		gf = Nothing
 
-		Dim Ritorno As String = NomeFile.Replace(Server.MapPath(".") & "\Temp\", "")
+		Dim Ritorno As String = NomeFile
 
 		Return Ritorno
 	End Function
