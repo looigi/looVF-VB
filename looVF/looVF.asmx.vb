@@ -15,12 +15,38 @@ Public Class looVF
 	Public Function CreaDirectoryVirtuale(App As String, Path As String) As String
 		Dim IIs As New IIS
 		' IIs.CreateVirtualDir("LocalHost", "looVF", "Appoggio", "C:\Appoggio")
-		Return IIs.CreateVDir("Appoggi2", "C:\Appoggio")
+		IIs.CreateVirtualDir("Default Web Site", "Appoggi2", "D:\Appoggio")
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaFiles() As String
+	Public Function RitornaFiles(Aggiorna As String) As String
 		Dim gf As New GestioneFilesDirectory
+
+		If Aggiorna = "N" Then
+			Dim Ok As Boolean = False
+
+			gf.ScansionaDirectorySingola(Server.MapPath(".") & "\Temp\")
+			Dim Filetti() As String = gf.RitornaFilesRilevati
+			Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
+			Dim MaxDatella As Date = "01/01/1970 00:00:00"
+			For i As Integer = 1 To qFiles
+				Dim Nome As String = gf.TornaNomeFileDaPath(Filetti(i))
+				Dim Campi() As String = Nome.Split("_")
+				Nome = Campi(0) & "/" & Campi(1) & "/" & Campi(2) & " " & Campi(3) & ":" & Campi(4) & ":" & Campi(5)
+				Dim Datella As Date = Nome.Replace(".txt", "")
+				If Datella > MaxDatella Then
+					MaxDatella = Datella
+					Ok = True
+				End If
+			Next
+
+			If Ok Then
+				Dim RitornoAggiorna As String = Server.MapPath(".") & "\Temp\" & MaxDatella.ToString.Replace(":", "_").Replace(" ", "_").Replace("\", "_").Replace("/", "_") & ".txt"
+
+				Return RitornoAggiorna
+			End If
+		End If
+
 		Dim sPathsVideo As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiVideo.txt")
 		'If sPathsVideo = "" Then
 		'	Return "ERROR: Nessun path video presente"
@@ -50,7 +76,7 @@ Public Class looVF
 				For i As Integer = 1 To qFiles
 					Dim sf As New StrutturaFiles
 
-					sf.Categoria = conta
+					sf.Categoria = Conta
 					sf.NomeFile = Files(i).Replace(pp(1), "")
 					sf.DimensioniFile = FileLen(Files(i))
 					sf.DataFile = FileDateTime(Files(i))
