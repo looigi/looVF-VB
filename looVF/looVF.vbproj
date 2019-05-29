@@ -95,6 +95,7 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GestioneDB.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="IIS.vb" />
     <Compile Include="looVF.asmx.vb">
