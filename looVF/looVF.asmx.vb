@@ -12,6 +12,43 @@ Public Class looVF
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaSuccessivoMultimedia(idTipologia As String, Categoria As String) As String
+		Dim Db As New GestioneDB
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+			Dim idCategoria As String = ""
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				If Not Rec.Eof Then
+					idCategoria = Rec("idCategoria").Value
+				End If
+				Rec.Close
+			End If
+
+			Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql &= " And idCategoria=" & idCategoria
+			End If
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			Dim Quante As Long = Rec(0).Value
+			Rec.Close
+
+			Dim x As Random = New Random
+			Dim y As Long = x.Next(Quante)
+
+			Ritorno = y.ToString
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaCategorie() As String
 		Dim Db As New GestioneDB
 		Dim Ritorno As String = ""
@@ -100,7 +137,7 @@ Public Class looVF
 			Dim pi As ProcessStartInfo = New ProcessStartInfo()
 			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
 			pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
-			gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
+			' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
 			pi.WindowStyle = ProcessWindowStyle.Normal
 			processoFFMpeg.StartInfo = pi
 			processoFFMpeg.Start()
