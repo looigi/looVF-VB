@@ -27,6 +27,8 @@ Public Class looVF
 				Rec = Db.LeggeQuery(ConnSQL, Sql)
 				If Not Rec.Eof Then
 					idCategoria = Rec("idCategoria").Value
+				Else
+					Return "ERROR: Categoria non trovata"
 				End If
 				Rec.Close
 			End If
@@ -41,8 +43,16 @@ Public Class looVF
 
 			Dim x As Random = New Random
 			Dim y As Long = x.Next(Quante)
+			Dim Inizio As Long = 0
 
-			Ritorno = y.ToString
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				Inizio = Rec(0).Value - 1
+				Rec.Close
+			End If
+
+			Ritorno = (Inizio + y).ToString
 		End If
 
 		Return Ritorno
@@ -112,8 +122,8 @@ Public Class looVF
 				End If
 
 				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";"
-				Else
-					Ritorno = "ERROR: Nessun file rilevato"
+			Else
+				Ritorno = "ERROR: Nessun file rilevato"
 			End If
 			Rec.Close()
 		End If
@@ -122,8 +132,12 @@ Public Class looVF
 	End Function
 
 	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String) As String
-		Dim OutPut As String = Server.MapPath(".") & "\Thumbs\" & Categoria & "\"
 		Dim gf As New GestioneFilesDirectory
+		Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoThumbs.txt")
+		If Strings.Right(PathBase, 1) <> "\" Then
+			PathBase &= "\"
+		End If
+		Dim OutPut As String = PathBase & Categoria & "\"
 		Dim Nome As String = gf.TornaNomeFileDaPath(Video)
 		Dim Estensione As String = gf.TornaEstensioneFileDaPath(Nome)
 		Dim Cartella As String = Video.Replace(Nome, "")
@@ -144,7 +158,7 @@ Public Class looVF
 			processoFFMpeg.WaitForExit()
 		End If
 
-		Return OutPut.Replace(Server.MapPath(".") & "\", "")
+		Return OutPut.Replace(PathBase, "")
 	End Function
 
 	<WebMethod()>
