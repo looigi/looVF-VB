@@ -85,6 +85,7 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ffmpeg.exe" />
     <Content Include="looVF.asmx" />
     <Content Include="PercorsiImmagini.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

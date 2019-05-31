@@ -24,7 +24,7 @@ Public Class looVF
 			Sql = "Select * From Categorie"
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			Do Until Rec.Eof
-				Ritorno = Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";§"
+				Ritorno &= Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";§"
 
 				Rec.MoveNext
 			Loop
@@ -63,17 +63,51 @@ Public Class looVF
 			Dim ConnSQL As Object = Db.ApreDB()
 			Dim Rec As Object = CreateObject("ADODB.Recordset")
 
-			Sql = "Select * From Dati Where idTipologia=" & Tipologia & " And Progressivo=" & idMultimedia
+			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+				"Where Dati.idTipologia=" & Tipologia & " And Progressivo=" & idMultimedia
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			If Not Rec.Eof Then
-				Ritorno = Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";"
-			Else
-				Ritorno = "ERROR: Nessun file rilevato"
+				Dim Thumb As String = ""
+
+				If Tipologia = "2" Then
+					Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
+				End If
+
+				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";"
+				Else
+					Ritorno = "ERROR: Nessun file rilevato"
 			End If
 			Rec.Close()
 		End If
 
 		Return Ritorno
+	End Function
+
+	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String) As String
+		Dim OutPut As String = Server.MapPath(".") & "\Thumbs\" & Categoria & "\"
+		Dim gf As New GestioneFilesDirectory
+		Dim Nome As String = gf.TornaNomeFileDaPath(Video)
+		Dim Estensione As String = gf.TornaEstensioneFileDaPath(Nome)
+		Dim Cartella As String = Video.Replace(Nome, "")
+		OutPut &= Cartella
+		gf.CreaDirectoryDaPercorso(OutPut)
+		OutPut &= Nome.Replace(Estensione, "") & ".jpg"
+		Video = Percorso & "\" & Video
+
+		If Not File.Exists(OutPut) Then
+			Dim processoFFMpeg As Process = New Process()
+			Dim pi As ProcessStartInfo = New ProcessStartInfo()
+			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
+			pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
+			gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
+			pi.WindowStyle = ProcessWindowStyle.Normal
+			processoFFMpeg.StartInfo = pi
+			processoFFMpeg.Start()
+			processoFFMpeg.WaitForExit()
+		End If
+
+		Return OutPut.Replace(Server.MapPath(".") & "\", "")
 	End Function
 
 	<WebMethod()>
