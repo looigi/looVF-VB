@@ -101,7 +101,7 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function RitornMultimediaDaId(Tipologia As String, idMultimedia As String) As String
+	Public Function RitornaMultimediaDaId(Tipologia As String, idMultimedia As String) As String
 		Dim Db As New GestioneDB
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -126,6 +126,66 @@ Public Class looVF
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
 			Rec.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaImmaginiPerGriglia(QuanteImm As String, Categoria As String) As String
+		Dim Db As New GestioneDB
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+
+			Dim Inizio As Long = 0
+			Dim idCategoria As String = ""
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select * From Categorie Where idTipologia=1 And Categoria='" & Categoria & "'"
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				If Not Rec.Eof Then
+					idCategoria = Rec("idCategoria").Value
+				Else
+					Return "ERROR: Categoria non trovata"
+				End If
+				Rec.Close
+			End If
+
+			Sql = "Select Count(*) From Dati Where idTipologia=1"
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql &= " And idCategoria=" & idCategoria
+			End If
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			Dim Quante As Long = Rec(0).Value
+			Rec.Close
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select Min(Progressivo) From Dati Where idTipologia=1 And idCategoria=" & idCategoria
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				Inizio = Rec(0).Value - 1
+				Rec.Close
+			End If
+
+			For i As Integer = 1 To Val(QuanteImm)
+				Dim x As Random = New Random
+				Dim y As Long = x.Next(Quante)
+				Dim idMultimedia As Long = Inizio + y
+
+				Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+					"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+					"Where Dati.idTipologia=1 And Progressivo=" & idMultimedia
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				If Not Rec.Eof Then
+					Ritorno &= Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";§"
+				Else
+					Ritorno = "ERROR: Nessun file rilevato"
+				End If
+				Rec.Close()
+			Next
 		End If
 
 		Return Ritorno
