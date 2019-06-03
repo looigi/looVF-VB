@@ -41,7 +41,7 @@ Public Class looVF
 			Dim Quante As Long = Rec(0).Value
 			Rec.Close
 
-			Dim x As Random = New Random
+			Static x As Random = New Random()
 			Dim y As Long = x.Next(Quante)
 			Dim Inizio As Long = 0
 
@@ -171,7 +171,8 @@ Public Class looVF
 			End If
 
 			For i As Integer = 1 To Val(QuanteImm)
-				Dim x As Random = New Random
+				Randomize()
+				Static x As Random = New Random()
 				Dim y As Long = x.Next(Quante)
 				Dim idMultimedia As Long = Inizio + y
 
@@ -183,6 +184,7 @@ Public Class looVF
 					Ritorno &= Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";§"
 				Else
 					Ritorno = "ERROR: Nessun file rilevato"
+					Exit For
 				End If
 				Rec.Close()
 			Next
