@@ -121,7 +121,7 @@ Public Class looVF
 					Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
 				End If
 
-				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";"
+				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value & ";"
 			Else
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
@@ -181,7 +181,7 @@ Public Class looVF
 					"Where Dati.idTipologia=1 And Progressivo=" & idMultimedia
 				Rec = Db.LeggeQuery(ConnSQL, Sql)
 				If Not Rec.Eof Then
-					Ritorno &= Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";§"
+					Ritorno &= Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value & ";§"
 				Else
 					Ritorno = "ERROR: Nessun file rilevato"
 					Exit For
