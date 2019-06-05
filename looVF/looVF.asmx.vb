@@ -396,4 +396,76 @@ Public Class looVF
 		Return "*"
 	End Function
 
+	<WebMethod()>
+	Public Function TornaNumeroImmaginePerSfondo() As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim Immagine As String = ""
+
+		Try
+			MkDir(Server.MapPath(".") & "\Sfondi")
+		Catch ex As Exception
+
+		End Try
+
+		If QuanteImmaginiSfondi = 0 Then
+			If Strings.Right(Path, 1) <> "\" Then
+				Path &= "\"
+			End If
+			gf.ScansionaDirectorySingola(Path)
+			Dim filetti() As String = gf.RitornaFilesRilevati
+			QuanteImmaginiSfondi = gf.RitornaQuantiFilesRilevati
+
+			For i As Integer = 1 To QuanteImmaginiSfondi
+				ListaImmagini.Add(filetti(i))
+			Next
+		End If
+
+		Dim Minuti As Integer = Now.Minute
+		If Minuti > 0 And Minuti < 15 Then
+			Minuti = 0
+		Else
+			If Minuti >= 15 And Minuti < 30 Then
+				Minuti = 15
+			Else
+				If Minuti >= 30 And Minuti < 45 Then
+					Minuti = 30
+				Else
+					If Minuti >= 45 Then
+						Minuti = 45
+					End If
+				End If
+			End If
+		End If
+
+		Dim NomeFile As String = Server.MapPath(".") & "\Sfondi\Sfondo_" & Minuti & ".txt"
+
+		If File.Exists(NomeFile) Then
+			Immagine = gf.LeggeFileIntero(NomeFile)
+		Else
+			For Each foundFile As String In My.Computer.FileSystem.GetFiles(Server.MapPath(".") & "\Sfondi")
+				Dim conta As Integer = 0
+
+				While File.Exists(foundFile)
+					File.Delete(foundFile)
+					Threading.Thread.Sleep(1000)
+					conta += 1
+					If conta > 10 Then
+						Exit While
+					End If
+				End While
+			Next
+
+			Static x As Random = New Random()
+			Dim y As Long = x.Next(QuanteImmaginiSfondi)
+
+			Immagine = y.ToString & ";" & ListaImmagini.Item(y).Replace(Path, "") & ";"
+
+			gf.CreaAggiornaFile(NomeFile, Immagine)
+		End If
+
+
+		Return Immagine
+	End Function
+
 End Class
