@@ -424,18 +424,23 @@ Public Class looVF
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
 				"Where Dati.idTipologia=" & idTipologia & " And Dati.NomeFile Like '%" & Ricerca & "%' And Dati.idCategoria = " & idCategoria
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
-			If Not Rec.Eof Then
-				Dim Thumb As String = ""
+			If Not Rec.eof Then
+				Do Until Rec.eof
+					Dim Thumb As String = ""
 
-				If idTipologia = "2" Then
-					Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
-				End If
+					If idTipologia = "2" Then
+						Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
+					End If
 
-				Ritorno = Thumb & ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value.ToString & ";" & idTipologia & ";§"
+					Ritorno &= Thumb & ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value.ToString & ";" & idTipologia & ";§"
+
+					Rec.MoveNext
+				Loop
+
+				Rec.Close()
 			Else
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
-			Rec.Close()
 		End If
 
 		Return Ritorno
