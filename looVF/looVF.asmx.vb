@@ -397,6 +397,51 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function EffettuaRicerca(idTipologia As String, Categoria As String, Ricerca As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Ritorno As String = ""
+		Dim Db As New GestioneDB
+		Dim Rec As Object = CreateObject("ADODB.Recordset")
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+
+			Dim idCategoria As String = ""
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				If Not Rec.Eof Then
+					idCategoria = Rec("idCategoria").Value
+				Else
+					Return "ERROR: Categoria non trovata"
+				End If
+				Rec.Close
+			End If
+
+			Sql = "Select Top 30 Dati.Progressivo, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+				"Where Dati.idTipologia=" & idTipologia & " And Dati.NomeFile Like '%" & Ricerca & "%' And Dati.idCategoria = " & idCategoria
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			If Not Rec.Eof Then
+				Dim Thumb As String = ""
+
+				If idTipologia = "2" Then
+					Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
+				End If
+
+				Ritorno = Thumb & ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value.ToString & ";" & idTipologia & ";§"
+			Else
+				Ritorno = "ERROR: Nessun file rilevato"
+			End If
+			Rec.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function TornaNumeroImmaginePerSfondo() As String
 		Dim gf As New GestioneFilesDirectory
 		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
