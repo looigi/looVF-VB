@@ -71,7 +71,7 @@ Public Class looVF
 			Sql = "Select * From Categorie"
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			Do Until Rec.Eof
-				Ritorno &= Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";§"
+				Ritorno &= Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Protetta").Value & ";§"
 
 				Rec.MoveNext
 			Loop
@@ -317,7 +317,7 @@ Public Class looVF
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
-					Sql = "Insert Into Categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "')"
+					Sql = "Insert Into Categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "')"
 					Dim sRitorno As String = Db.EsegueSql(ConnSQL, Sql)
 
 					If Strings.Right(pp(1), 1) <> "\" Then
