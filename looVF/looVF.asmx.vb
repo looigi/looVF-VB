@@ -275,7 +275,7 @@ Public Class looVF
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
-					Sql = "Insert Into Categorie Values (" & idCategoria & ", 2, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "')"
+					Sql = "Insert Into Categorie Values (" & idCategoria & ", 2, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "')"
 					Dim sRitorno As String = Db.EsegueSql(ConnSQL, Sql)
 
 					If Strings.Right(pp(1), 1) <> "\" Then
