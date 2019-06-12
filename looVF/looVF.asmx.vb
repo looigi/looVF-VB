@@ -82,6 +82,52 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaPermessi(Device As String, User As String, IMEI As String, IMSI As String) As String
+		Dim Db As New GestioneDB
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+			Dim sDevice As String = Device
+			Dim sUser As String = User
+
+			sDevice = sDevice.Replace("***AND***", "&")
+			sDevice = sDevice.Replace("***PI***", "?")
+
+			sUser = sUser.Replace("***AND***", "&")
+			sUser = sUser.Replace("***PI***", "?")
+
+			Sql = "Select * From Permessi Where Device='" & sDevice & "' And Utente='" & sUser & "'" '  And IMEI='" & IMEI & "' And IMSI='" & IMSI & "'"
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			If Not Rec.Eof Then
+				Ritorno = Rec("Amministratore").Value
+
+				Rec.Close()
+			Else
+				Dim id As Integer
+
+				Sql = "Select Max(idUtente)+1 From Permessi"
+				Rec = Db.LeggeQuery(ConnSQL, Sql)
+				If Rec(0).Value Is DBNull.Value Then
+					id = 1
+				Else
+					id = Rec(0).Value
+				End If
+				Rec.Close
+
+				Sql = "Insert Into Permessi Values (" & id & ", '" & sDevice & "', '" & sUser & "', '" & IMEI & "', '" & IMSI & "', 'N')"
+				Db.EsegueSql(ConnSQL, Sql)
+
+				Ritorno = "N"
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaQuantiFiles(idTipologia As String) As String
 		Dim Db As New GestioneDB
 		Dim Quanti As String = ""
