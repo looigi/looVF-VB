@@ -160,7 +160,7 @@ Public Class looVF
 			Dim ConnSQL As Object = Db.ApreDB()
 			Dim Rec As Object = CreateObject("ADODB.Recordset")
 
-			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
 				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
@@ -168,7 +168,19 @@ Public Class looVF
 				Dim Thumb As String = ""
 
 				If idTipologia = "2" Then
-					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, "" & Rec("Percorso").Value, "" & Rec("NomeFile").value)
+					Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
+					Dim PathOriginale As String = Rec("Percorso").Value.ToString
+					If Conversione <> "" Then
+						Dim cc() As String = Conversione.Split("*")
+						PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+					End If
+					If Right(PathOriginale, 1) <> "\" Then
+						PathOriginale &= "\"
+					End If
+
+					' Return "" & Rec("Categoria").Value & " - " & PathOriginale & " - " & Rec("NomeFile").value
+
+					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value)
 				End If
 
 				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";"
@@ -246,22 +258,35 @@ Public Class looVF
 	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoThumbs.txt")
+
 		If Strings.Right(PathBase, 1) <> "\" Then
 			PathBase &= "\"
 		End If
+
+		Dim ritorno As String = "111->" & PathBase & "*" & Categoria & "*" & Percorso & "*" & Video & "*" & vbCrLf
+
 		Dim OutPut As String = PathBase & Categoria & "\"
 		Dim Nome As String = gf.TornaNomeFileDaPath(Video)
+		'Dim Nome As String = Video
 		Dim Estensione As String = gf.TornaEstensioneFileDaPath(Nome)
+
 		Dim Cartella As String = Video.Replace(Nome, "")
-		OutPut &= Cartella
+
+		ritorno &= "222->" & OutPut & "*" & Nome & "*" & Estensione & "*" & Video & "*" & Cartella & "*" & vbCrLf
+
+		' OutPut &= Cartella
+
 		gf.CreaDirectoryDaPercorso(OutPut)
 		OutPut &= Nome.Replace(Estensione, "") & ".jpg"
-		Video = Percorso & "\" & Video
+		' Video = Percorso & "\" & Video
 
 		If Not File.Exists(OutPut) Then
 			Dim processoFFMpeg As Process = New Process()
 			Dim pi As ProcessStartInfo = New ProcessStartInfo()
 			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
+
+			' Return pi.Arguments
+
 			pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
 			' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
 			pi.WindowStyle = ProcessWindowStyle.Normal
@@ -325,7 +350,7 @@ Public Class looVF
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
-					Sql = "Insert Into Categorie Values (" & idCategoria & ", 2, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "')"
+					Sql = "Insert Into Categorie Values (" & idCategoria & ", 2, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
 					Dim sRitorno As String = Db.EsegueSql(ConnSQL, Sql)
 
 					If Strings.Right(pp(1), 1) <> "\" Then
@@ -367,7 +392,7 @@ Public Class looVF
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
-					Sql = "Insert Into Categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "')"
+					Sql = "Insert Into Categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
 					Dim sRitorno As String = Db.EsegueSql(ConnSQL, Sql)
 
 					If Strings.Right(pp(1), 1) <> "\" Then
