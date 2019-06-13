@@ -151,7 +151,7 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaMultimediaDaId(Tipologia As String, idMultimedia As String) As String
+	Public Function RitornaMultimediaDaId(idTipologia As String, idCategoria As String, idMultimedia As String) As String
 		Dim Db As New GestioneDB
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -162,13 +162,13 @@ Public Class looVF
 
 			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
-				"Where Dati.idTipologia=" & Tipologia & " And Progressivo=" & idMultimedia
+				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			If Not Rec.Eof Then
 				Dim Thumb As String = ""
 
-				If Tipologia = "2" Then
-					Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
+				If idTipologia = "2" Then
+					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, "" & Rec("Percorso").Value, "" & Rec("NomeFile").value)
 				End If
 
 				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";"
