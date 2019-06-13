@@ -48,7 +48,11 @@ Public Class looVF
 			If Categoria <> "" And Categoria <> "Tutto" Then
 				Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
 				Rec = Db.LeggeQuery(ConnSQL, Sql)
-				Inizio = Rec(0).Value - 1
+				If Rec(0).Value Is DBNull.Value Then
+					Inizio = 0
+				Else
+					Inizio = Rec(0).Value - 1
+				End If
 				Rec.Close
 			End If
 
