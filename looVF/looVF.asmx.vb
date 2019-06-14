@@ -180,7 +180,7 @@ Public Class looVF
 
 					' Return "" & Rec("Categoria").Value & " - " & PathOriginale & " - " & Rec("NomeFile").value
 
-					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value)
+					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value, Conversione)
 				End If
 
 				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";"
@@ -255,7 +255,7 @@ Public Class looVF
 		Return Ritorno
 	End Function
 
-	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String) As String
+	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String, Conversione As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoThumbs.txt")
 
@@ -263,7 +263,7 @@ Public Class looVF
 			PathBase &= "\"
 		End If
 
-		Dim ritorno As String = "111->" & PathBase & "*" & Categoria & "*" & Percorso & "*" & Video & "*" & vbCrLf
+		Dim ritorno As String = "" ' "111->" & PathBase & "*" & Categoria & "*" & Percorso & "*" & Video & "*" & vbCrLf
 
 		Dim OutPut As String = PathBase & Categoria & "\"
 		Dim Nome As String = gf.TornaNomeFileDaPath(Video)
@@ -272,7 +272,7 @@ Public Class looVF
 
 		Dim Cartella As String = Video.Replace(Nome, "")
 
-		ritorno &= "222->" & OutPut & "*" & Nome & "*" & Estensione & "*" & Video & "*" & Cartella & "*" & vbCrLf
+		' ritorno &= "222->" & OutPut & "*" & Nome & "*" & Estensione & "*" & Video & "*" & Cartella & "*" & vbCrLf
 
 		' OutPut &= Cartella
 
@@ -283,6 +283,11 @@ Public Class looVF
 		If Not File.Exists(OutPut) Then
 			Dim processoFFMpeg As Process = New Process()
 			Dim pi As ProcessStartInfo = New ProcessStartInfo()
+
+			Dim cc() As String = Conversione.Split("*")
+			Video = Video.Replace(cc(1), cc(0))
+			OutPut = OutPut.Replace(cc(1), cc(0))
+
 			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
 
 			' Return pi.Arguments
@@ -291,7 +296,18 @@ Public Class looVF
 			' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
 			pi.WindowStyle = ProcessWindowStyle.Normal
 			processoFFMpeg.StartInfo = pi
+			processoFFMpeg.StartInfo.UseShellExecute = False
+			processoFFMpeg.StartInfo.RedirectStandardOutput = True
+			processoFFMpeg.StartInfo.RedirectStandardError = True
 			processoFFMpeg.Start()
+
+			Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
+			ritorno = OutPutP & "****"
+			Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
+			ritorno &= Err & "*****"
+
+			' Return ritorno
+
 			processoFFMpeg.WaitForExit()
 		End If
 
@@ -504,7 +520,20 @@ Public Class looVF
 					Dim Thumb As String = ""
 
 					If idTipologia = "2" Then
-						Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
+						Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
+						Dim PathOriginale As String = Rec("Percorso").Value.ToString
+						If Conversione <> "" Then
+							Dim cc() As String = Conversione.Split("*")
+							PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+						End If
+						If Right(PathOriginale, 1) <> "\" Then
+							PathOriginale &= "\"
+						End If
+
+						' Return "" & Rec("Categoria").Value & " - " & PathOriginale & " - " & Rec("NomeFile").value
+
+						Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value, Conversione)
+						' Thumb = CreaThumbDaVideo(Rec("Categoria").Value, Rec("Percorso").Value, Rec("NomeFile").value)
 					End If
 
 					Ritorno &= Thumb & ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & Rec("Progressivo").Value.ToString & ";" & idTipologia & ";§"
