@@ -284,34 +284,36 @@ Public Class looVF
 			Dim processoFFMpeg As Process = New Process()
 			Dim pi As ProcessStartInfo = New ProcessStartInfo()
 
-			Dim cc() As String = Conversione.Split("*")
-			Video = Video.Replace(cc(1), cc(0))
-			OutPut = OutPut.Replace(cc(1), cc(0))
+			If Conversione <> "" And Conversione.Contains("*") Then
+				Dim cc() As String = Conversione.Split("*")
+				Video = Video.Replace(cc(1), cc(0))
+				OutPut = OutPut.Replace(cc(1), cc(0))
+			End If
 
 			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
 
-			' Return pi.Arguments
+				' Return pi.Arguments
 
-			pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
-			' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
-			pi.WindowStyle = ProcessWindowStyle.Normal
-			processoFFMpeg.StartInfo = pi
-			processoFFMpeg.StartInfo.UseShellExecute = False
-			processoFFMpeg.StartInfo.RedirectStandardOutput = True
-			processoFFMpeg.StartInfo.RedirectStandardError = True
-			processoFFMpeg.Start()
+				pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
+				' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
+				pi.WindowStyle = ProcessWindowStyle.Normal
+				processoFFMpeg.StartInfo = pi
+				processoFFMpeg.StartInfo.UseShellExecute = False
+				processoFFMpeg.StartInfo.RedirectStandardOutput = True
+				processoFFMpeg.StartInfo.RedirectStandardError = True
+				processoFFMpeg.Start()
 
-			Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
-			ritorno = OutPutP & "****"
-			Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
-			ritorno &= Err & "*****"
+				Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
+				ritorno = OutPutP & "****"
+				Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
+				ritorno &= Err & "*****"
 
-			' Return ritorno
+				' Return ritorno
 
-			processoFFMpeg.WaitForExit()
-		End If
+				processoFFMpeg.WaitForExit()
+			End If
 
-		Return OutPut.Replace(PathBase, "")
+			Return OutPut.Replace(PathBase, "")
 	End Function
 
 	<WebMethod()>
