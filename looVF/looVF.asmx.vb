@@ -488,7 +488,7 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function EffettuaRicerca(idTipologia As String, Categoria As String, Ricerca As String) As String
+	Public Function EffettuaRicerca(idTipologia As String, Categoria As String, Ricerca As String, Quante As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim Ritorno As String = ""
 		Dim Db As New GestioneDB
@@ -511,7 +511,7 @@ Public Class looVF
 				Rec.Close
 			End If
 
-			Sql = "Select Top 30 Dati.Progressivo, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+			Sql = "Select Top " & Quante & " Dati.Progressivo, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
 				"Where Dati.idTipologia=" & idTipologia & " And Dati.NomeFile Like '%" & Ricerca & "%' And Dati.idCategoria = " & idCategoria
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
