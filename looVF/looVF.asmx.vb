@@ -292,28 +292,28 @@ Public Class looVF
 
 			pi.Arguments = "-i """ & Video & """ -vframes 1 -an -s 1024x768 -ss 5 """ & OutPut & """"
 
-				' Return pi.Arguments
+			' Return pi.Arguments
 
-				pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
-				' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
-				pi.WindowStyle = ProcessWindowStyle.Normal
-				processoFFMpeg.StartInfo = pi
-				processoFFMpeg.StartInfo.UseShellExecute = False
-				processoFFMpeg.StartInfo.RedirectStandardOutput = True
-				processoFFMpeg.StartInfo.RedirectStandardError = True
-				processoFFMpeg.Start()
+			pi.FileName = Server.MapPath(".") & "\ffmpeg.exe"
+			' gf.CreaAggiornaFile(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
+			pi.WindowStyle = ProcessWindowStyle.Normal
+			processoFFMpeg.StartInfo = pi
+			processoFFMpeg.StartInfo.UseShellExecute = False
+			processoFFMpeg.StartInfo.RedirectStandardOutput = True
+			processoFFMpeg.StartInfo.RedirectStandardError = True
+			processoFFMpeg.Start()
 
-				Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
-				ritorno = OutPutP & "****"
-				Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
-				ritorno &= Err & "*****"
+			Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
+			ritorno = OutPutP & "****"
+			Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
+			ritorno &= Err & "*****"
 
-				' Return ritorno
+			' Return ritorno
 
-				processoFFMpeg.WaitForExit()
-			End If
+			processoFFMpeg.WaitForExit()
+		End If
 
-			Return OutPut.Replace(PathBase, "")
+		Return OutPut.Replace(PathBase, "")
 	End Function
 
 	<WebMethod()>
@@ -564,6 +564,12 @@ Public Class looVF
 
 		End Try
 
+		If ContatoreRiletturaImmagini = 10 Then
+			ContatoreRiletturaImmagini = 0
+			QuanteImmaginiSfondi = 0
+			ListaImmagini = New List(Of String)
+		End If
+
 		If QuanteImmaginiSfondi = 0 Then
 			If Strings.Right(Path, 1) <> "\" Then
 				Path &= "\"
@@ -575,6 +581,8 @@ Public Class looVF
 			For i As Integer = 1 To QuanteImmaginiSfondi
 				ListaImmagini.Add(filetti(i))
 			Next
+		Else
+			ContatoreRiletturaImmagini += 1
 		End If
 
 		Dim Minuti As Integer = (Now.Minute \ 3) * 3
