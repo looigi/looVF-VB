@@ -170,7 +170,7 @@ Public Class looVF
 				If idTipologia = "2" Then
 					Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
 					Dim PathOriginale As String = Rec("Percorso").Value.ToString
-					If Conversione <> "" Then
+					If Conversione <> "" And Conversione <> "--" Then
 						Dim cc() As String = Conversione.Split("*")
 						PathOriginale = PathOriginale.Replace(cc(0), cc(1))
 					End If
