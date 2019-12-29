@@ -318,6 +318,12 @@ Public Class looVF
 
 	<WebMethod()>
 	Public Function RitornaFiles() As String
+		If StaLeggendoImmagini Then
+			Return "ERROR: Sto già caricando immagini"
+		End If
+
+		StaLeggendoImmagini = True
+
 		Dim gf As New GestioneFilesDirectory
 
 		'If Aggiorna = "N" Then
@@ -356,15 +362,26 @@ Public Class looVF
 		Dim Sql As String
 
 		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim NomeFileLog As String = Server.MapPath(".") & "\Log\Log_" & dataAttuale() & ".txt"
 			Dim ConnSQL As Object = Db.ApreDB()
 			Dim idCategoria As Integer = 0
+
+			Try
+				MkDir(Server.MapPath(".") & "\Log")
+			Catch ex As Exception
+
+			End Try
 
 			Db.EsegueSql(ConnSQL, "Delete From Categorie")
 			Db.EsegueSql(ConnSQL, "Delete From Dati")
 
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - VIDEO")
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " -----------------------------------------------------------")
 			Conta = 0
 			For Each p As String In PathVideo
 				If p.Trim <> "" Then
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Elaborazione video: " & p)
+
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
@@ -374,10 +391,16 @@ Public Class looVF
 					If Strings.Right(pp(1), 1) <> "\" Then
 						pp(1) &= "\"
 					End If
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Scansione cartella: " & pp(1))
 					gf.ScansionaDirectorySingola(pp(1))
 					Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 					Dim Files() As String = gf.RitornaFilesRilevati
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Numero files rilevati: " & qFiles)
+
 					For i As Integer = 1 To qFiles
+						If (i / 1000 = Int(i / 1000)) Then
+							gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Scrittura: " & i & "/" & qFiles)
+						End If
 						'Dim sf As New StrutturaFiles
 
 						'sf.Categoria = Conta
@@ -397,16 +420,25 @@ Public Class looVF
 							")"
 						sRitorno = Db.EsegueSql(ConnSQL, Sql)
 						If sRitorno <> "" Then
+							gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Errore: " & sRitorno)
+							StaLeggendoImmagini = False
 							Return "ERROR:" & sRitorno
 						End If
 					Next
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Fine Scrittura: " & qFiles & "/" & qFiles)
 				End If
 			Next
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " -----------------------------------------------------------")
 
+			gf.CreaAggiornaFile(NomeFileLog, "")
+			gf.CreaAggiornaFile(NomeFileLog, "")
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - IMMAGINI")
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " -----------------------------------------------------------")
 			Conta = 0
 			idCategoria = 0
 			For Each p As String In PathImmagini
 				If p.Trim <> "" Then
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Elaborazione immagini: " & p)
 					Dim pp() As String = p.Split(";")
 
 					idCategoria += 1
@@ -416,11 +448,16 @@ Public Class looVF
 					If Strings.Right(pp(1), 1) <> "\" Then
 						pp(1) &= "\"
 					End If
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Scansione cartella: " & pp(1))
 					gf.ScansionaDirectorySingola(pp(1))
 					Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 					Dim Files() As String = gf.RitornaFilesRilevati
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Numero files: " & qFiles)
 					' Conta += 1
 					For i As Integer = 1 To qFiles
+						If (i / 1000 = Int(i / 1000)) Then
+							gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Scrittura: " & i & "/" & qFiles)
+						End If
 						'Dim sf As New StrutturaFiles
 
 						'sf.Categoria = Conta
@@ -440,11 +477,36 @@ Public Class looVF
 							")"
 						sRitorno = Db.EsegueSql(ConnSQL, Sql)
 						If sRitorno <> "" Then
+							gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Errore: " & sRitorno)
+							StaLeggendoImmagini = False
 							Return "ERROR: " & sRitorno
 						End If
 					Next
+					gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - Fine Scrittura: " & qFiles & "/" & qFiles)
 				End If
 			Next
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " -----------------------------------------------------------")
+
+			gf.CreaAggiornaFile(NomeFileLog, "")
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - RIEPILOGO")
+			Sql = "Select Tipologia, Categoria, Count(*) As Quanti From Dati A " &
+				"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+				"Left Join Tipologie C On A.idTipologia = C.idTipologia " &
+				"Group By Tipologia, Categoria " &
+				"Order By 1,2"
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			Do Until Rec.Eof
+				Dim Tipologia As String = Rec("Tipologia").Value
+				Dim Categoria As String = Rec("Categoria").Value
+				Dim Quanti As String = Rec("Quanti").Value
+
+				gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " - " & Tipologia & ": " & Categoria & " -> Files " & Quanti)
+
+				Rec.MoveNext
+			Loop
+			Rec.Close
+			gf.CreaAggiornaFile(NomeFileLog, dataAttuale() & " -----------------------------------------------------------")
 
 			'gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Temp\")
 
@@ -485,6 +547,7 @@ Public Class looVF
 			'Dim Ritorno As String = NomeFile
 		End If
 
+		StaLeggendoImmagini = False
 
 		Return "*"
 	End Function
