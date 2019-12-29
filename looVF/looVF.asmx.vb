@@ -54,9 +54,11 @@ Public Class looVF
 					Inizio = Rec(0).Value - 1
 				End If
 				Rec.Close
+			Else
+				idCategoria = -1
 			End If
 
-			Ritorno = (Inizio + y).ToString
+			Ritorno = (Inizio + y).ToString & ";" & idCategoria
 		End If
 
 		Return Ritorno
@@ -160,9 +162,15 @@ Public Class looVF
 			Dim ConnSQL As Object = Db.ApreDB()
 			Dim Rec As Object = CreateObject("ADODB.Recordset")
 
-			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+			If idCategoria = -1 Then
+				Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+				"Where Dati.idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+			Else
+				Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
 				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+			End If
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			If Not Rec.Eof Then
 				Dim Thumb As String = ""
