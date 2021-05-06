@@ -17,13 +17,18 @@ Public Class looVF
 		Dim Ritorno As String = ""
 		Dim Sql As String
 
+		'Dim gf As New GestioneFilesDirectory
+		'Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
 		If Db.LeggeImpostazioniDiBase() = True Then
 			Dim ConnSQL As Object = Db.ApreDB()
 			Dim Rec As Object = CreateObject("ADODB.Recordset")
 			Dim idCategoria As String = ""
 
+			'gf.CreaAggiornaFile(NomeFile, idTipologia & "-" & Categoria)
+
 			If Categoria <> "" And Categoria <> "Tutto" Then
 				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				'gf.CreaAggiornaFile(NomeFile, Sql)
 				Rec = Db.LeggeQuery(ConnSQL, Sql)
 				If Not Rec.Eof Then
 					idCategoria = Rec("idCategoria").Value
@@ -37,9 +42,11 @@ Public Class looVF
 			If Categoria <> "" And Categoria <> "Tutto" Then
 				Sql &= " And idCategoria=" & idCategoria
 			End If
+			'gf.CreaAggiornaFile(NomeFile, Sql)
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			Dim Quante As Long = Rec(0).Value
 			Rec.Close
+			'gf.CreaAggiornaFile(NomeFile, Quante)
 
 			Static x As Random = New Random()
 			Dim y As Long = x.Next(Quante)
@@ -47,6 +54,7 @@ Public Class looVF
 
 			If Categoria <> "" And Categoria <> "Tutto" Then
 				Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+				'gf.CreaAggiornaFile(NomeFile, Sql)
 				Rec = Db.LeggeQuery(ConnSQL, Sql)
 				If Rec(0).Value Is DBNull.Value Then
 					Inizio = 0
@@ -57,6 +65,30 @@ Public Class looVF
 			End If
 
 			Ritorno = (Inizio + y).ToString
+		End If
+		'gf.CreaAggiornaFile(NomeFile, Ritorno)
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaCategoriaDaID(id As String) As String
+		Dim Db As New GestioneDB
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+
+			Sql = "Select B.idCategoria, B.Categoria From Dati A " &
+				"Left Join Categorie B On A.idCategoria = B.idCategoria And A.idTipologia = B.idTipologia " &
+				"Where Progressivo=" & id
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			If Not Rec.Eof Then
+				Ritorno &= Rec("idCategoria").Value & ";" & Rec("Categoria").Value
+			End If
+			Rec.Close()
 		End If
 
 		Return Ritorno
@@ -97,10 +129,10 @@ Public Class looVF
 			Dim sDevice As String = Device
 			Dim sUser As String = User
 
-			sDevice = sDevice.Replace("***AND***", "&")
+			sDevice = sDevice.Replace("***And***", "&")
 			sDevice = sDevice.Replace("***PI***", "?")
 
-			sUser = sUser.Replace("***AND***", "&")
+			sUser = sUser.Replace("***And***", "&")
 			sUser = sUser.Replace("***PI***", "?")
 
 			Sql = "Select * From Permessi Where Device='" & sDevice & "' And Utente='" & sUser & "'" '  And IMEI='" & IMEI & "' And IMSI='" & IMSI & "'"
@@ -151,6 +183,29 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaQuantiFilesPerVB(idTipologia As String, idCategoria As String) As String
+		Dim Db As New GestioneDB
+		Dim Quanti As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+
+			If idCategoria = -1 Then
+				Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+			Else
+				Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+			End If
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			Quanti = Rec(0).Value
+			Rec.Close()
+		End If
+
+		Return Quanti
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaMultimediaDaId(idTipologia As String, idCategoria As String, idMultimedia As String) As String
 		Dim Db As New GestioneDB
 		Dim Ritorno As String = ""
@@ -163,6 +218,9 @@ Public Class looVF
 			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
 				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+			' Dim gf As New GestioneFilesDirectory
+			' Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
+			' gf.CreaAggiornaFile(NomeFile, Sql)
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			If Not Rec.Eof Then
 				Dim Thumb As String = ""
@@ -187,6 +245,7 @@ Public Class looVF
 			Else
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
+			'gf.CreaAggiornaFile(NomeFile, Ritorno)
 			Rec.Close()
 		End If
 
@@ -513,9 +572,11 @@ Public Class looVF
 				Rec.Close
 			End If
 
-			Sql = "Select Top " & Quante & " Dati.Progressivo, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso From Dati " &
+			If Quante = -1 Then Quante = 9999
+
+			Sql = "Select Top " & Quante & " Dati.Progressivo, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
-				"Where Dati.idTipologia=" & idTipologia & " And Dati.NomeFile Like '%" & Ricerca & "%' And Dati.idCategoria = " & idCategoria
+				"Where Dati.idTipologia=" & idTipologia & " And Dati.NomeFile Like '%" & Ricerca & "%' And Dati.idCategoria = " & idCategoria & " And Dati.NomeFile Not Like '%.nomedia%' "
 			Rec = Db.LeggeQuery(ConnSQL, Sql)
 			If Not Rec.eof Then
 				Do Until Rec.eof
@@ -524,10 +585,11 @@ Public Class looVF
 					If idTipologia = "2" Then
 						Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
 						Dim PathOriginale As String = Rec("Percorso").Value.ToString
-						If Conversione <> "" Then
-							Dim cc() As String = Conversione.Split("*")
-							PathOriginale = PathOriginale.Replace(cc(0), cc(1))
-						End If
+
+						'If Conversione <> "" Then
+						'	Dim cc() As String = Conversione.Split("*")
+						'	PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+						'End If
 						If Right(PathOriginale, 1) <> "\" Then
 							PathOriginale &= "\"
 						End If
@@ -631,6 +693,56 @@ Public Class looVF
 
 
 		Return Immagine
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaMultimediaDaId(idTipologia As String, idCategoria As String, idMultimedia As String) As String
+		Dim Db As New GestioneDB
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		If Db.LeggeImpostazioniDiBase() = True Then
+			Dim ConnSQL As Object = Db.ApreDB()
+			Dim Rec As Object = CreateObject("ADODB.Recordset")
+
+			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+			' Dim gf As New GestioneFilesDirectory
+			' Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
+			' gf.CreaAggiornaFile(NomeFile, Sql)
+			Rec = Db.LeggeQuery(ConnSQL, Sql)
+			If Not Rec.Eof Then
+				Dim Thumb As String = ""
+
+				If idTipologia = "2" Then
+					Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
+					Dim PathOriginale As String = Rec("Percorso").Value.ToString
+					If Conversione <> "" And Conversione <> "--" Then
+						Dim cc() As String = Conversione.Split("*")
+						PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+					End If
+					If Right(PathOriginale, 1) <> "\" Then
+						PathOriginale &= "\"
+					End If
+
+					Dim filetto As String = PathOriginale & Rec("NomeFile").value
+
+					Dim gf As New GestioneFilesDirectory
+					Ritorno = gf.EliminaFileFisico(filetto)
+					If Ritorno = "" Then
+						Ritorno = "*"
+					End If
+				End If
+				' Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";"
+			Else
+				Ritorno = "ERROR: Nessun file rilevato"
+			End If
+			'gf.CreaAggiornaFile(NomeFile, Ritorno)
+			Rec.Close()
+		End If
+
+		Return Ritorno
 	End Function
 
 End Class
