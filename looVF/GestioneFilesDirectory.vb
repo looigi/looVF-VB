@@ -1,11 +1,7 @@
 ﻿Imports System.IO
-Imports System.Text
-Imports System.Management
 Imports System.Security.AccessControl
-Imports System.Windows.Forms
 Imports System.Runtime.InteropServices
 Imports System.ComponentModel
-Imports System.Threading
 
 Public Structure ModalitaDiScan
     Dim TipologiaScan As Integer
@@ -57,6 +53,12 @@ Public Class GestioneFilesDirectory
     End Sub
 
     Public Function TornaDimensioneFile(NomeFile As String) As Long
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
         If File.Exists(NomeFile) Then
             Dim infoReader As System.IO.FileInfo
             infoReader = My.Computer.FileSystem.GetFileInfo(NomeFile)
@@ -84,35 +86,61 @@ Public Class GestioneFilesDirectory
         Next
     End Sub
 
+    Public Function EsisteFile(NomeFile As String) As Boolean
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
+        If File.Exists(NomeFile) Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
     Public Function NomeFileEsistente(NomeFile As String) As String
         Dim NomeFileDestinazione As String = NomeFile
-        Dim gf As New GestioneFilesDirectory
-        Dim Estensione As String = gf.TornaEstensioneFileDaPath(NomeFileDestinazione)
+        Dim Estensione As String = TornaEstensioneFileDaPath(NomeFileDestinazione)
         If Estensione <> "" Then
             NomeFileDestinazione = NomeFileDestinazione.Replace(Estensione, "")
         End If
         Dim Contatore As Integer = 1
 
-        Do While File.Exists(NomeFileDestinazione & "_" & Format(Contatore, "0000") & Estensione) = True
+        Dim NomeFinale As String = NomeFileDestinazione & "_" & Format(Contatore, "0000") & Estensione
+        If TipoDB <> "SQLSERVER" Then
+            NomeFinale = NomeFinale.Replace("\", "/")
+            NomeFinale = NomeFinale.Replace("//", "/")
+            NomeFinale = NomeFinale.Replace("/\", "/")
+        End If
+
+        Do While File.Exists(NomeFinale) = True
             Contatore += 1
+            NomeFinale = NomeFileDestinazione & "_" & Format(Contatore, "0000") & Estensione
         Loop
 
-        NomeFileDestinazione = NomeFileDestinazione & "_" & Format(Contatore, "0000") & Estensione
-        gf = Nothing
+        ' NomeFileDestinazione = NomeFileDestinazione & "_" & Format(Contatore, "0000") & Estensione
 
         Return NomeFileDestinazione
     End Function
 
-    Public Function EliminaFileFisico(NomeFileOrigine As String) As String
-        If File.Exists(NomeFileOrigine) Then
+    Public Function EliminaFileFisico(NomeFile As String) As String
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
+        If File.Exists(NomeFile) Then
             Dim Ritorno As String = ""
 
-            If NomeFileOrigine.Trim <> "" Then
+            If NomeFile.Trim <> "" Then
                 Try
-                    File.Delete(NomeFileOrigine)
+                    File.Delete(NomeFile)
 
-                    Do While (System.IO.File.Exists(NomeFileOrigine) = True)
-                        Thread.Sleep(1000)
+                    Do While (File.Exists(NomeFile) = True)
+                        Threading.Thread.Sleep(1000)
                     Loop
                 Catch ex As Exception
                     Ritorno = "ERRORE: " & ex.Message
@@ -125,10 +153,16 @@ Public Class GestioneFilesDirectory
         End If
     End Function
 
-    Public Function PrendeAttributiFile(Filetto As String) As FileAttribute
-        If File.Exists(Filetto) Then
+    Public Function PrendeAttributiFile(NomeFile As String) As FileAttribute
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
+        If File.Exists(NomeFile) Then
             Dim attributes As FileAttributes
-            attributes = File.GetAttributes(Filetto)
+            attributes = File.GetAttributes(NomeFile)
 
             Return attributes
         Else
@@ -137,6 +171,12 @@ Public Class GestioneFilesDirectory
     End Function
 
     Public Sub ImpostaAttributiFile(Filetto As String, Attributi As FileAttribute)
+        If TipoDB <> "SQLSERVER" Then
+            Filetto = Filetto.Replace("\", "/")
+            Filetto = Filetto.Replace("//", "/")
+            Filetto = Filetto.Replace("/\", "/")
+        End If
+
         If File.Exists(Filetto) Then
             File.SetAttributes(Filetto, Attributi)
         End If
@@ -144,6 +184,16 @@ Public Class GestioneFilesDirectory
 
     Public Function CopiaFileFisico(NomeFileOrigine As String, NomeFileDestinazione As String, SovraScrittura As Boolean) As String
         Dim Ritorno As String = ""
+
+        If TipoDB <> "SQLSERVER" Then
+            NomeFileOrigine = NomeFileOrigine.Replace("\", "/")
+            NomeFileOrigine = NomeFileOrigine.Replace("//", "/")
+            NomeFileOrigine = NomeFileOrigine.Replace("/\", "/")
+
+            NomeFileDestinazione = NomeFileDestinazione.Replace("\", "/")
+            NomeFileDestinazione = NomeFileDestinazione.Replace("//", "/")
+            NomeFileDestinazione = NomeFileDestinazione.Replace("/\", "/")
+        End If
 
         If File.Exists(NomeFileOrigine) Then
             If NomeFileOrigine.Trim <> "" And NomeFileDestinazione.Trim <> "" And NomeFileOrigine.Trim.ToUpper <> NomeFileDestinazione.Trim.ToUpper Then
@@ -168,8 +218,8 @@ Public Class GestioneFilesDirectory
                     Try
                         File.Copy(NomeFileOrigine, NomeFileDestinazione, True)
 
-                        Do Until (System.IO.File.Exists(NomeFileDestinazione))
-                            Thread.Sleep(1000)
+                        Do Until (File.Exists(NomeFileDestinazione))
+                            Threading.Thread.Sleep(1000)
                         Loop
 
                         ImpostaAttributiFile(NomeFileDestinazione, attr)
@@ -231,7 +281,9 @@ Public Class GestioneFilesDirectory
         Return Ritorno
     End Function
 
-    Public Sub CreaAggiornaFile(NomeFile As String, Cosa As String)
+    Public Function CreaAggiornaFile(NomeFile As String, Cosa As String) As String
+        Dim Ritorno As String = ""
+
         Try
             Dim path As String
 
@@ -243,14 +295,30 @@ Public Class GestioneFilesDirectory
 
             path = path.Replace(barra & barra, barra)
 
-            Dim sw As StreamWriter
-            If (Not File.Exists(NomeFile)) Then
-                sw = File.CreateText(NomeFile)
-            Else
-                sw = File.AppendText(NomeFile)
+            ' Create or overwrite the file.
+            'Dim fs As FileStream = File.Create(path)
+
+            '' Add text to the file.
+            'Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
+            'fs.Write(info, 0, info.Length)
+            'fs.Close()
+
+            ' Using fs As FileStream = File.Create(path)
+            If TipoDB <> "SQLSERVER" Then
+                path = path.Replace("\", "/")
+                path = path.Replace("//", "/")
+                path = path.Replace("/\", "/")
             End If
-            sw.WriteLine(Cosa)
-            sw.Close()
+
+
+            Using fs As New FileStream(path, IO.FileMode.Create, IO.FileAccess.ReadWrite, FileShare.ReadWrite)
+                Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
+                fs.Write(info, 0, info.Length)
+                fs.Flush()
+                fs.Close()
+            End Using
+
+            Ritorno = "*"
         Catch ex As Exception
             'Dim StringaPassaggio As String
             'Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
@@ -259,8 +327,11 @@ Public Class GestioneFilesDirectory
             'StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("Nick")
             'StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
             'H.Response.Redirect("Errore.aspx" & StringaPassaggio)
+            Ritorno = StringaErrore & " " & ex.Message
         End Try
-    End Sub
+
+        Return Ritorno
+    End Function
 
     Private objReader As StreamReader
 
@@ -277,6 +348,12 @@ Public Class GestioneFilesDirectory
     End Sub
 
     Public Function LeggeFileIntero(NomeFile As String) As String
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
         If File.Exists(NomeFile) Then
             Dim objReader As StreamReader = New StreamReader(NomeFile)
             Dim sLine As String = ""
@@ -284,7 +361,7 @@ Public Class GestioneFilesDirectory
 
             Do
                 sLine = objReader.ReadLine()
-                Ritorno += sLine
+                Ritorno += sLine & vbCrLf
             Loop Until sLine Is Nothing
             objReader.Close()
 
@@ -294,7 +371,31 @@ Public Class GestioneFilesDirectory
         End If
     End Function
 
-    Public Sub ScansionaDirectorySingola(Percorso As String, Optional Filtro As String = "", Optional lblAggiornamento As Label = Nothing, Optional SoloRoot As Boolean = False)
+    Public Function LeggeFileInteroSenzaVbCrLf(NomeFile As String) As String
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
+        If File.Exists(NomeFile) Then
+            Dim objReader As StreamReader = New StreamReader(NomeFile)
+            Dim sLine As String = ""
+            Dim Ritorno As StringBuilder = New StringBuilder
+
+            Do
+                sLine = objReader.ReadLine()
+                Ritorno.Append(sLine)
+            Loop Until sLine Is Nothing
+            objReader.Close()
+
+            Return Ritorno.ToString
+        Else
+            Return ""
+        End If
+    End Function
+
+    Public Sub ScansionaDirectorySingola(Percorso As String, Optional Filtro As String = "", Optional lblAggiornamento As Label = Nothing)
         Eliminati = False
 
         PulisceInfo()
@@ -304,12 +405,18 @@ Public Class GestioneFilesDirectory
 
         LeggeFilesDaDirectory(Percorso, Filtro)
 
-        LeggeTutto(Percorso, Filtro, lblAggiornamento, SoloRoot)
+        LeggeTutto(Percorso, Filtro, lblAggiornamento)
     End Sub
 
     Dim Conta As Integer
 
-    Private Sub LeggeTutto(Percorso As String, Filtro As String, lblAggiornamento As Label, SoloRoot As Boolean)
+    Private Sub LeggeTutto(Percorso As String, Filtro As String, lblAggiornamento As Label)
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+        End If
+
         If Directory.Exists(Percorso) Then
             Dim di As New IO.DirectoryInfo(Percorso)
             Dim diar1 As IO.DirectoryInfo() = di.GetDirectories
@@ -320,8 +427,7 @@ Public Class GestioneFilesDirectory
                     Conta += 1
                     If Conta = 2 Then
                         Conta = 0
-						' Application.DoEvents()
-					End If
+                    End If
                 End If
 
                 QuanteDirRilevate += 1
@@ -333,9 +439,7 @@ Public Class GestioneFilesDirectory
 
                 LeggeFilesDaDirectory(dra.FullName, Filtro)
 
-                If Not SoloRoot Then
-                    LeggeTutto(dra.FullName, Filtro, lblAggiornamento, SoloRoot)
-                End If
+                LeggeTutto(dra.FullName, Filtro, lblAggiornamento)
             Next
         End If
     End Sub
@@ -358,6 +462,12 @@ Public Class GestioneFilesDirectory
     End Function
 
     Public Sub LeggeFilesDaDirectory(Percorso As String, Optional Filtro As String = "")
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+        End If
+
         If Directory.Exists(Percorso) Then
             Dim di As New IO.DirectoryInfo(Percorso)
 
@@ -393,6 +503,16 @@ Public Class GestioneFilesDirectory
 
     Public Sub CreaDirectoryDaPercorso(Percorso As String)
         Dim Ritorno As String = Percorso
+
+        If TipoDB <> "SQLSERVER" Then
+            Ritorno = Ritorno.Replace("\", "/")
+            Ritorno = Ritorno.Replace("//", "/")
+            Ritorno = Ritorno.Replace("/\", "/")
+
+            barra = "/"
+        Else
+            barra = "\"
+        End If
 
         For i As Integer = 1 To Ritorno.Length
             If Mid(Ritorno, i, 1) = barra Then
@@ -468,6 +588,12 @@ Public Class GestioneFilesDirectory
     End Sub
 
     Public Function TornaDataDiCreazione(NomeFile As String) As Date
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
         If File.Exists(NomeFile) Then
             Dim info As New FileInfo(NomeFile)
             Return info.CreationTime
@@ -477,6 +603,12 @@ Public Class GestioneFilesDirectory
     End Function
 
     Public Function TornaDataDiUltimaModifica(NomeFile As String) As Date
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
         If File.Exists(NomeFile) Then
             Dim info As New FileInfo(NomeFile)
             Return info.LastWriteTime
@@ -486,6 +618,12 @@ Public Class GestioneFilesDirectory
     End Function
 
     Public Function TornaDataUltimoAccesso(NomeFile As String) As Date
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
         If File.Exists(NomeFile) Then
             Dim info As New FileInfo(NomeFile)
             Return info.LastAccessTime
@@ -494,80 +632,15 @@ Public Class GestioneFilesDirectory
         End If
     End Function
 
-    'Public Function RitornaDischi() As String()
-    '    Dim unita As DriveInfo() = DriveInfo.GetDrives()
-    '    Dim Dischi(unita.Count) As String
-
-    '    For i As Integer = 0 To unita.Count - 1
-    '        Dischi(i) = PrendeInfoDischi(unita(i).Name)
-    '    Next
-
-    '    Return Dischi
-    'End Function
-
-    'Private Function PrendeInfoDischi(Lettera As String) As String
-    '    Dim Ritorno As String = ""
-    '    Dim unita As New DriveInfo(Lettera)
-    '    Dim TipoDisco As String = ""
-    '    Dim Pronta As Boolean
-    '    Dim SpazioDisponibile As String = ""
-    '    Dim SpazioTotale As String = ""
-    '    Dim SpazioTotale2 As String = ""
-    '    Dim NomeDisco As String = ""
-    '    Dim Seriale As String = ""
-
-    '    Select Case unita.DriveType
-    '        Case DriveType.CDRom
-    '            TipoDisco = "CD-ROM"
-    '        Case DriveType.Fixed
-    '            TipoDisco = "Disco Fisso"
-    '        Case DriveType.Removable
-    '            TipoDisco = "Rimuovibile"
-    '        Case DriveType.Unknown
-    '            TipoDisco = "Sconosciuto"
-    '    End Select
-
-    '    If unita.IsReady = True Then
-    '        Pronta = True
-    '    Else
-    '        Pronta = False
-    '    End If
-
-    '    If Pronta = True Then
-    '        SpazioDisponibile = unita.AvailableFreeSpace.ToString.Trim
-    '        SpazioTotale = unita.TotalSize.ToString.Trim
-    '        SpazioTotale2 = unita.TotalFreeSpace.ToString.Trim
-    '        NomeDisco = unita.VolumeLabel
-
-    '        Dim searcher As ManagementObjectSearcher = New ManagementObjectSearcher("SELECT * FROM Win32_DiskDrive")
-    '        Dim i As Integer = 0
-    '        For Each wmi_HD As ManagementObject In searcher.[Get]()
-    '            ' get the hard drive from collection
-    '            ' get the hardware serial no.
-    '            If wmi_HD("SerialNumber") Is Nothing Then
-    '                Seriale = "None"
-    '            Else
-    '                Seriale = wmi_HD("SerialNumber").ToString()
-    '            End If
-
-    '            i += 1
-    '        Next
-    '    Else
-    '        SpazioDisponibile = ""
-    '        SpazioTotale = ""
-    '        SpazioTotale2 = ""
-    '        NomeDisco = ""
-    '        Seriale = ""
-    '    End If
-
-    '    Ritorno = TipoDisco & ";" & Pronta & ";" & SpazioDisponibile & ";" & SpazioTotale & ";" & SpazioTotale2 & ";" & NomeDisco & ";" & Seriale & ";" & Lettera & ";"
-
-    '    Return Ritorno
-    'End Function
-
     Private outputFile As StreamWriter
 
     Public Sub ApreFileDiTestoPerScrittura(Percorso As String)
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+        End If
+
         outputFile = New StreamWriter(Percorso, True)
     End Sub
 
@@ -580,42 +653,7 @@ Public Class GestioneFilesDirectory
         outputFile.Close()
     End Sub
 
-	' Public Function SceltaFile(Optional sPercorso As String = "", Optional Filtro As String = "") As String
-	'     Dim Percorso As String = ""
-	' 
-	'     Using obj As New OpenFileDialog
-	'         obj.CheckFileExists = False
-	'         obj.CheckPathExists = False
-	'         obj.Title = "Seleziona file"
-	'         If Filtro <> "" Then
-	'             obj.Filter = "All Files|" & Filtro
-	'         End If
-	'         If sPercorso <> "" Then
-	'             obj.InitialDirectory = sPercorso
-	'         End If
-	'         If obj.ShowDialog = Windows.Forms.DialogResult.OK Then
-	'             Percorso = IO.Directory.GetParent(obj.FileName).FullName
-	'         End If
-	'     End Using
-	' 
-	'     Return Percorso
-	' End Function
-
-	' ublic Function SceltaDirectory(Optional sPercorso As String = "") As String
-	'    Dim Percorso As String = ""
-	' 
-	'    Dim fbd As New FolderBrowserDialog()
-	' 
-	'    fbd.Description = "Scelta cartella"
-	' 
-	'    If fbd.ShowDialog() = DialogResult.OK Then
-	'        Percorso = fbd.SelectedPath
-	'    End If
-	' 
-	'    Return Percorso
-	' nd Function
-
-	Public Sub LockCartella(Cartella As String)
+    Public Sub LockCartella(Cartella As String)
         Try
             Dim fs As FileSystemSecurity = File.GetAccessControl(Cartella)
             fs.AddAccessRule(New FileSystemAccessRule(Environment.UserName, FileSystemRights.FullControl, AccessControlType.Deny))

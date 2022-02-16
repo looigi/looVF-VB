@@ -1,171 +1,323 @@
-﻿Public Class GestioneDB
-    Private ConnessioneMDB As String
-    Private ConnessioneSQL As String
+﻿Imports System.Reflection
+Imports System.Timers
+Imports ADODB
 
-    Public Function ProvaConnessione(Connessione As String) As String
-        Dim Conn As Object = CreateObject("ADODB.Connection")
+Public Class clsGestioneDB
+	Private mdb As clsMariaDB
+	Private TipoDB As String
 
-        Try
-            Conn.Open(Connessione)
-            Conn.Close()
+	Public Sub New(Tipo As String)
+		Me.TipoDB = Tipo
+	End Sub
 
-            Conn = Nothing
-            Return ""
-        Catch ex As Exception
-            Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
-            Dim StringaPassaggio As String
-
-            StringaPassaggio = "?Errore=Apertura DB"
-            StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("idUtente")
-            StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
-            StringaPassaggio = StringaPassaggio & "&Errore=" & ex.Message
-            H.Response.Redirect("Errore.aspx" & StringaPassaggio)
-
-            Return ex.Message
-        End Try
-    End Function
-
-    Public Function LeggeImpostazioniDiBase() As Boolean
-        Dim Ritorno As String
-        Dim Ok As Boolean = True
-        Dim CosaCercare As String
-        Dim Conn As String = ""
-
-		'If ModalitaLocale = True Then
-		CosaCercare = "SQLConnectionStringLOCALElooVF"
-		'Else
-		'CosaCercare = "SQLConnectionStringWEB"
-		'End If
+	Public Function LeggeImpostazioniDiBase() As String
+		Dim Connessione As String = ""
 
 		' Impostazioni di base
 		Dim ListaConnessioni As ConnectionStringSettingsCollection = ConfigurationManager.ConnectionStrings
 
-        If ListaConnessioni.Count <> 0 Then
-            ' Get the collection elements. 
-            For Each Connessioni As ConnectionStringSettings In ListaConnessioni
-                Dim Nome As String = Connessioni.Name
-                Dim Provider As String = Connessioni.ProviderName
-                Dim connectionString As String = Connessioni.ConnectionString
+		If ListaConnessioni.Count <> 0 Then
+			' Get the collection elements. 
+			For Each Connessioni As ConnectionStringSettings In ListaConnessioni
+				Dim Nome As String = Connessioni.Name
+				Dim Provider As String = Connessioni.ProviderName
+				Dim connectionString As String = Connessioni.ConnectionString
 
-                If Nome = CosaCercare Then
-                    Conn = "Provider=" & Provider & ";" & connectionString
+				If TipoDB = "SQLSERVER" Then
+					If Nome = "SQLConnectionStringLOCALElooVF" Then
+						Connessione = "Provider=" & Provider & ";" & connectionString
+						Exit For
+					End If
+				Else
+					If Nome = "SQLConnectionStringLOCALElooVF" Then
+						Connessione = connectionString
+						Exit For
+					End If
+				End If
+			Next
+		End If
 
-                    Exit For
-                End If
-            Next
-        End If
+		Return Connessione
+	End Function
 
-        If Conn = "" Then
-            ' Response.Redirect("errore_ErroreImprevisto.aspx?Errore=Impostazioni di connessione al DB non valide&Chiamante=" & Request.CurrentExecutionFilePath.ToUpper.Trim & "&Sql=")
-            Ok = False
-        Else
-            Ritorno = ProvaConnessione(Conn)
-            If Ritorno <> "" Then
-                ' Response.Redirect("errore_ErroreImprevisto.aspx?Errore=" & Ritorno & "&Chiamante=" & Request.CurrentExecutionFilePath.ToUpper.Trim & "&Sql=")
-                Ok = False
-            Else
-                ConnessioneSQL = Conn
-            End If
-            ' Impostazioni di base
-        End If
+	Public Function ApreDB(ByVal Connessione As String) As Object
+		' Routine che apre il DB e vede se ci sono errori
+		Dim Conn As Object
+		' Dim TipoDB As String = LeggeTipoDB()
 
-        Return Ok
-    End Function
+		If TipoDB = "SQLSERVER" Then
+			Conn = CreateObject("ADODB.Connection")
+			Try
+				Conn.Open(Connessione)
+				Conn.CommandTimeout = 0
+			Catch ex As Exception
+				Conn = StringaErrore & " " & ex.Message
+			End Try
+		Else
+			mdb = New clsMariaDB
 
-    Public Function ApreDB() As Object
-        ' Routine che apre il DB e vede se ci sono errori
-        Dim Conn As Object = CreateObject("ADODB.Connection")
+			Try
+				Conn = mdb.apreConnessione(Connessione)
+			Catch ex As Exception
+				Conn = StringaErrore & " " & ex.Message
+			End Try
+		End If
 
-        Try
-            Conn.Open(ConnessioneSQL)
-            Conn.CommandTimeout = 0
-        Catch ex As Exception
-            Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
-            Dim StringaPassaggio As String
+		Return Conn
+	End Function
 
-            StringaPassaggio = "?Errore=Apertura DB"
-            StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("idUtente")
-            StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
-            StringaPassaggio = StringaPassaggio & "&Sql="
-            H.Response.Redirect("Errore.aspx" & StringaPassaggio)
-        End Try
+	Public Function EsegueSql(MP As String, Sql As String, Connessione As String, Optional ModificaQuery As Boolean = True) As String
+		Dim Ritorno As String = "*"
+		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+		Dim gf As New GestioneFilesDirectory
 
-        Return Conn
-    End Function
+		Connessione = Connessione.Replace(vbCrLf, "")
+		Connessione = Connessione.Replace("*", ";")
+		Connessione = Connessione.Replace("^", "=")
 
-    Private Function ControllaAperturaConnessione(ByRef Conn As Object) As Boolean
-        Dim Ritorno As Boolean = False
+		Dim Errore As String = ""
 
-        If Conn Is Nothing Then
-            Ritorno = True
-            Conn = ApreDB(ConnessioneSQL)
-        End If
+		Dim Conn As Object = ApreDB(Connessione)
+		If TypeOf (Conn) Is String Then
+			Errore = Conn
+		End If
 
-        Return Ritorno
-    End Function
+		If effettuaLog And Not HttpContext.Current Is Nothing Then
+			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
-    Public Function EsegueSql(ByVal Conn As Object, ByVal Sql As String) As String
-        Dim AperturaManuale As Boolean = ControllaAperturaConnessione(Conn)
-        Dim Ritorno As String = ""
+			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
+			ThreadScriveLog(Datella & ": Esecuzione SQL")
+			ThreadScriveLog(Datella & ": Tipo db: " & TipoDB)
+			ThreadScriveLog(Datella & ": Connessione: " & Connessione)
 
-        ' Routine che esegue una query sul db
-        Try
-            Conn.Execute(Sql)
-        Catch ex As Exception
-			'Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
-			'Dim StringaPassaggio As String
+			Dim Sql2 As String = ""
 
-			'StringaPassaggio = "?Errore=Errore esecuzione query: " & Err.Description
-			'StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("idUtente")
-			'StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
-			'StringaPassaggio = StringaPassaggio & "&Sql=" & Sql
-			'H.Response.Redirect("Errore.aspx" & StringaPassaggio)
-			Ritorno = ex.Message
-		End Try
+			If ModificaQuery Then
+				If TipoDB = "SQLSERVER" Then
+					Sql2 = Sql
+				Else
+					Sql2 = Sql.ToLower()
+					Sql2 = Sql2.Replace("[", "")
+					Sql2 = Sql2.Replace("]", "")
+					Sql2 = Sql2.Replace("dbo.", "")
 
-		ChiudeDB(AperturaManuale, Conn)
+					Sql2 = Sql2.Replace("generale", "Generale")
+				End If
+			Else
+				Sql2 = Sql
+			End If
 
-        Return Ritorno
-    End Function
+			ThreadScriveLog(Datella & ": SQL = " & Sql2)
+			If Errore <> "" Then
+				ThreadScriveLog(Datella & ": " & Errore)
+			End If
+			' End If
+		End If
 
-    Public Function EsegueSqlSenzaTRY(ByVal Conn As Object, ByVal Sql As String) As String
-        Dim AperturaManuale As Boolean = ControllaAperturaConnessione(Conn)
-        Dim Ritorno As String = ""
+		If Errore = "" Then
+			' Routine che esegue una query sul db
+			If TipoDB = "SQLSERVER" Then
+				Try
+					Conn.Execute(Sql)
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": OK")
+					End If
+				Catch ex As Exception
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
+					End If
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+			Else
+				Try
+					Ritorno = mdb.EsegueSql(Sql, ModificaQuery)
+					If Ritorno.ToUpper.Trim <> "OK" Then
+						Ritorno = StringaErrore & " " & Ritorno
+					End If
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": " & Ritorno)
+					End If
+				Catch ex As Exception
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
+					End If
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+			End If
 
-        Conn.Execute(Sql)
+			Try
+				ChiudeDB(Conn)
+			Catch ex As Exception
+				Ritorno = StringaErrore & " " & ex.Message
+			End Try
+		Else
+			Ritorno = Errore
+		End If
 
-        ChiudeDB(AperturaManuale, Conn)
+		If effettuaLog And Not HttpContext.Current Is Nothing Then
+			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
+			ThreadScriveLog("")
+		End If
 
-        Return Ritorno
-    End Function
+		Return Ritorno
+	End Function
 
-    Private Sub ChiudeDB(ByVal TipoApertura As Boolean, ByRef Conn As Object)
-        If TipoApertura = True Then
-            Conn.Close()
-        End If
-    End Sub
+	Public Sub Close()
 
-    Public Function LeggeQuery(ByVal Conn As Object, ByVal Sql As String) As Object
-        Dim AperturaManuale As Boolean = ControllaAperturaConnessione(Conn)
-        Dim Rec As Object = CreateObject("ADODB.Recordset")
+	End Sub
 
-        Try
-            Rec.Open(Sql, Conn)
-        Catch ex As Exception
-            Rec = Nothing
+	Public Function LeggeQuery(MP As String, Sql As String, Connessione As String, Optional ModificaQuery As Boolean = True) As Object
+		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+		Dim gf As New GestioneFilesDirectory
+		' Dim TipoDB As String = LeggeTipoDB()
 
-            Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
-            Dim StringaPassaggio As String
+		Connessione = Connessione.Replace(vbCrLf, "")
+		Connessione = Connessione.Replace("*", ";")
+		Connessione = Connessione.Replace("^", "=")
 
-            StringaPassaggio = "?Errore=Errore query: " & Err.Description
-            StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("idUtente")
-            StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
-            StringaPassaggio = StringaPassaggio & "&Sql=" & Sql
-            H.Response.Redirect("Errore.aspx" & StringaPassaggio)
-        End Try
+		Dim Errore As String = ""
 
-        ChiudeDB(AperturaManuale, Conn)
+		Dim Conn As Object = ApreDB(Connessione)
+		If TypeOf (Conn) Is String Then
+			Errore = Conn
+		End If
 
-        Return Rec
-    End Function
+		If effettuaLog And Not HttpContext.Current Is Nothing Then
+			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+
+			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
+			ThreadScriveLog(Datella & ": Lettura Query")
+			ThreadScriveLog(Datella & ": Tipo db: " & TipoDB)
+			ThreadScriveLog(Datella & ": Connessione: " & Connessione)
+
+			Dim Sql2 As String = ""
+
+			If ModificaQuery Then
+				If TipoDB = "SQLSERVER" Then
+					Sql2 = Sql
+				Else
+					Sql2 = Sql.ToLower()
+					Sql2 = Sql2.Replace("[", "")
+					Sql2 = Sql2.Replace("]", "")
+					Sql2 = Sql2.Replace("dbo.", "")
+
+					Sql2 = Sql2.Replace("generale", "Generale")
+				End If
+			Else
+				Sql2 = Sql
+			End If
+
+			ThreadScriveLog(Datella & ": SQL = " & Sql2)
+			If Errore <> "" Then
+				ThreadScriveLog(Datella & ": ERROR: " & Errore)
+			End If
+			'End If
+		End If
+
+		'Return "Lettura " & Indice & " -> " & mdb.Length
+
+		Dim Rec As Object
+
+		If Errore = "" Then
+			If TipoDB = "SQLSERVER" Then
+				Rec = New Recordset
+
+				Try
+					Rec.Open(Sql, Conn)
+				Catch ex As Exception
+					Rec = StringaErrore & " " & ex.Message
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
+					End If
+				End Try
+			Else
+				Try
+					Rec = mdb.Lettura(Sql, ModificaQuery)
+					If TypeOf (Rec) Is String Then
+						If effettuaLog Then
+							ThreadScriveLog(Datella & ": ERRORE SQL -> " & Rec)
+						End If
+					End If
+				Catch ex As Exception
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
+					End If
+					Rec = StringaErrore & " " & ex.Message
+				End Try
+			End If
+
+			Try
+				ChiudeDB(Conn)
+			Catch ex As Exception
+				Rec = StringaErrore & " " & ex.Message
+			End Try
+		Else
+			Rec = Errore
+		End If
+
+		If effettuaLog And Not HttpContext.Current Is Nothing Then
+			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
+			ThreadScriveLog("")
+		End If
+
+		Return Rec
+	End Function
+
+	'Private Function ControllaAperturaConnessione(ByRef Conn As Object, ByVal Connessione As String, Indice As Integer) As Boolean
+	'	Dim Ritorno As Boolean = False
+
+	'	If Conn Is Nothing Then
+	'		If TipoDB = "SQLSERVER" Then
+	'			Ritorno = True
+	'			Conn = ApreDB(Connessione, Indice)
+	'		Else
+	'			Ritorno = True
+	'			Conn = ApreDB(Connessione, Indice)
+	'		End If
+	'	End If
+
+	'	Return Ritorno
+	'End Function
+
+	Public Sub ChiudeDB(Conn As Object)
+		If TipoDB = "SQLSERVER" Then
+			Conn.Close()
+		Else
+			mdb.ChiudiConn(Conn)
+		End If
+	End Sub
+
+	Private Sub ThreadScriveLog(s As String)
+		listalog.Add(s)
+
+		avviaTimerLog()
+
+		'scodaLog(s)
+	End Sub
+
+	Private Sub avviaTimerLog()
+		If timerLog Is Nothing Then
+			timerLog = New Timer(100)
+			AddHandler timerLog.Elapsed, New ElapsedEventHandler(AddressOf scodaLog)
+			timerLog.Start()
+		End If
+	End Sub
+
+	Private Sub scodaLog()
+		timerLog.Enabled = False
+		Dim sLog As String = listalog.Item(0)
+
+		Dim gf As New GestioneFilesDirectory
+		gf.ApreFileDiTestoPerScrittura(nomeFileLogGenerale)
+		gf.ScriveTestoSuFileAperto(sLog)
+		gf.ChiudeFileDiTestoDopoScrittura()
+
+		listalog.RemoveAt(0)
+		If listalog.Count > 0 Then
+			timerLog.Enabled = True
+		Else
+			timerLog = Nothing
+			listalog = New List(Of String)
+		End If
+	End Sub
 End Class
