@@ -27,27 +27,10 @@ Public Class clsMariaDB
 
 	Public Function EsegueSql(Sql As String, ModificaQuery As Boolean) As String
 		Dim Errore As String = ""
-		Dim Sql2 As String
-
-		If ModificaQuery Then
-			If TipoDB = "SQLSERVER" Then
-				Sql2 = Sql
-			Else
-				Sql2 = Sql.ToLower()
-				Sql2 = Sql2.Replace("[", "")
-				Sql2 = Sql2.Replace("]", "")
-				Sql2 = Sql2.Replace("dbo.", "")
-
-				Sql2 = Sql2.Replace("generale", "Generale")
-				Sql2 = Sql2.Replace("dbvuoto", "DBvuoto")
-			End If
-		Else
-			Sql2 = Sql
-		End If
 
 		' Routine che esegue una query sul db
 		Try
-			Dim cmd As MySqlCommand = New MySqlCommand(Sql2, Conn)
+			Dim cmd As MySqlCommand = New MySqlCommand(Sql, Conn)
 			cmd.ExecuteNonQuery()
 
 			Errore = "OK"
@@ -59,34 +42,18 @@ Public Class clsMariaDB
 	End Function
 
 	Public Function Lettura(sql As String, ModificaQuery As Boolean) As Object
-		Dim Sql2 As String = ""
-
-		If ModificaQuery Then
-			If TipoDB = "SQLSERVER" Then
-				Sql2 = sql
-			Else
-				Sql2 = sql.ToLower()
-				Sql2 = Sql2.Replace("[", "")
-				Sql2 = Sql2.Replace("]", "")
-				Sql2 = Sql2.Replace("dbo.", "")
-
-				Sql2 = Sql2.Replace("generale", "Generale")
-				Sql2 = Sql2.Replace("dbvuoto", "DBvuoto")
-				Sql2 = Sql2.Replace("dbpieno", "dbPieno")
-			End If
-		Else
-			Sql2 = sql
-		End If
-
-		Dim cmd As MySqlCommand = New MySqlCommand(Sql2, Conn)
+		Dim cmd As MySqlCommand = New MySqlCommand(sql, Conn)
 		Dim Ritorno As MySqlDataReader
 		Dim rec As Object = Nothing
 
 		Try
 			Ritorno = cmd.ExecuteReader()
+			Dim ds As DataSet = New DataSet()
 			Dim theCommand As New DataTable()
+			ds.Tables.Add(theCommand)
+			ds.EnforceConstraints = False
 			theCommand.Load(Ritorno)
-			rec = New clsRecordset(theCommand, Sql2)
+			rec = New clsRecordset(theCommand, sql)
 		Catch ex As Exception
 			rec = "MDB ERROR:" & ex.Message
 		End Try

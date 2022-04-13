@@ -12,6 +12,101 @@ Public Class looVF
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		'Dim gf As New GestioneFilesDirectory
+		'Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Dim idCategoria As String = ""
+			Dim Altro As String = ""
+
+			If Filtro <> "" Then
+				Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
+			End If
+			'gf.ScriveTestoSuFileAperto(NomeFile, idTipologia & "-" & Categoria)
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				If Rec.Eof = False Then
+					idCategoria = Rec("idCategoria").Value
+				Else
+					Return "ERROR: Categoria non trovata"
+				End If
+				Rec.Close
+			End If
+
+			Dim Quante As Long = 0
+			Dim Indici As New List(Of Integer)
+
+			If Filtro <> "" Then
+				Quante = 0
+				Sql = "Select * From Dati Where idTipologia=" & idTipologia & " " & Altro
+				If Categoria <> "" And Categoria <> "Tutto" Then
+					Sql &= " And idCategoria=" & idCategoria
+				End If
+				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Do Until Rec.Eof
+					Indici.Add(Rec("Progressivo").Value)
+
+					Quante += 1
+					Rec.MoveNext
+				Loop
+				Rec.Close
+			Else
+				Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+				If Categoria <> "" And Categoria <> "Tutto" Then
+					Sql &= " And idCategoria=" & idCategoria
+				End If
+				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Quante = Rec(0).Value
+				Rec.Close
+				'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
+			End If
+
+			Static x As Random = New Random()
+			Dim y As Long = x.Next(Quante)
+			Dim Inizio As Long = 0
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				If Filtro = "" Then
+					Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " " & Altro
+					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+					If Rec(0).Value Is DBNull.Value Then
+						Inizio = 0
+					Else
+						Inizio = Rec(0).Value - 1
+					End If
+					Rec.Close
+				Else
+					If Indici.Count > y Then
+						Inizio = Indici(y)
+					Else
+						Inizio = -1
+					End If
+					y = 0
+				End If
+			Else
+				idCategoria = -1
+				End If
+
+				Ritorno = (Inizio + y).ToString & ";" & idCategoria & ";" & Quante
+			End If
+			'gf.ScriveTestoSuFileAperto(NomeFile, Ritorno)
+
+			Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaSuccessivoMultimedia(idTipologia As String, Categoria As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
@@ -255,6 +350,115 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function StaEseguendoRefresh() As String
+		If StaLeggendoImmagini Then
+			Return "Sto caricando multimedia"
+		Else
+			Return "NON Sto caricando multimedia"
+		End If
+	End Function
+
+	<WebMethod()>
+	Public Function ContaRigheDuranteRefresh() As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+
+			Sql = "Select COALESCE(Count(*),0) As QuanteRighe From Dati"
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If Rec.Eof = False Then
+				Ritorno = Rec("QuanteRighe").Value
+			Else
+				Ritorno = "ERROR: Nessuna riga rilevata"
+			End If
+			Rec.Close
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaMultimediaPerGriglia(QuanteImm As String, Categoria As String, idTipologia As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+
+			Dim Inizio As Long = 0
+			Dim idCategoria As String = ""
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				If Rec.Eof = False Then
+					idCategoria = Rec("idCategoria").Value
+				Else
+					Return "ERROR: Categoria non trovata"
+				End If
+				Rec.Close
+			End If
+
+			Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia & " "
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql &= " And idCategoria=" & idCategoria
+			End If
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			Dim Quante As Long = Rec(0).Value
+			Rec.Close
+
+			If Categoria <> "" And Categoria <> "Tutto" Then
+				Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Inizio = Rec(0).Value - 1
+				Rec.Close
+			End If
+
+			For i As Integer = 1 To Val(QuanteImm)
+				Randomize()
+				Static x As Random = New Random()
+				Dim y As Long = x.Next(Quante)
+				Dim idMultimedia As Long = Inizio + y
+
+				Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+					"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+					"Where Dati.idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				If Rec.Eof = False Then
+					If idTipologia = 2 Then
+						Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
+						Dim PathOriginale As String = Rec("Percorso").Value.ToString
+						If Conversione <> "" And Conversione <> "--" Then
+							Dim cc() As String = Conversione.Split("*")
+							PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+						End If
+						If Right(PathOriginale, 1) <> "\" Then
+							PathOriginale &= "\"
+						End If
+
+						Dim Thumb As String = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value, Conversione)
+						Ritorno &= Thumb & ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";§"
+					Else
+						Ritorno &= ";" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";§"
+					End If
+				Else
+					Ritorno = "ERROR: Nessun file rilevato"
+					Exit For
+				End If
+				Rec.Close()
+			Next
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaImmaginiPerGriglia(QuanteImm As String, Categoria As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
@@ -319,6 +523,8 @@ Public Class looVF
 	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String, Conversione As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoThumbs.txt")
+		PathBase = PathBase.Replace(vbCrLf, "")
+
 		Dim Barra As String = "\"
 
 		If TipoDB = "SQLSERVER" Then
@@ -765,11 +971,25 @@ Public Class looVF
 	<WebMethod()>
 	Public Function TornaNumeroImmaginePerSfondo() As String
 		Dim gf As New GestioneFilesDirectory
-		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim P As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim pp() As String = P.Split(";")
+		Dim PathSfondi As String = pp(0).Replace(vbCrLf, "")
+		Dim PathSfondiDir As String = pp(1).Replace(vbCrLf, "")
+
 		Dim Immagine As String = ""
 
+		If TipoDB <> "SQLSERVER" Then
+			PathSfondi = PathSfondi.Replace("\", "/")
+			PathSfondi = PathSfondi.Replace("//", "/")
+			PathSfondi = PathSfondi.Replace("/\", "/")
+
+			PathSfondiDir = PathSfondiDir.Replace("\", "/")
+			PathSfondiDir = PathSfondiDir.Replace("//", "/")
+			PathSfondiDir = PathSfondiDir.Replace("/\", "/")
+		End If
+
 		Try
-			MkDir(Server.MapPath(".") & "\Sfondi")
+			MkDir(PathSfondi)
 		Catch ex As Exception
 
 		End Try
@@ -789,10 +1009,11 @@ Public Class looVF
 		End If
 
 		If QuanteImmaginiSfondi = 0 Then
-			If Strings.Right(Path, 1) <> Barra Then
-				Path &= Barra
-			End If
-			gf.ScansionaDirectorySingola(Path)
+			'If Strings.Right(PathSfondiDir, 1) <> Barra Then
+			'	PathSfondiDir &= Barra
+			'End If
+
+			gf.ScansionaDirectorySingola(PathSfondiDir)
 			Dim filetti() As String = gf.RitornaFilesRilevati
 			QuanteImmaginiSfondi = gf.RitornaQuantiFilesRilevati
 
@@ -802,6 +1023,8 @@ Public Class looVF
 		Else
 			ContatoreRiletturaImmagini += 1
 		End If
+
+		'Return PathSfondi & " - " & PathSfondiDir & " - " & QuanteImmaginiSfondi
 
 		Dim Minuti As Integer = (Now.Minute \ 3) * 3
 
@@ -821,14 +1044,28 @@ Public Class looVF
 		'	End If
 		'End If
 
-		Dim NomeFile As String = Server.MapPath(".") & "\Sfondi\Sfondo_" & Minuti & ".txt"
+		Dim NomeFile As String = PathSfondi & "/Sfondo_" & Minuti & ".txt" ' Server.MapPath(".") & "\Sfondi\Sfondo_" & Minuti & ".txt"
+
+		If TipoDB <> "SQLSERVER" Then
+			NomeFile = NomeFile.Replace("\", "/")
+			NomeFile = NomeFile.Replace("//", "/")
+			NomeFile = NomeFile.Replace("/\", "/")
+		End If
 
 		If gf.EsisteFile(NomeFile) Then
 			Immagine = gf.LeggeFileIntero(NomeFile)
 		Else
 			gf.ApreFileDiTestoPerScrittura(NomeFile)
 
-			For Each foundFile As String In My.Computer.FileSystem.GetFiles(Server.MapPath(".") & "\Sfondi")
+			Dim Perc As String = PathSfondi & "\"
+
+			If TipoDB <> "SQLSERVER" Then
+				Perc = Perc.Replace("\", "/")
+				Perc = Perc.Replace("//", "/")
+				Perc = Perc.Replace("/\", "/")
+			End If
+
+			For Each foundFile As String In My.Computer.FileSystem.GetFiles(Perc)
 				Dim conta As Integer = 0
 
 				While gf.EsisteFile(foundFile)
@@ -844,7 +1081,7 @@ Public Class looVF
 			Static x As Random = New Random()
 			Dim y As Long = x.Next(QuanteImmaginiSfondi)
 
-			Immagine = y.ToString & ";" & ListaImmagini.Item(y).Replace(Path, "") & ";"
+			Immagine = y.ToString & ";" & ListaImmagini.Item(y).Replace(PathSfondiDir, "") & ";"
 
 			gf.ScriveTestoSuFileAperto(Immagine)
 			gf.ChiudeFileDiTestoDopoScrittura()

@@ -66,6 +66,43 @@ Public Class clsGestioneDB
 		Return Conn
 	End Function
 
+	Private Function ConverteStringaPerLinux(Sql As String) As String
+		Dim Sql2 As String = Sql
+
+		If Sql2.ToUpper.Trim.StartsWith("INSERT INTO ") Then
+			Dim a As Integer = Sql2.ToUpper.IndexOf(" VALUES")
+
+			If a = 0 Then
+				a = Sql2.ToUpper.IndexOf(" SELECT")
+			End If
+			If a > 0 Then
+				Dim inizio As String = Mid(Sql2, 1, a)
+				Dim modificato As String = inizio.ToLower
+				Sql2 = Sql2.Replace(inizio, modificato)
+			End If
+		Else
+			If Sql2.ToUpper.Trim.StartsWith("UPDATE ") Then
+				Dim a As Integer = Sql2.ToUpper.IndexOf(" SET ")
+
+				If a > 0 Then
+					Dim inizio As String = Mid(Sql2, 1, a)
+					Dim modificato As String = inizio.ToLower
+					Sql2 = Sql2.Replace(inizio, modificato)
+				End If
+			Else
+				Sql2 = Sql2.ToLower()
+			End If
+		End If
+
+		Sql2 = Sql2.Replace("[", "")
+		Sql2 = Sql2.Replace("]", "")
+		Sql2 = Sql2.Replace("dbo.", "")
+
+		'Sql2 = Sql2.Replace("generale", "Generale")
+
+		Return Sql2
+	End Function
+
 	Public Function EsegueSql(MP As String, Sql As String, Connessione As String, Optional ModificaQuery As Boolean = True) As String
 		Dim Ritorno As String = "*"
 		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
@@ -82,6 +119,18 @@ Public Class clsGestioneDB
 			Errore = Conn
 		End If
 
+		Dim Sql2 As String = ""
+
+		If ModificaQuery Then
+			If TipoDB = "SQLSERVER" Then
+				Sql2 = Sql
+			Else
+				Sql2 = ConverteStringaPerLinux(Sql)
+			End If
+		Else
+			Sql2 = Sql
+		End If
+
 		If effettuaLog And Not HttpContext.Current Is Nothing Then
 			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
@@ -89,24 +138,6 @@ Public Class clsGestioneDB
 			ThreadScriveLog(Datella & ": Esecuzione SQL")
 			ThreadScriveLog(Datella & ": Tipo db: " & TipoDB)
 			ThreadScriveLog(Datella & ": Connessione: " & Connessione)
-
-			Dim Sql2 As String = ""
-
-			If ModificaQuery Then
-				If TipoDB = "SQLSERVER" Then
-					Sql2 = Sql
-				Else
-					Sql2 = Sql.ToLower()
-					Sql2 = Sql2.Replace("[", "")
-					Sql2 = Sql2.Replace("]", "")
-					Sql2 = Sql2.Replace("dbo.", "")
-
-					Sql2 = Sql2.Replace("generale", "Generale")
-				End If
-			Else
-				Sql2 = Sql
-			End If
-
 			ThreadScriveLog(Datella & ": SQL = " & Sql2)
 			If Errore <> "" Then
 				ThreadScriveLog(Datella & ": " & Errore)
@@ -118,7 +149,7 @@ Public Class clsGestioneDB
 			' Routine che esegue una query sul db
 			If TipoDB = "SQLSERVER" Then
 				Try
-					Conn.Execute(Sql)
+					Conn.Execute(Sql2)
 					If effettuaLog Then
 						ThreadScriveLog(Datella & ": OK")
 					End If
@@ -130,7 +161,7 @@ Public Class clsGestioneDB
 				End Try
 			Else
 				Try
-					Ritorno = mdb.EsegueSql(Sql, ModificaQuery)
+					Ritorno = mdb.EsegueSql(Sql2, ModificaQuery)
 					If Ritorno.ToUpper.Trim <> "OK" Then
 						Ritorno = StringaErrore & " " & Ritorno
 					End If
@@ -182,6 +213,18 @@ Public Class clsGestioneDB
 			Errore = Conn
 		End If
 
+		Dim Sql2 As String = ""
+
+		If ModificaQuery Then
+			If TipoDB = "SQLSERVER" Then
+				Sql2 = Sql
+			Else
+				Sql2 = ConverteStringaPerLinux(Sql)
+			End If
+		Else
+			Sql2 = Sql
+		End If
+
 		If effettuaLog And Not HttpContext.Current Is Nothing Then
 			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
@@ -189,24 +232,6 @@ Public Class clsGestioneDB
 			ThreadScriveLog(Datella & ": Lettura Query")
 			ThreadScriveLog(Datella & ": Tipo db: " & TipoDB)
 			ThreadScriveLog(Datella & ": Connessione: " & Connessione)
-
-			Dim Sql2 As String = ""
-
-			If ModificaQuery Then
-				If TipoDB = "SQLSERVER" Then
-					Sql2 = Sql
-				Else
-					Sql2 = Sql.ToLower()
-					Sql2 = Sql2.Replace("[", "")
-					Sql2 = Sql2.Replace("]", "")
-					Sql2 = Sql2.Replace("dbo.", "")
-
-					Sql2 = Sql2.Replace("generale", "Generale")
-				End If
-			Else
-				Sql2 = Sql
-			End If
-
 			ThreadScriveLog(Datella & ": SQL = " & Sql2)
 			If Errore <> "" Then
 				ThreadScriveLog(Datella & ": ERROR: " & Errore)
@@ -223,7 +248,7 @@ Public Class clsGestioneDB
 				Rec = New Recordset
 
 				Try
-					Rec.Open(Sql, Conn)
+					Rec.Open(Sql2, Conn)
 				Catch ex As Exception
 					Rec = StringaErrore & " " & ex.Message
 					If effettuaLog Then
@@ -232,7 +257,7 @@ Public Class clsGestioneDB
 				End Try
 			Else
 				Try
-					Rec = mdb.Lettura(Sql, ModificaQuery)
+					Rec = mdb.Lettura(Sql2, ModificaQuery)
 					If TypeOf (Rec) Is String Then
 						If effettuaLog Then
 							ThreadScriveLog(Datella & ": ERRORE SQL -> " & Rec)
