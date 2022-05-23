@@ -612,6 +612,43 @@ Public Class looVF
 		Return OutPut.Replace(PathBase, "")
 	End Function
 
+	Public Function SistemaPercorso(pathPassato As String) As String
+		Dim pp As String = pathPassato
+
+		pp = pp.Replace(vbCrLf, "").Trim()
+		If Strings.Right(pp, 1) = "\" Or Strings.Right(pp, 1) = "/" Then
+			pp = Mid(pp, 1, pp.Length - 1)
+		End If
+
+		Return pp
+	End Function
+
+	Public Sub ScriveLog(MP As String, Squadra As String, NomeFile As String, Cosa As String)
+		If Not effettuaLog Then
+			Return
+		End If
+
+		If Squadra = "" Then
+			Squadra = "NessunaSquadra"
+		End If
+
+		Dim gf As New GestioneFilesDirectory
+
+		'If nomeFileLogMail = "" Then
+
+		Dim nomeFileLog As String = Server.MapPath(".") & "\" & NomeFile & ".txt"
+		gf.CreaDirectoryDaPercorso(nomeFileLog)
+		'End If
+
+		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+		gf.ApreFileDiTestoPerScrittura(nomeFileLog)
+		gf.ScriveTestoSuFileAperto(Datella & " " & Cosa)
+		gf.ChiudeFileDiTestoDopoScrittura()
+
+		gf = Nothing
+	End Sub
+
 	<WebMethod()>
 	Public Function RitornaFilesNuovo(idTipologia As String, Categoria As String) As String
 		If StaLeggendoImmagini Then
@@ -648,7 +685,7 @@ Public Class looVF
 
 			Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 			If ConnessioneSQL <> "" Then
-				Dim idCategoria As Integer = 0
+				Dim idCategoria As Integer = -1
 
 				Try
 					gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Logs")
@@ -675,8 +712,26 @@ Public Class looVF
 						For Each p As String In PathVideo
 							Dim pp() As String = p.Split(";")
 							Dim Nome As String = pp(0)
+							'Dim idCategoria As Integer = -1
+							'Dim idVecchioCategoria As Integer = 0
 
 							If Nome.ToUpper.Trim = Categoria.ToUpper.Trim Then
+								'	If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
+								'		idVecchioCategoria = idCategoria
+
+								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
+								'		Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+								'		Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+								'		If Rec.Eof = False Then
+								'			idCategoria = Rec("idCategoria").Value
+								'			gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
+								'		Else
+								'			gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
+								'			Return "ERROR: Categoria non trovata"
+								'		End If
+								'		Rec.Close
+								'	End If
+
 								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione video: " & p)
 
 								'idCategoria += 1
@@ -717,6 +772,7 @@ Public Class looVF
 									Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 									If sRitorno <> "OK" Then
 										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore: " & sRitorno)
+										gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
 
 										StaLeggendoImmagini = False
 
@@ -742,14 +798,32 @@ Public Class looVF
 					gf.ScriveTestoSuFileAperto(dataAttuale() & " - IMMAGINI")
 					gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
 					Conta = 0
-					idCategoria = 0
+					'Dim idCategoria As Integer = -1
+					'Dim idVecchioCategoria As Integer = 0
+
 					Try
 						For Each p As String In PathImmagini
 							Dim pp() As String = p.Split(";")
 							Dim Nome As String = pp(0)
 
-							If Nome.ToUpper.Trim = Categoria.ToUpper.Trim Then
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione immagini: " & p)
+							If Nome.ToUpper.Trim = Categoria.ToUpper.Trim And Not Nome.ToUpper.Contains(".NOMEDIA") Then
+						'If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
+						'	idVecchioCategoria = idCategoria
+
+						'	gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
+						'	Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+						'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+						'	If Rec.Eof = False Then
+						'		idCategoria = Rec("idCategoria").Value
+						'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
+						'	Else
+						'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
+						'		Return "ERROR: Categoria non trovata"
+						'	End If
+						'	Rec.Close
+						'End If
+
+						gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione immagini: " & p)
 
 								'idCategoria += 1
 								'Sql = "Insert Into categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
@@ -788,6 +862,7 @@ Public Class looVF
 									Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 									If sRitorno <> "OK" Then
 										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore: " & sRitorno)
+										gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
 										StaLeggendoImmagini = False
 
 										gf.ChiudeFileDiTestoDopoScrittura()
