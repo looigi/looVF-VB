@@ -16,6 +16,7 @@ Public Class looVF
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
+		Dim NuovaRicerca As String = idTipologia & ";" & Categoria & ";" & Filtro
 
 		'Dim gf As New GestioneFilesDirectory
 		'Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
@@ -61,15 +62,21 @@ Public Class looVF
 				Loop
 				Rec.Close
 			Else
-				Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
-				If idCategoria <> "" Then
-					Sql &= " And idCategoria=" & idCategoria
+				If NuovaRicerca <> VecchiaRicerca Then
+					Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+					If idCategoria <> "" Then
+						Sql &= " And idCategoria=" & idCategoria
+					End If
+					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+					Quante = Rec(0).Value
+					Rec.Close
+					VecchioQuante = Quante
+					'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
+					VecchiaRicerca = NuovaRicerca
+				Else
+					Quante = vecchioquante
 				End If
-				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-				Quante = Rec(0).Value
-				Rec.Close
-				'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
 			End If
 
 			Static x As Random = New Random()
@@ -106,9 +113,9 @@ Public Class looVF
 
 			Ritorno = (Inizio + y).ToString & ";" & idCategoria & ";" & Quante & ";" & Categoria
 		End If
-			'gf.ScriveTestoSuFileAperto(NomeFile, Ritorno)
+		'gf.ScriveTestoSuFileAperto(NomeFile, Ritorno)
 
-			Return Ritorno
+		Return Ritorno
 	End Function
 
 	<WebMethod()>
@@ -916,6 +923,7 @@ Public Class looVF
 			gf.ScriveTestoSuFileAperto(dataAttuale() & ex.Message)
 		End Try
 
+		VecchiaRicerca = ""
 		StaLeggendoImmagini = False
 
 		gf.ChiudeFileDiTestoDopoScrittura()
