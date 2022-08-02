@@ -26,57 +26,91 @@ Public Class looVF
 			Dim idCategoria As String = ""
 			Dim Altro As String = ""
 
-			If Filtro <> "" Then
-				Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
-			End If
 			'gf.ScriveTestoSuFileAperto(NomeFile, idTipologia & "-" & Categoria)
-
-			If Categoria <> "" And Categoria <> "Tutto" Then
-				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
-				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-				If Rec.Eof = False Then
-					idCategoria = Rec("idCategoria").Value
-				Else
-					Return "ERROR: Categoria non trovata"
-				End If
-				Rec.Close
-			End If
 
 			Dim Quante As Long = 0
 			Dim Indici As New List(Of Integer)
+			Dim Categorie As New List(Of Integer)
+			Dim NomeCategorie As New List(Of String)
 
-			If Filtro <> "" Then
-				Quante = 0
-				Sql = "Select * From Dati Where idTipologia=" & idTipologia & " " & Altro
-				If idCategoria <> "" Then
-					Sql &= " And idCategoria=" & idCategoria
+			If Categoria <> "Preferiti" And Categoria <> "Preferiti Prot" Then
+				If Filtro <> "" Then
+					Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
 				End If
-				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-				Do Until Rec.Eof
-					Indici.Add(Rec("Progressivo").Value)
 
-					Quante += 1
-					Rec.MoveNext
-				Loop
-				Rec.Close
-			Else
-				If NuovaRicerca <> VecchiaRicerca Then
-					Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+				If Categoria <> "" And Categoria <> "Tutto" Then
+					Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+					If Rec.Eof = False Then
+						idCategoria = Rec("idCategoria").Value
+					Else
+						Return "ERROR: Categoria non trovata"
+					End If
+					Rec.Close
+				End If
+
+				If Filtro <> "" Then
+					Quante = 0
+					Sql = "Select * From Dati Where idTipologia=" & idTipologia & " " & Altro
 					If idCategoria <> "" Then
 						Sql &= " And idCategoria=" & idCategoria
 					End If
 					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
 					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-					Quante = Rec(0).Value
+					Do Until Rec.Eof
+						Indici.Add(Rec("Progressivo").Value)
+
+						Quante += 1
+						Rec.MoveNext
+					Loop
 					Rec.Close
-					VecchioQuante = Quante
-					'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
-					VecchiaRicerca = NuovaRicerca
 				Else
-					Quante = vecchioquante
+					If NuovaRicerca <> VecchiaRicerca Then
+						Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia
+						If idCategoria <> "" Then
+							Sql &= " And idCategoria=" & idCategoria
+						End If
+						'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+						Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+						Quante = Rec(0).Value
+						Rec.Close
+						VecchioQuante = Quante
+						'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
+						VecchiaRicerca = NuovaRicerca
+					Else
+						Quante = VecchioQuante
+					End If
 				End If
+			Else
+				If Filtro <> "" Then
+					Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
+				End If
+
+				Quante = 0
+
+				Dim NomeTabella As String = ""
+
+				If Categoria = "Preferiti" Then
+					NomeTabella = "Preferiti"
+				Else
+					NomeTabella = "PreferitiProt"
+				End If
+				Sql = "Select A.*, B.NomeFile, C.Categoria From " & NomeTabella & " A " &
+					"Left Join Dati B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria And A.Progressivo=B.Progressivo " &
+					"Left Join Categorie C On A.idTipologia=C.idTipologia And A.idCategoria=C.idCategoria " &
+					"Where A.idTipologia=" & idTipologia & " " & Altro
+				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Do Until Rec.Eof
+					Indici.Add(Rec("Progressivo").Value)
+					Categorie.Add(Rec("idCategoria").Value)
+					NomeCategorie.Add(Rec("Categoria").Value)
+
+					Quante += 1
+					Rec.MoveNext
+				Loop
+				Rec.Close
 			End If
 
 			Static x As Random = New Random()
@@ -84,7 +118,7 @@ Public Class looVF
 			Dim Inizio As Long = 0
 
 			'If idCategoria <> "" Then
-			If Filtro = "" Then
+			If Filtro = "" And Categoria <> "Preferiti" And Categoria <> "Preferiti Prot" Then
 				Sql = "Select Coalesce(Min(Progressivo),0) From Dati Where idTipologia=" & idTipologia & " " & Altro & " "
 				If idCategoria <> "" Then
 					Sql &= "And idCategoria=" & idCategoria
@@ -101,6 +135,12 @@ Public Class looVF
 				End If
 				y = 0
 			End If
+
+			If Categoria = "Preferiti" Or Categoria = "Preferiti Prot" Then
+				idCategoria = Categorie.Item(y)
+				Categoria = NomeCategorie.Item(y)
+			End If
+
 			'Else
 			'	idCategoria = -1
 			'End If
@@ -315,6 +355,32 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function ImpostaPreferito(idTipologia As String, idCategoria As String, idMultimedia As String, SiNo As String, Protetto As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim NomeTabella As String = "Preferiti"
+
+			If Protetto = "S" Then
+				NomeTabella = "PreferitiProt"
+			End If
+
+			If SiNo = "S" Then
+				Sql = "Insert Into " & nometabella & " Values (" & idCategoria & ", " & idTipologia & ", " & idMultimedia & ")"
+			Else
+				Sql = "Delete From " & nometabella & " Where idcategoria=" & idCategoria & " And idtipologia=" & idTipologia & " And progressivo=" & idMultimedia
+			End If
+
+			Ritorno = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL)
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaMultimediaDaId(idTipologia As String, idCategoria As String, idMultimedia As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
@@ -324,9 +390,11 @@ Public Class looVF
 		If ConnessioneSQL <> "" Then
 			Dim Rec As Object
 
-			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco, Coalesce(preferiti.idCategoria, -1) As Preferito, Coalesce(preferitiprot.idCategoria, -1) As PreferitoProt From Dati " &
 				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
-				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+				"Left Join preferiti On Dati.idCategoria=preferiti.idCategoria And Dati.idTipologia=preferiti.idTipologia And Dati.progressivo=preferiti.progressivo " &
+				"Left Join preferitiprot On Dati.idCategoria=preferitiprot.idCategoria And Dati.idTipologia=preferitiprot.idTipologia And Dati.progressivo=preferitiprot.progressivo " &
+				"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " And dati.Progressivo=" & idMultimedia
 			' Dim gf As New GestioneFilesDirectory
 			' Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
 			' gf.ScriveTestoSuFileAperto(NomeFile, Sql)
@@ -350,7 +418,11 @@ Public Class looVF
 					Thumb = CreaThumbDaVideo("" & Rec("Categoria").Value, PathOriginale, PathOriginale & Rec("NomeFile").value, Conversione)
 				End If
 
-				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";"
+				Dim Preferito As String = IIf(Val(Rec("Preferito").Value) > -1, "S", "N")
+				If Preferito = "N" Then
+					Preferito = IIf(Val(Rec("PreferitoProt").Value) > -1, "S", "N")
+				End If
+				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";" & Preferito & ";"
 			Else
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
