@@ -12,7 +12,7 @@ Public Class looVF
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String) As String
+	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -113,8 +113,35 @@ Public Class looVF
 				Rec.Close
 			End If
 
+			Dim Ultimo As Integer = -1
+
+			If idTipologia = 1 Then
+				Ultimo = UltimoMultimediaImm
+			Else
+				Ultimo = UltimoMultimediaVid
+			End If
+
 			Static x As Random = New Random()
-			Dim y As Long = x.Next(Quante)
+			Dim y As Long = -1
+			If Random = "S" Or Random = "" Then
+				y = x.Next(Quante)
+			Else
+				If Ultimo <> -1 Then
+					y = Ultimo + 1
+					If y > Quante Then
+						y = 0
+					End If
+				Else
+					y = x.Next(Quante)
+				End If
+			End If
+			If idTipologia = 1 Then
+				UltimoMultimediaImm = y
+			Else
+				UltimoMultimediaVid = y
+			End If
+
+			'Return "Random: " & Random & ";Ultimo Multimedia: " & UltimoMultimedia & ";Y: " & y & ";Quante: " & Quante
 			Dim Inizio As Long = 0
 
 			'If idCategoria <> "" Then
@@ -604,6 +631,103 @@ Public Class looVF
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function ConverteVideo(idTipologia As String, idCategoria As String, idMultimedia As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Barra As String = "\"
+
+		If TipoDB = "SQLSERVER" Then
+			Barra = "\"
+		Else
+			Barra = "/"
+		End If
+
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+		Dim PathVideoInput As String = ""
+		Dim PathVideoOutput As String = ""
+		Dim NomeNuovo As String = ""
+		Dim BytesVecchi As Long
+		Dim BytesNuovi As Long
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
+				"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
+				"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If Rec.Eof = False Then
+				PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+				Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
+				NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+				For i As Integer = Len(NomeNuovo) To 1 Step -1
+					If Mid(NomeNuovo, i, 1) = Barra Then
+						NomeNuovo = Mid(NomeNuovo, i + 1, NomeNuovo.Length)
+					End If
+				Next
+				PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+
+				Rec.Close
+
+				'Return "ERROR: File input: " & PathVideoInput & " - File Output: " & PathVideoOutput & " - NomeNuovo: " & NomeNuovo
+
+				If gf.EsisteFile(PathVideoInput) Then
+					gf.EliminaFileFisico(PathVideoOutput)
+
+					Dim processoFFMpeg As Process = New Process()
+					Dim pi As ProcessStartInfo = New ProcessStartInfo()
+
+					' -an -i input.mov -vcodec libx264 -pix_fmt yuv420p -profile:v baseline -level 3 output2.mp4
+					pi.Arguments = "-an -i """ & PathVideoInput & """ -vcodec libx264 -pix_fmt yuv420p -profile:v baseline -level 3 """ & PathVideoOutput & """"
+
+					Dim Comando As String
+
+					If TipoDB <> "SQLSERVER" Then
+						Comando = "ffmpeg"
+					Else
+						Comando = Server.MapPath(".") & "\ffmpeg.exe"
+					End If
+
+					pi.FileName = Comando
+					' gf.ScriveTestoSuFileAperto(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
+					pi.WindowStyle = ProcessWindowStyle.Normal
+					processoFFMpeg.StartInfo = pi
+					processoFFMpeg.StartInfo.UseShellExecute = False
+					processoFFMpeg.StartInfo.RedirectStandardOutput = True
+					processoFFMpeg.StartInfo.RedirectStandardError = True
+					processoFFMpeg.Start()
+
+					Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
+					Ritorno = OutPutP & "****"
+					Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
+					Ritorno &= Err & "*****"
+
+					' Return ritorno
+
+					processoFFMpeg.WaitForExit()
+
+					Sql = "Update dati Set NomeFile='" & NomeNuovo.Replace("'", "''") & "' Where idCategoria=" & idCategoria & " And idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+					Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+					If sRitorno <> "OK" Then
+						Return "ERROR: " & sRitorno
+					Else
+						BytesVecchi = gf.TornaDimensioneFile(PathVideoInput)
+						BytesNuovi = gf.TornaDimensioneFile(PathVideoOutput)
+						gf.EliminaFileFisico(PathVideoInput)
+					End If
+				Else
+					Return "ERROR: File non rilevato -> " & PathVideoInput
+				End If
+			Else
+				Return "ERROR: Nessun multimedia rilevato"
+			End If
+		End If
+
+		Return NomeNuovo & ";" & BytesVecchi & ";" & BytesNuovi
+	End Function
+
 	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String, Conversione As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoThumbs.txt")
@@ -663,6 +787,7 @@ Public Class looVF
 			' Return pi.Arguments
 
 			Dim Comando As String
+
 			If TipoDB <> "SQLSERVER" Then
 				Comando = "ffmpeg"
 			Else

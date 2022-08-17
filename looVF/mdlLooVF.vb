@@ -11,6 +11,8 @@
 	Public timerLog As New Timers.Timer
 	Public VecchiaRicerca As String = ""
 	Public VecchioQuante As Long
+	Public UltimoMultimediaImm As Long = -1
+	Public UltimoMultimediaVid As Long = -1
 
 	Public Function dataAttuale() As String
 		Return Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
