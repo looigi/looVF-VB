@@ -2,6 +2,8 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
+Imports System.Threading
+Imports System.Timers
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -10,6 +12,18 @@ Imports System.IO
 <ToolboxItem(False)>
 Public Class looVF
 	Inherits System.Web.Services.WebService
+
+	Dim processoFFMpeg As Process = New Process()
+	Dim PathVideoInput As String = ""
+	Dim PathVideoOutput As String = ""
+	Dim idTipologiaGlobale As String = ""
+	Dim idCategoriaGlobale As String = ""
+	Dim idMultimediaGlobale As String = ""
+	Dim nomeNuovoGlobale As String = ""
+	Dim bytesVecchiGlobale As String = ""
+	Dim bytesNuoviGlobale As String = ""
+	Dim NumeroFrames As String = ""
+	Dim NomeFileDaConvertire As String = ""
 
 	<WebMethod()>
 	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String) As String
@@ -462,10 +476,23 @@ Public Class looVF
 
 	<WebMethod()>
 	Public Function StaEseguendoRefresh() As String
+		Dim StaConvertendoVideo As String = "N"
+		Dim DeveRinominareVideoConvertito As String = ""
+		Dim NomeFile1 As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
+		Dim NomeFile2 As String = Server.MapPath(".") & "/Logs/FinitaConversione.txt"
+		Dim gf As New GestioneFilesDirectory
+
+		If gf.EsisteFile(NomeFile1) Then
+			StaConvertendoVideo = "S"
+		End If
+		If gf.EsisteFile(NomeFile2) Then
+			DeveRinominareVideoConvertito = gf.LeggeFileIntero(NomeFile2)
+		End If
+
 		If StaLeggendoImmagini Then
-			Return "Sto caricando multimedia"
+			Return "Sto caricando multimedia;" & StaConvertendoVideo & ";" & DeveRinominareVideoConvertito
 		Else
-			Return "NON Sto caricando multimedia"
+			Return "NON Sto caricando multimedia;" & StaConvertendoVideo & ";" & DeveRinominareVideoConvertito
 		End If
 	End Function
 
@@ -631,6 +658,115 @@ Public Class looVF
 		Return Ritorno
 	End Function
 
+	'<WebMethod()>
+	'Public Function EliminaMultimedia(idTipologia As String, idCategoria As String, idMultimedia As String) As String
+	'	Dim gf As New GestioneFilesDirectory
+	'	Dim Barra As String = "\"
+
+	'	If TipoDB = "SQLSERVER" Then
+	'		Barra = "\"
+	'	Else
+	'		Barra = "/"
+	'	End If
+
+	'	Dim Db As New clsGestioneDB(TipoDB)
+	'	Dim Ritorno As String = ""
+	'	Dim Sql As String
+	'	Dim PathVideoInput As String = ""
+
+	'	Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+	'	If ConnessioneSQL <> "" Then
+	'		Dim Rec As Object
+	'		Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
+	'			"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
+	'			"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+	'		Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+	'		If Rec.Eof = False Then
+	'			PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+	'		End If
+	'	End If
+
+	'	Return Ritorno
+	'End Function
+
+	<WebMethod()>
+	Public Function RitornaInformazioniConversione() As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Ritorno As String = ""
+		Dim NomeFile As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
+
+		Ritorno = gf.LeggeFileIntero(NomeFile)
+
+		Return ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function FinisceConversioneVideo(idTipologia As String, idCategoria As String, idMultimedia As String, SoloRitorno As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim NomeNuovo As String = ""
+		Dim BytesVecchi As Long
+		Dim BytesNuovi As Long
+
+		If SoloRitorno = "N" Then
+			Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+			If ConnessioneSQL <> "" Then
+				Dim Rec As Object
+				Dim PathVideoInput As String = ""
+				Dim PathVideoOutput As String = ""
+				Dim Barra As String = "\"
+
+				If TipoDB = "SQLSERVER" Then
+					Barra = "\"
+				Else
+					Barra = "/"
+				End If
+
+				Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
+				"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
+				"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				If Rec.Eof = False Then
+					PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+					Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
+					NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+					For i As Integer = Len(NomeNuovo) To 1 Step -1
+						If Mid(NomeNuovo, i, 1) = Barra Then
+							NomeNuovo = Mid(NomeNuovo, i + 1, NomeNuovo.Length)
+						End If
+					Next
+					PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+
+					Sql = "Update dati Set NomeFile='" & NomeNuovo.Replace("'", "''") & "' Where idCategoria=" & idCategoria & " And idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+					Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+					If sRitorno <> "OK" Then
+						Return "ERROR: " & sRitorno
+					Else
+						BytesVecchi = gf.TornaDimensioneFile(PathVideoInput)
+						BytesNuovi = gf.TornaDimensioneFile(PathVideoOutput)
+						gf.EliminaFileFisico(PathVideoInput)
+
+						nomeNuovoGlobale = NomeNuovo
+						bytesVecchiGlobale = BytesVecchi
+						bytesNuoviGlobale = BytesNuovi
+
+						' Dim rit As String = gf.CreaAggiornaFile(Server.MapPath(".") & "/Logs/FiniscoConversione.txt", "RINIOMINA: " & nomeNuovoGlobale & ";" & bytesVecchiGlobale & ";" & bytesNuoviGlobale)
+
+						Dim NomeFile As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
+						gf.EliminaFileFisico(NomeFile)
+
+						gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/FinitaConversione.txt")
+					End If
+				End If
+			End If
+		End If
+
+		Return nomeNuovo & ";" & bytesVecchi & ";" & bytesNuovi
+	End Function
+
 	<WebMethod()>
 	Public Function ConverteVideo(idTipologia As String, idCategoria As String, idMultimedia As String) As String
 		Dim gf As New GestioneFilesDirectory
@@ -645,11 +781,18 @@ Public Class looVF
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
-		Dim PathVideoInput As String = ""
-		Dim PathVideoOutput As String = ""
 		Dim NomeNuovo As String = ""
-		Dim BytesVecchi As Long
-		Dim BytesNuovi As Long
+		Dim BytesVecchi As Long = -1
+		Dim BytesNuovi As Long = -1
+
+		idTipologiaGlobale = idTipologia
+		idCategoriaGlobale = idCategoria
+		idMultimediaGlobale = idMultimedia
+
+		Dim NomeFile As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
+		If gf.EsisteFile(NomeFile) Then
+			Return "ERROR: Conversione in corso"
+		End If
 
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		If ConnessioneSQL <> "" Then
@@ -660,6 +803,7 @@ Public Class looVF
 			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 			If Rec.Eof = False Then
 				PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+				NomeFileDaConvertire = Rec("NomeFile").Value
 				Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
 				NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
 				For i As Integer = Len(NomeNuovo) To 1 Step -1
@@ -674,15 +818,73 @@ Public Class looVF
 				'Return "ERROR: File input: " & PathVideoInput & " - File Output: " & PathVideoOutput & " - NomeNuovo: " & NomeNuovo
 
 				If gf.EsisteFile(PathVideoInput) Then
+					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/ffmpegout.txt")
+					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames1.txt")
+					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames2.txt")
+					' gf.EliminaFileFisico(Server.MapPath(".") & "/FiniscoConversione.txt")
 					gf.EliminaFileFisico(PathVideoOutput)
 
-					Dim processoFFMpeg As Process = New Process()
+					' Ritorna numero frames
+					Dim processoFFMpeg2 As Process = New Process()
 					Dim pi As ProcessStartInfo = New ProcessStartInfo()
+					Dim Comando As String = ""
+
+					Comando = "ffprobe"
+					pi.Arguments = "-v error -select_streams v:0 -count_frames -show_entries stream=nb_read_frames -print_format csv """ & PathVideoInput & """"
+
+					pi.FileName = Comando
+					pi.WindowStyle = ProcessWindowStyle.Normal
+					processoFFMpeg2.StartInfo = pi
+					processoFFMpeg2.StartInfo.UseShellExecute = False
+					processoFFMpeg2.StartInfo.RedirectStandardOutput = True
+					processoFFMpeg2.StartInfo.RedirectStandardError = True
+					processoFFMpeg2.Start()
+
+					Dim ffReader As StreamReader
+					Dim ffReader2 As StreamReader
+					Dim strFFOUT As String = "INIZIO"
+					Dim strFFOUT2 As String = "INIZIO"
+
+					ffReader = processoFFMpeg2.StandardError
+					ffReader2 = processoFFMpeg2.StandardOutput
+
+					NumeroFrames = ""
+					Do
+						strFFOUT = ffReader.ReadLine
+						strFFOUT2 = ffReader2.ReadLine
+
+						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames1.txt")
+						gf.ScriveTestoSuFileAperto(strFFOUT)
+						gf.ChiudeFileDiTestoDopoScrittura()
+
+						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames2.txt")
+						gf.ScriveTestoSuFileAperto(strFFOUT2)
+						gf.ChiudeFileDiTestoDopoScrittura()
+
+						If strFFOUT2.Contains("stream,") Then         'if the strFFOut contains the string
+							NumeroFrames = strFFOUT2.Replace("stream,", "")
+							Exit Do
+						End If
+
+						'If strFFOUT2.Contains("[/FRAME]") Then         'if the strFFOut contains the string
+						'	Exit Do
+						'End If
+					Loop Until strFFOUT = Nothing Or strFFOUT = ""
+					' Ritorna numero frames
+
+					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames1.txt")
+					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames2.txt")
+
+					If NumeroFrames = "" Then
+						Return "ERROR: Non riesco a rilevare il numero dei frames"
+					End If
+					'Return "FRAMES: " & NumeroFrames
+
+					processoFFMpeg = New Process()
+					pi = New ProcessStartInfo()
 
 					' -an -i input.mov -vcodec libx264 -pix_fmt yuv420p -profile:v baseline -level 3 output2.mp4
-					pi.Arguments = "-an -i """ & PathVideoInput & """ -vcodec libx264 -pix_fmt yuv420p -profile:v baseline -level 3 """ & PathVideoOutput & """"
-
-					Dim Comando As String
+					pi.Arguments = "-an -i """ & PathVideoInput & """ -vcodec libx264 -pix_fmt yuv420p -profile:v baseline -level 3 """ & PathVideoOutput & """" ' > " & Server.MapPath(".") & "/err.txt 2> " & Server.MapPath(".") & "/ffmpegout.txt"
 
 					If TipoDB <> "SQLSERVER" Then
 						Comando = "ffmpeg"
@@ -691,7 +893,6 @@ Public Class looVF
 					End If
 
 					pi.FileName = Comando
-					' gf.ScriveTestoSuFileAperto(Server.MapPath(".") & "\Buttami.txt", pi.Arguments)
 					pi.WindowStyle = ProcessWindowStyle.Normal
 					processoFFMpeg.StartInfo = pi
 					processoFFMpeg.StartInfo.UseShellExecute = False
@@ -699,24 +900,30 @@ Public Class looVF
 					processoFFMpeg.StartInfo.RedirectStandardError = True
 					processoFFMpeg.Start()
 
-					Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
-					Ritorno = OutPutP & "****"
-					Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
-					Ritorno &= Err & "*****"
+					'Dim OutPutP As String = processoFFMpeg.StandardOutput.ReadToEnd()
+					'Ritorno = OutPutP & "****"
+					'Dim Err As String = processoFFMpeg.StandardError.ReadToEnd()
+					'Ritorno &= Err & "*****"
 
 					' Return ritorno
 
-					processoFFMpeg.WaitForExit()
+					'Dim timerLog As Timers.Timer = Nothing
 
-					Sql = "Update dati Set NomeFile='" & NomeNuovo.Replace("'", "''") & "' Where idCategoria=" & idCategoria & " And idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
-					Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-					If sRitorno <> "OK" Then
-						Return "ERROR: " & sRitorno
-					Else
-						BytesVecchi = gf.TornaDimensioneFile(PathVideoInput)
-						BytesNuovi = gf.TornaDimensioneFile(PathVideoOutput)
-						gf.EliminaFileFisico(PathVideoInput)
-					End If
+					timerLog = New Timers.Timer(100)
+					AddHandler timerLog.Elapsed, New ElapsedEventHandler(AddressOf ContinuaConversione)
+					timerLog.Start()
+
+					' processoFFMpeg.WaitForExit()
+
+					'Sql = "Update dati Set NomeFile='" & NomeNuovo.Replace("'", "''") & "' Where idCategoria=" & idCategoria & " And idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+					'Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+					'If sRitorno <> "OK" Then
+					'	Return "ERROR: " & sRitorno
+					'Else
+					'	BytesVecchi = gf.TornaDimensioneFile(PathVideoInput)
+					'	BytesNuovi = gf.TornaDimensioneFile(PathVideoOutput)
+					'	gf.EliminaFileFisico(PathVideoInput)
+					'End If
 				Else
 					Return "ERROR: File non rilevato -> " & PathVideoInput
 				End If
@@ -725,8 +932,124 @@ Public Class looVF
 			End If
 		End If
 
-		Return NomeNuovo & ";" & BytesVecchi & ";" & BytesNuovi
+		Return "*"
 	End Function
+
+	Private Sub ContinuaConversione()
+		timerLog.Enabled = False
+
+		Dim gf As New GestioneFilesDirectory
+		Dim strFFOUT As String = "INIZIO"
+		Dim Inizio As String = Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+		Dim InizioData As DateTime = Now
+
+		Dim ffReader As StreamReader
+		Dim currentFramestr As String = ""
+		Dim currentFrameInt As Integer = -1
+
+		ffReader = processoFFMpeg.StandardError
+
+		Do
+			strFFOUT = ffReader.ReadLine
+			If strFFOUT.Contains("frame=") Then         'if the strFFOut contains the string
+				currentFramestr = Mid(strFFOUT, 7, 6)   'grab the next part after the string 'frame='
+				currentFrameInt = CInt(currentFramestr) 'convert the string back to an integer
+			End If
+
+			Try
+				Dim dime1 As Long = gf.TornaDimensioneFile(PathVideoInput)
+				Dim dime2 As Long = gf.TornaDimensioneFile(PathVideoOutput)
+				Dim sDime1 As String = ""
+				Dim sDime2 As String = ""
+
+				If dime1 > 1024 * 1024 * 1024 Then
+					sDime1 = (CInt((dime1 / 1024 / 1024 / 1024) * 100) / 100) & " Gb."
+				Else
+
+					If dime1 > 1024 * 1024 Then
+						sDime1 = (CInt((dime1 / 1024 / 1024) * 100) / 100) & " Mb."
+					Else
+						If dime1 > 1024 Then
+							sDime1 = (CInt((dime1 / 1024) * 100) / 100) & " Kb."
+						Else
+							sDime1 = dime1 & " B."
+						End If
+					End If
+				End If
+
+				If dime2 > 1024 * 1024 * 1024 Then
+					sDime2 = (CInt((dime2 / 1024 / 1024 / 1024) * 100) / 100) & " Gb."
+				Else
+					If dime2 > 1024 * 1024 Then
+						sDime2 = (CInt((dime2 / 1024 / 1024) * 100) / 100) & " Mb."
+					Else
+						If dime2 > 1024 Then
+							sDime2 = (CInt((dime2 / 1024) * 100) / 100) & " Kb."
+						Else
+							sDime2 = dime2 & " B."
+						End If
+					End If
+				End If
+
+				Dim perc As Single = CInt((dime2 / dime1) * 100) ' / 100
+				Dim Scritta As String = ""
+
+				Dim differenza As Integer = DateDiff("s", InizioData, Now)
+				Dim Ore As Integer = 0
+				Dim Minuti As Integer = 0
+				Dim Secondi As Integer = 0
+				While differenza > 59
+					differenza -= 60
+					Minuti += 1
+					If Minuti > 59 Then
+						Minuti = 0
+						Ore += 1
+					End If
+				End While
+				Secondi = differenza
+				Dim DataDaStampare As String = Format(Ore, "00") & ":" & Format(Minuti, "00") & ":" & Format(Secondi, "00")
+
+				Scritta = NomeFileDaConvertire & ";"
+				Scritta &= "Ora inizio UTC: " & Inizio & " - Tempo Impiegato: " & DataDaStampare & ";"
+				If currentFrameInt <> -1 Then
+					Dim perc2 As Single = CInt((currentFrameInt / Val(NumeroFrames)) * 100) ' / 100
+
+					Scritta &= "Frame: " & currentFrameInt & "/" & NumeroFrames & " " & perc2 & "%;"
+				End If
+				'Scritta &= strFFOUT & ";"
+				Scritta &= "Dimensione Origine: " & sDime1 & ";"
+				Scritta &= "Dimensione Destinazione: " & sDime2 & " " & perc & "%;"
+				' Scritta &= "Perc.: " & perc & "%"
+
+				Dim rit2 As String = gf.CreaAggiornaFile(Server.MapPath(".") & "/Logs/ffmpegout.txt", Scritta)
+				'If rit.Contains(StringaErrore) Then
+				'	Return rit
+				'End If
+
+				'If strFFOUT.Contains("[libx264") Then
+				'	Exit Do
+				'End If
+				If currentFrameInt > Val(NumeroFrames) Then
+					Exit Do
+				End If
+			Catch ex As Exception
+				Dim rit2 As String = gf.CreaAggiornaFile(Server.MapPath(".") & "/Logs/ffmpegout.txt", ex.Message)
+			End Try
+		Loop Until processoFFMpeg.HasExited And strFFOUT = Nothing Or strFFOUT = ""
+
+		Dim Tutto As String = ""
+
+		'gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/ffmpegout.txt")
+
+		If gf.EsisteFile(Server.MapPath(".") & "/Logs/FinitaConversione.txt") Then
+			Tutto = gf.LeggeFileIntero(Server.MapPath(".") & "/Logs/FinitaConversione.txt")
+			gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/FinitaConversione.txt")
+		End If
+		Tutto &= idTipologiaGlobale & "*" & idCategoriaGlobale & "*" & idMultimediaGlobale & "§"
+		Dim rit As String = gf.CreaAggiornaFile(Server.MapPath(".") & "/Logs/FinitaConversione.txt", Tutto)
+		'FinisceConversioneVideo(idTipologiaGlobale, idCategoriaGlobale, idMultimediaGlobale, "N")
+		' processoFFMpeg.WaitForExit()
+	End Sub
 
 	Private Function CreaThumbDaVideo(Categoria As String, Percorso As String, Video As String, Conversione As String) As String
 		Dim gf As New GestioneFilesDirectory
