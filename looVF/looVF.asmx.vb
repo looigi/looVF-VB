@@ -4,6 +4,7 @@ Imports System.ComponentModel
 Imports System.IO
 Imports System.Threading
 Imports System.Timers
+Imports System.Web.Script.Serialization
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -410,9 +411,9 @@ Public Class looVF
 			End If
 
 			If SiNo = "S" Then
-				Sql = "Insert Into " & nometabella & " Values (" & idCategoria & ", " & idTipologia & ", " & idMultimedia & ")"
+				Sql = "Insert Into " & NomeTabella & " Values (" & idCategoria & ", " & idTipologia & ", " & idMultimedia & ")"
 			Else
-				Sql = "Delete From " & nometabella & " Where idcategoria=" & idCategoria & " And idtipologia=" & idTipologia & " And progressivo=" & idMultimedia
+				Sql = "Delete From " & NomeTabella & " Where idcategoria=" & idCategoria & " And idtipologia=" & idTipologia & " And progressivo=" & idMultimedia
 			End If
 
 			Ritorno = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL)
@@ -697,7 +698,7 @@ Public Class looVF
 
 		Ritorno = gf.LeggeFileIntero(NomeFile)
 
-		Return ritorno
+		Return Ritorno
 	End Function
 
 	<WebMethod()>
@@ -732,19 +733,37 @@ Public Class looVF
 				If Rec.Eof = False Then
 					PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
 					Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
-					NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
-					For i As Integer = Len(NomeNuovo) To 1 Step -1
-						If Mid(NomeNuovo, i, 1) = Barra Then
-							NomeNuovo = Mid(NomeNuovo, i + 1, NomeNuovo.Length)
-						End If
-					Next
-					PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+					NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "")
+					If Not NomeNuovo.Contains("_CONV") Then
+						NomeNuovo &= "_CONV"
+					End If
+					If Not NomeNuovo.Contains(".mp4") Then
+						NomeNuovo &= ".mp4"
+					End If
+					'For i As Integer = Len(NomeNuovo) To 1 Step -1
+					'	If Mid(NomeNuovo, i, 1) = Barra Then
+					'		NomeNuovo = Mid(NomeNuovo, i + 1, NomeNuovo.Length)
+					'	End If
+					'Next
+					PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "")
+					If Not PathVideoOutput.Contains("_CONV") Then
+						PathVideoOutput &= "_CONV"
+					End If
+					If Not PathVideoOutput.Contains(".mp4") Then
+						PathVideoOutput &= ".mp4"
+					End If
+
+					'NomeNuovo = Rec("Percorso").Value & Barra & NomeNuovo
 
 					Sql = "Update dati Set NomeFile='" & NomeNuovo.Replace("'", "''") & "' Where idCategoria=" & idCategoria & " And idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
 					Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 					If sRitorno <> "OK" Then
 						Return "ERROR: " & sRitorno
 					Else
+						Sql = "Update InformazioniVideo Set Convertito = 'S' " &
+							"Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
+						Dim rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
 						BytesVecchi = gf.TornaDimensioneFile(PathVideoInput)
 						BytesNuovi = gf.TornaDimensioneFile(PathVideoOutput)
 						gf.EliminaFileFisico(PathVideoInput)
@@ -764,7 +783,101 @@ Public Class looVF
 			End If
 		End If
 
-		Return nomeNuovo & ";" & bytesVecchi & ";" & bytesNuovi
+		Return NomeNuovo & ";" & BytesVecchi & ";" & BytesNuovi
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaInformazioniVideo(idTipologia As String, idCategoria As String, idMultimedia As String, Refresh As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Barra As String = "\"
+
+		If TipoDB = "SQLSERVER" Then
+			Barra = "\"
+		Else
+			Barra = "/"
+		End If
+
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
+				"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
+				"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If Rec.Eof = False Then
+				PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+				If gf.EsisteFile(PathVideoInput) = False Then
+					If PathVideoInput.Contains("_CONV") Then
+						PathVideoInput = PathVideoInput.Replace("_CONV", "")
+					Else
+						PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
+						Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
+						PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+					End If
+					If gf.EsisteFile(PathVideoInput) = False Then
+						Return "ERROR: Nessun file video fisico rilevato: " & PathVideoInput
+					End If
+				End If
+			Else
+				Return "ERROR: Nessun file video rilevato"
+			End If
+			Rec.Close
+
+			Sql = "Select * From InformazioniVideo " &
+				"Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL, False)
+			If Rec.Eof = True Or Refresh = "S" Then
+				Dim processoFFMpeg2 As Process = New Process()
+				Dim pi As ProcessStartInfo = New ProcessStartInfo()
+				Dim Comando As String = ""
+
+				Comando = "ffprobe"
+				pi.Arguments = "-loglevel 0 -print_format json -show_format -show_streams """ & PathVideoInput & """"
+
+				pi.FileName = Comando
+				pi.WindowStyle = ProcessWindowStyle.Normal
+				processoFFMpeg2.StartInfo = pi
+				processoFFMpeg2.StartInfo.UseShellExecute = False
+				processoFFMpeg2.StartInfo.RedirectStandardOutput = True
+				processoFFMpeg2.StartInfo.RedirectStandardError = True
+				processoFFMpeg2.Start()
+
+				Dim ffReader As StreamReader
+				Dim ffReader2 As StreamReader
+				Dim strFFOUT As String = "INIZIO"
+				Dim strFFOUT2 As String = "INIZIO"
+
+				ffReader = processoFFMpeg2.StandardError
+				ffReader2 = processoFFMpeg2.StandardOutput
+
+				Do
+					strFFOUT = ffReader.ReadLine
+					strFFOUT2 = ffReader2.ReadLine
+
+					'If strFFOUT2 <> "" Then
+					Ritorno &= strFFOUT2
+					'End If
+				Loop Until processoFFMpeg2.HasExited And strFFOUT2 = Nothing Or strFFOUT2 = ""
+
+				If Ritorno = "{" Then Ritorno = "{}"
+
+				Sql = "Delete From InformazioniVideo Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
+				Dim rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+				Sql = "Insert Into InformazioniVideo Values (" & idTipologia & ", " & idCategoria & ", " & idMultimedia & ", 'N', '" & Ritorno.Replace(" ", "") & "')"
+				rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+				Ritorno = "N;" & Ritorno
+			Else
+				Ritorno = Rec("Convertito").Value & ";" & Rec("Jsone").Value & ";"
+			End If
+		End If
+
+		Return Ritorno
 	End Function
 
 	<WebMethod()>
@@ -791,12 +904,17 @@ Public Class looVF
 
 		Dim NomeFile As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
 		If gf.EsisteFile(NomeFile) Then
-			Return "ERROR: Conversione in corso"
+			Return "Error: Conversione in corso"
 		End If
 
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		If ConnessioneSQL <> "" Then
 			Dim Rec As Object
+
+			Sql = "Delete From InformazioniVideo " &
+				"Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
+			Dim rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
 			Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
 				"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
 				"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
@@ -1064,8 +1182,8 @@ Public Class looVF
 			Barra = "/"
 		End If
 
-		If Strings.Right(PathBase, 1) <> barra Then
-			PathBase &= barra
+		If Strings.Right(PathBase, 1) <> Barra Then
+			PathBase &= Barra
 		End If
 
 		Dim ritorno As String = "" ' "111->" & PathBase & "*" & Categoria & "*" & Percorso & "*" & Video & "*" & vbCrLf
@@ -1334,23 +1452,23 @@ Public Class looVF
 							Dim Nome As String = pp(0)
 
 							If Nome.ToUpper.Trim = Categoria.ToUpper.Trim And Not Nome.ToUpper.Contains(".NOMEDIA") Then
-						'If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
-						'	idVecchioCategoria = idCategoria
+								'If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
+								'	idVecchioCategoria = idCategoria
 
-						'	gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
-						'	Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
-						'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-						'	If Rec.Eof = False Then
-						'		idCategoria = Rec("idCategoria").Value
-						'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
-						'	Else
-						'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
-						'		Return "ERROR: Categoria non trovata"
-						'	End If
-						'	Rec.Close
-						'End If
+								'	gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
+								'	Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+								'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+								'	If Rec.Eof = False Then
+								'		idCategoria = Rec("idCategoria").Value
+								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
+								'	Else
+								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
+								'		Return "ERROR: Categoria non trovata"
+								'	End If
+								'	Rec.Close
+								'End If
 
-						gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione immagini: " & p)
+								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione immagini: " & p)
 
 								'idCategoria += 1
 								'Sql = "Insert Into categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
