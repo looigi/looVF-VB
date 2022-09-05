@@ -9,10 +9,24 @@
 	Public nomeFileLogGenerale As String = ""
 	Public listaLog As New List(Of String)
 	Public timerLog As New Timers.Timer
+	Public timerConv As New Timers.Timer
 	Public VecchiaRicerca As String = ""
 	Public VecchioQuante As Long
-	Public UltimoMultimediaImm As Long = -1
-	Public UltimoMultimediaVid As Long = -1
+	Public UltimoMultimediaImm As Long
+	Public UltimoMultimediaVid As Long
+	Public StaEffettuandoConversioneAutomatica As Boolean = False
+	Public NumeroFrames As String = ""
+	Public NomeFileDaConvertire As String = ""
+	Public DaWebGlobale As Boolean = False
+	Public idTipologiaGlobale As String = ""
+	Public idCategoriaGlobale As String = ""
+	Public idMultimediaGlobale As String = ""
+	Public processoFFMpeg As Process = New Process()
+	Public PathVideoInput As String = ""
+	Public PathVideoOutput As String = ""
+	Public nomeNuovoGlobale As String = ""
+	Public bytesVecchiGlobale As String = ""
+	Public bytesNuoviGlobale As String = ""
 
 	Public Function dataAttuale() As String
 		Return Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
