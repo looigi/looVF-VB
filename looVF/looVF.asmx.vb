@@ -32,12 +32,122 @@ Public Class looVF
 		Return idMultimedia
 	End Function
 
+	Private Function RitornaSuccessivoMultimediaPerPreferiti(db As clsGestioneDB, ConnessioneSQL As String, idTipologia As String, Categoria As String, Filtro As String,
+															 Random As String, NomeFileLog As String, idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim QuanteRighePreferiti As Long = 0
+		Dim Sql As String = ""
+		Dim NomeTabella As String = ""
+		Dim Altro As String = ""
+		Dim Rec As Object
+
+		If Filtro <> "" Then
+			Altro = " And Upper(B.NomeFile) Like '%" & Filtro.ToUpper & "%'"
+		End If
+
+		If Categoria = "Preferiti" Then
+			NomeTabella = "Preferiti"
+		Else
+			NomeTabella = "PreferitiProt"
+		End If
+
+		ScriveLogGlobale(NomeFileLog, "Ricerca Successivo per preferiti: idTipologia " & idTipologia & " idCategoria " & idCategoria & " Categoria " & Categoria & " Filtro " & Filtro & " Random " & Random)
+
+		Sql = "Select Coalesce(Count(*), 0) As Quante From " & NomeTabella & " A " &
+			"Left Join Dati B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria And A.Progressivo=B.Progressivo " &
+			"Where (B.Eliminata = 'N' Or B.Eliminata = 'n') And A.idTipologia=" & idTipologia & " " & Altro
+		If idCategoria <> "" Then
+			Sql &= " And A.idCategoria=" & idCategoria
+		End If
+		Rec = db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+		QuanteRighePreferiti = Rec("Quante").Value
+		Rec.Close
+		ScriveLogGlobale(NomeFileLog, "Quantre righe preferiti: " & QuanteRighePreferiti)
+
+		Dim Ultimo As Integer = -1
+
+		If idTipologia = 1 Then
+			Ultimo = UltimoMultimediaImm
+		Else
+			Ultimo = UltimoMultimediaVid
+		End If
+		ScriveLogGlobale(NomeFileLog, "Ultimo MM impostato: " & Ultimo)
+
+		Static x As Random = New Random()
+
+		Dim y As Long = -1
+
+		If Random = "S" Or Random = "" Then
+			y = x.Next(QuanteRighePreferiti)
+			ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'S': " & y & "/" & QuanteRighePreferiti)
+		Else
+			If Ultimo <> -1 Then
+				y = Ultimo + 1
+				If y > QuanteRighePreferiti Then
+					y = 0
+				End If
+				ScriveLogGlobale(NomeFileLog, "Valore Sequenziale per Random 'N': " & y & "/" & QuanteRighePreferiti)
+			Else
+				y = x.Next(QuanteRighePreferiti)
+				ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'N': " & y & "/" & QuanteRighePreferiti & " Ultimo = -1")
+			End If
+		End If
+
+		If y = -1 Then
+			Return "ERROR: Non riesco a impostare il valore. Quante righe: " & QuanteRighePreferiti
+		End If
+
+		If idTipologia = 1 Then
+			UltimoMultimediaImm = y
+		Else
+			UltimoMultimediaVid = y
+		End If
+
+		Dim NumeroImmagine As Long
+		Dim idCategoriaRilevato As Integer
+		Dim CategoriaRilevata As String
+		Dim Altro2 As String = ""
+
+		If Filtro <> "" Then
+			Altro2 = " Where Upper(C.NomeFile) Like '%" & Filtro.ToUpper & "%'"
+		End If
+
+		Sql = "Select idTipologia, idCategoria, Progressivo, Categoria, NomeFile From ( " &
+			"SELECT ROW_NUMBER() OVER(Order BY idTipologia, idCategoria, progressivo) As Numero, A.idTipologia, A.idCategoria, A.Progressivo, B.Categoria, C.NomeFile " &
+			"FROM " & NomeTabella & " A " &
+			"Left Join categorie B On A.idtipologia = B.idtipologia And A.idCategoria = B.idcategoria " &
+			"Left Join Dati C On A.idtipologia = C.idtipologia And A.idCategoria = C.idcategoria And A.Progressivo = C.Progressivo  " &
+			" " & altro2 & " " &
+			") As a Where Numero=" & y
+		'"where idtipologia=" & idTipologia & " " & ' " and idcategoria=" & idCategoria & " " &
+		ScriveLogGlobale(NomeFileLog, Sql)
+		Rec = db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+		If Rec.Eof = False Then
+			NumeroImmagine = Rec("Progressivo").Value
+			idCategoriaRilevato = Rec("idCategoria").Value
+			CategoriaRilevata = Rec("Categoria").Value
+
+			Ritorno = NumeroImmagine.ToString & ";" & idCategoriaRilevato & ";" & QuanteRighePreferiti & ";" & CategoriaRilevata & ";" & Ultimo & ";" & y
+		Else
+			Ritorno = "ERROR: Nessun multimedia rilevato"
+		End If
+		Rec.Close
+
+		ScriveLogGlobale(NomeFileLog, "Ritorno: " & Ritorno)
+
+		Return Ritorno
+	End Function
+
 	<WebMethod()>
 	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
 		Dim NuovaRicerca As String = idTipologia & ";" & Categoria & ";" & Filtro
+		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/RitornaMultimediaSuccessivo.txt"
+
+		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
+		ScriveLogGlobale(NomeFileLog, "Inizio")
 
 		Dim gf As New GestioneFilesDirectory
 		'Dim NomeFile As String = Server.MapPath(".") & "\Log\LogRitorno.txt"
@@ -47,6 +157,7 @@ Public Class looVF
 			Dim idCategoria As String = ""
 			Dim Altro As String = ""
 
+			ScriveLogGlobale(NomeFileLog, "Connessione Aperta")
 			'gf.ScriveTestoSuFileAperto(NomeFile, idTipologia & "-" & Categoria)
 
 			Dim Quante As Long = 0
@@ -54,85 +165,112 @@ Public Class looVF
 			Dim Categorie As New List(Of Integer)
 			Dim NomeCategorie As New List(Of String)
 
-			If Categoria <> "Preferiti" And Categoria <> "Preferiti Prot" Then
-				If Filtro <> "" Then
-					Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
-				End If
+			ScriveLogGlobale(NomeFileLog, "Categoria: " & Categoria)
 
-				If Categoria <> "" And Categoria <> "Tutto" Then
-					Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
-					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-					If Rec.Eof = False Then
-						idCategoria = Rec("idCategoria").Value
-					Else
-						Return "ERROR: Categoria non trovata"
-					End If
-					Rec.Close
-				End If
+			If Filtro <> "" Then
+				Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
+			End If
 
-				If Filtro <> "" Then
-					Quante = 0
-					Sql = "Select * From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia & " " & Altro
-					If idCategoria <> "" Then
-						Sql &= " And idCategoria=" & idCategoria
-					End If
-					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-					Do Until Rec.Eof
-						Indici.Add(Rec("Progressivo").Value)
-
-						Quante += 1
-						Rec.MoveNext
-					Loop
-					Rec.Close
+			If Categoria <> "" And Categoria <> "Tutto" And Not Categoria.Contains("Preferiti") Then
+				Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
+				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				If Rec.Eof = False Then
+					idCategoria = Rec("idCategoria").Value
 				Else
-					If NuovaRicerca <> VecchiaRicerca Then
-						Sql = "Select Count(*) From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia
-						If idCategoria <> "" Then
-							Sql &= " And idCategoria=" & idCategoria
-						End If
-						'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
-						Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-						Quante = Rec(0).Value
-						Rec.Close
-						VecchioQuante = Quante
-						'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
-						VecchiaRicerca = NuovaRicerca
-					Else
-						Quante = VecchioQuante
-					End If
+					Return "ERROR: Categoria non trovata"
 				End If
-			Else
-				If Filtro <> "" Then
-					Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
-				End If
+				Rec.Close
+			End If
+
+			If Categoria = "Preferiti" Or Categoria = "Preferiti Prot" Then
+				ScriveLogGlobale(NomeFileLog, "Categoria uguale a Preferiti: " & Categoria & ". Vado alla funzione adatta")
+
+				Ritorno = RitornaSuccessivoMultimediaPerPreferiti(Db, ConnessioneSQL, idTipologia, Categoria, Filtro, Random, NomeFileLog, idCategoria)
+
+				Return Ritorno
+			End If
+
+			ScriveLogGlobale(NomeFileLog, "IDCategoria: " & idCategoria)
+
+			If Filtro <> "" Then
+				ScriveLogGlobale(NomeFileLog, "Filtro impostato: " & Filtro)
 
 				Quante = 0
-
-				Dim NomeTabella As String = ""
-
-				If Categoria = "Preferiti" Then
-					NomeTabella = "Preferiti"
-				Else
-					NomeTabella = "PreferitiProt"
+				Sql = "Select * From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia & " " & Altro
+				If idCategoria <> "" Then
+					Sql &= " And idCategoria=" & idCategoria
 				End If
-				Sql = "Select A.*, B.NomeFile, C.Categoria From " & NomeTabella & " A " &
-					"Left Join Dati B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria And A.Progressivo=B.Progressivo " &
-					"Left Join Categorie C On A.idTipologia=C.idTipologia And A.idCategoria=C.idCategoria " &
-					"Where (B.Eliminata = 'N' Or B.Eliminata = 'n') And A.idTipologia=" & idTipologia & " " & Altro
 				'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 				Do Until Rec.Eof
 					Indici.Add(Rec("Progressivo").Value)
-					Categorie.Add(Rec("idCategoria").Value)
-					NomeCategorie.Add(Rec("Categoria").Value)
 
 					Quante += 1
 					Rec.MoveNext
 				Loop
 				Rec.Close
+
+				ScriveLogGlobale(NomeFileLog, "Indici Rilevati: " & Indici.Count - 1)
+			Else
+				ScriveLogGlobale(NomeFileLog, "Filtro NON impostato")
+				ScriveLogGlobale(NomeFileLog, "Nuova Ricerca: " & NuovaRicerca & " Vecchia Ricerca: " & VecchiaRicerca)
+
+				If NuovaRicerca <> VecchiaRicerca Then
+					ScriveLogGlobale(NomeFileLog, "Nuova Ricerca diversa da Vecchia Ricerca")
+
+					Sql = "Select Count(*) From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia
+					If idCategoria <> "" Then
+						Sql &= " And idCategoria=" & idCategoria
+					End If
+					'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+					Quante = Rec(0).Value
+					Rec.Close
+					VecchioQuante = Quante
+					'gf.ScriveTestoSuFileAperto(NomeFile, Quante)
+					VecchiaRicerca = NuovaRicerca
+				Else
+					Quante = VecchioQuante
+					ScriveLogGlobale(NomeFileLog, "Nuova Ricerca uguale Vecchia Ricerca")
+				End If
+				ScriveLogGlobale(NomeFileLog, "Numero files rilevati: " & Quante)
 			End If
+			'Else
+			'	ScriveLogGlobale(NomeFileLog, "Categoria uguale a Preferiti")
+
+			'	If Filtro <> "" Then
+			'		Altro = " And Upper(NomeFile) Like '%" & Filtro.ToUpper & "%'"
+			'	End If
+
+			'	Quante = 0
+
+			'	Dim NomeTabella As String = ""
+
+			'	If Categoria = "Preferiti" Then
+			'		NomeTabella = "Preferiti"
+			'	Else
+			'		NomeTabella = "PreferitiProt"
+			'	End If
+
+			'	Sql = "Select A.*, B.NomeFile, C.Categoria From " & NomeTabella & " A " &
+			'		"Left Join Dati B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria And A.Progressivo=B.Progressivo " &
+			'		"Left Join Categorie C On A.idTipologia=C.idTipologia And A.idCategoria=C.idCategoria " &
+			'		"Where (B.Eliminata = 'N' Or B.Eliminata = 'n') And A.idTipologia=" & idTipologia & " " & Altro
+			'	'gf.ScriveTestoSuFileAperto(NomeFile, Sql)
+			'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			'	Do Until Rec.Eof
+			'		Indici.Add(Rec("Progressivo").Value)
+			'		Categorie.Add(Rec("idCategoria").Value)
+			'		NomeCategorie.Add(Rec("Categoria").Value)
+
+			'		Quante += 1
+			'		Rec.MoveNext
+			'	Loop
+			'	Rec.Close
+
+			'	ScriveLogGlobale(NomeFileLog, "Numero files rilevati: " & Quante & " Indici: " & Indici.Count - 1 & " Categorie: " & Categorie.Count - 1 & " Nome Categorie: " & NomeCategorie.Count - 1)
+			'End If
 
 			Dim Ultimo As Integer = -1
 
@@ -148,6 +286,7 @@ Public Class looVF
 				'End If
 			End If
 			'Return Ultimo
+			ScriveLogGlobale(NomeFileLog, "Ultimo MM impostato: " & Ultimo)
 
 			Static x As Random = New Random()
 
@@ -155,14 +294,17 @@ Public Class looVF
 
 			If Random = "S" Or Random = "" Then
 				y = x.Next(Quante)
+				ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'S': " & y & "/" & Quante)
 			Else
 				If Ultimo <> -1 Then
 					y = Ultimo + 1
 					If y > Quante Then
 						y = 0
 					End If
+					ScriveLogGlobale(NomeFileLog, "Valore Sequenziale per Random 'N': " & y & "/" & Quante)
 				Else
 					y = x.Next(Quante)
+					ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'N': " & y & "/" & Quante & " Ultimo = -1")
 				End If
 			End If
 
@@ -180,7 +322,9 @@ Public Class looVF
 			Dim Inizio As Long = 0
 
 			'If idCategoria <> "" Then
-			If Filtro = "" And Categoria <> "Preferiti" And Categoria <> "Preferiti Prot" Then
+			If Filtro = "" Then '  And Categoria <> "Preferiti" And Categoria <> "Preferiti Prot"
+				ScriveLogGlobale(NomeFileLog, "Filtro nullo")
+
 				Sql = "Select Coalesce(Min(Progressivo),0) From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia & " " & Altro & " "
 				If idCategoria <> "" Then
 					Sql &= "And idCategoria=" & idCategoria
@@ -189,44 +333,86 @@ Public Class looVF
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 				Inizio = (Rec(0).Value - 1)
 				Rec.Close
+
+				ScriveLogGlobale(NomeFileLog, "Inizio: " & Inizio)
 			Else
+				ScriveLogGlobale(NomeFileLog, "Filtro NON Nullo (" & Filtro & ")")
+
 				If Indici.Count > y Then
 					Inizio = Indici(y)
 				Else
 					Inizio = -1
 				End If
-				y = 0
-			End If
+				'y = 0
 
-			If Random = "N" Then
-				Inizio = 0
-			End If
-
-			If Categoria = "Preferiti" Or Categoria = "Preferiti Prot" Then
-					idCategoria = Categorie.Item(y)
-					Categoria = NomeCategorie.Item(y)
-				End If
-
-				'Else
-				'	idCategoria = -1
+				'If Categoria <> "Preferiti" And Categoria <> "Preferiti Prot" Then
 				'End If
-				If idCategoria = "" Then
+
+				ScriveLogGlobale(NomeFileLog, "Inizio: " & Inizio & " Indici: " & Indici.Count - 1)
+			End If
+
+			If Random = "N" Then ' And (Categoria = "Preferiti" Or Categoria = "Preferiti Prot") Then
+				Inizio = 0
+
+				ScriveLogGlobale(NomeFileLog, "Random No e NON Preferiti, azzero l'inizio")
+			End If
+
+			'If Categoria = "Preferiti" Or Categoria = "Preferiti Prot" Then
+			'	idCategoria = Categorie.Item(y)
+			'	Categoria = NomeCategorie.Item(y)
+
+			'	Sql = "Select * From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+			'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			'	idCategoria = Rec("idCategoria").Value
+			'	Rec.Close
+
+			'	Dim NomeTabella As String = ""
+
+			'	If Categoria = "Preferiti" Then
+			'		NomeTabella = "Preferiti"
+			'	Else
+			'		NomeTabella = "PreferitiProt"
+			'	End If
+
+			'	Sql = "Select Progressivo From ( " &
+			'		"SELECT ROW_NUMBER() OVER(Order BY idTipologia, idCategoria, progressivo) As Numero, Progressivo " &
+			'		"FROM " & NomeTabella & " " &
+			'		"where idtipologia=" & idTipologia & " " & ' " and idcategoria=" & idCategoria & " " &
+			'		") As a Where Numero=" & (Inizio + y)
+			'	ScriveLogGlobale(NomeFileLog, Sql)
+			'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			'	Inizio = Rec("Progressivo").Value
+			'	Rec.Close
+
+			'	ScriveLogGlobale(NomeFileLog, "Categoria Preferiti. Imposto idCategoria e Categoria: " & idCategoria & " - " & Categoria & ". Valore riga: " & Inizio)
+			'End If
+
+			'Else
+			'	idCategoria = -1
+			'End If
+			If idCategoria = "" Then
+				ScriveLogGlobale(NomeFileLog, "Categoria Nulla. La ricerco per idTipologia " & idTipologia & " e idMultimedia " & Inizio + y)
+
 				Sql = "Select idCategoria From Dati Where (Eliminata = 'N' Or Eliminata = 'n') And idTipologia=" & idTipologia & " And Progressivo=" & Inizio + y
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-					idCategoria = Rec("idCategoria").Value
-					Rec.Close
-				End If
+				idCategoria = Rec("idCategoria").Value
+				Rec.Close
 
-				Dim Quanto As Integer
-
-				Quanto = (Inizio + y)
-				'Return Inizio & ";" & y
-
-				Ritorno = Quanto.ToString & ";" & idCategoria & ";" & Quante & ";" & Categoria & ";" & Ultimo & ";" & Inizio
+				ScriveLogGlobale(NomeFileLog, "Categoria Rilevata: " & idCategoria)
 			End If
-			'gf.ScriveTestoSuFileAperto(NomeFile, Ritorno)
 
-			Return Ritorno
+			Dim Quanto As Integer
+
+			Quanto = (Inizio + y)
+			'Return Inizio & ";" & y
+			ScriveLogGlobale(NomeFileLog, "Id Multimedia ritornato: " & Quanto & " - Inizio: " & Inizio & " Y: " & y)
+
+			Ritorno = Quanto.ToString & ";" & idCategoria & ";" & Quante & ";" & Categoria & ";" & Ultimo & ";" & Inizio
+			ScriveLogGlobale(NomeFileLog, "Ritorno: " & Ritorno)
+		End If
+		'gf.ScriveTestoSuFileAperto(NomeFile, Ritorno)
+
+		Return Ritorno
 	End Function
 
 	<WebMethod()>
@@ -552,7 +738,7 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaMultimediaPerGriglia(QuanteImm As String, Categoria As String, idTipologia As String) As String
+	Public Function RitornaMultimediaPerGriglia(QuanteImm As String, Categoria As String, idTipologia As String, Filtro As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -575,16 +761,22 @@ Public Class looVF
 				Rec.Close
 			End If
 
-			Sql = "Select Count(*) From Dati Where idTipologia=" & idTipologia & " "
+			Dim Altro As String = ""
+
+			If Filtro <> "" Then
+				Altro = " And Upper(Dati.NomeFile) Like '%" & Filtro.ToUpper & "%' "
+			End If
+
+			Sql = "Select Count(*) From Dati Where Dati.idTipologia=" & idTipologia & " " & Altro
 			If Categoria <> "" And Categoria <> "Tutto" Then
-				Sql &= " And idCategoria=" & idCategoria
+				Sql &= " And Dati.idCategoria=" & idCategoria
 			End If
 			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 			Dim Quante As Long = Rec(0).Value
 			Rec.Close
 
-			If Categoria <> "" And Categoria <> "Tutto" Then
-				Sql = "Select Min(Progressivo) From Dati Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+			If Categoria <> "" And Categoria <> "Tutto" And Filtro = "" Then
+				Sql = "Select Min(Progressivo) From Dati Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria ' & Altro
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 				Inizio = Rec(0).Value - 1
 				Rec.Close
@@ -593,14 +785,32 @@ Public Class looVF
 			For i As Integer = 1 To Val(QuanteImm)
 				Randomize()
 				Static x As Random = New Random()
-				Dim y As Long = x.Next(Quante)
-				Dim idMultimedia As Long = Inizio + y
+				Dim idMultimedia As Long
 
-				Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
-					"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
-					"Where Dati.idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+				If Filtro = "" Then
+					Dim y As Long = x.Next(Quante)
+					idMultimedia = Inizio + y
+
+					Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+						"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+						"Where Dati.idTipologia=" & idTipologia & " And Progressivo=" & idMultimedia
+				Else
+					Dim y As Long = x.Next(Quante)
+
+					Sql = "Select Numero, NomeFile, Dimensioni, Data, idTipologia, idCategoria, Categoria, Progressivo, Percorso, LetteraDisco From ( " &
+						"Select ROW_NUMBER() OVER(Order BY Dati.idTipologia, Dati.idCategoria, Dati.progressivo) As Numero, Dati.idTipologia, Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, " &
+						"Categorie.Percorso, Categorie.LetteraDisco, Dati.Progressivo From Dati " &
+						"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+						"Where Dati.idTipologia=" & idTipologia & " And Dati.idCategoria=" & idCategoria & " " & Altro & " And Categorie.Percorso Is Not Null " & ' And Progressivo=" & idMultimedia
+						") As A Where Numero=" & y
+				End If
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+
 				If Rec.Eof = False Then
+					If Filtro <> "" Then
+						idMultimedia = Inizio + Val(Rec("Progressivo").Value)
+					End If
+
 					If idTipologia = 2 Then
 						Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
 						Dim PathOriginale As String = Rec("Percorso").Value.ToString
@@ -621,6 +831,7 @@ Public Class looVF
 					Ritorno = "ERROR: Nessun file rilevato"
 					Exit For
 				End If
+
 				Rec.Close()
 			Next
 		End If
@@ -858,7 +1069,7 @@ Public Class looVF
 			End If
 		End If
 
-			Return Ritorno
+		Return Ritorno
 	End Function
 
 	<WebMethod()>
@@ -927,17 +1138,27 @@ Public Class looVF
 
 						Dim Rit As String = ConverteVideo(2, idCategoria, idMultimedia, "N")
 
-						Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-						gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
-						gf.ChiudeFileDiTestoDopoScrittura()
+						If Rit.Contains("ERROR:") Then
+							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-						RitornaInformazioniVideo(2, idCategoria, idMultimedia, "S")
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria. " & Rit)
+							gf.ChiudeFileDiTestoDopoScrittura()
+						Else
+							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-						Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-						gf.ScriveTestoSuFileAperto(Inizio & ": Fine Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> " & Rit)
-						gf.ChiudeFileDiTestoDopoScrittura()
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
+							gf.ChiudeFileDiTestoDopoScrittura()
+
+							RitornaInformazioniVideo(2, idCategoria, idMultimedia, "S")
+
+							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio & ": Fine Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> " & Rit)
+							gf.ChiudeFileDiTestoDopoScrittura()
+						End If
 					End If
 
 					If StaEffettuandoConversioneAutomatica = False Then
@@ -1321,28 +1542,46 @@ Public Class looVF
 					ffReader2 = processoFFMpeg2.StandardOutput
 
 					NumeroFrames = ""
-					Do
-						strFFOUT = ffReader.ReadLine
-						strFFOUT2 = ffReader2.ReadLine
+					Try
+						Do
+							strFFOUT = ffReader.ReadLine
+							strFFOUT2 = ffReader2.ReadLine
 
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames1.txt")
-						gf.ScriveTestoSuFileAperto(strFFOUT)
-						gf.ChiudeFileDiTestoDopoScrittura()
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames1.txt")
+							gf.ScriveTestoSuFileAperto(strFFOUT)
+							gf.ChiudeFileDiTestoDopoScrittura()
 
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames2.txt")
-						gf.ScriveTestoSuFileAperto(strFFOUT2)
-						gf.ChiudeFileDiTestoDopoScrittura()
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/frames2.txt")
+							gf.ScriveTestoSuFileAperto(strFFOUT2)
+							gf.ChiudeFileDiTestoDopoScrittura()
 
-						If strFFOUT2.Contains("stream,") Then         'if the strFFOut contains the string
-							NumeroFrames = strFFOUT2.Replace("stream,", "")
-							Exit Do
-						End If
+							If strFFOUT2.Contains("stream,") Then         'if the strFFOut contains the string
+								NumeroFrames = strFFOUT2.Replace("stream,", "")
+								Exit Do
+							End If
 
-						'If strFFOUT2.Contains("[/FRAME]") Then         'if the strFFOut contains the string
-						'	Exit Do
-						'End If
-					Loop Until strFFOUT = Nothing Or strFFOUT = ""
+							If strFFOUT.Contains("moov atom not found") Then
+								NumeroFrames = ""
+								Exit Do
+							End If
+
+							'If strFFOUT2.Contains("[/FRAME]") Then         'if the strFFOut contains the string
+							'	Exit Do
+							'End If
+						Loop Until strFFOUT = Nothing Or strFFOUT = ""
+					Catch ex As Exception
+						NumeroFrames = ""
+						Return "ERROR: " & ex.Message
+					End Try
 					' Ritorna numero frames
+
+					If DaWebGlobale = True Then
+						Dim Inizio2 As String = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+						gf.ScriveTestoSuFileAperto(Inizio2 & ": Letto numero frames: " & NumeroFrames)
+						gf.ChiudeFileDiTestoDopoScrittura()
+					End If
 
 					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames1.txt")
 					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames2.txt")

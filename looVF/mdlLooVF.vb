@@ -1,4 +1,6 @@
 ﻿Module mdlLooVF
+	Public FaiLog As Boolean = False
+
 	Public ListaImmagini As List(Of String) = New List(Of String)
 	Public QuanteImmaginiSfondi As Integer = 0
 	Public ContatoreRiletturaImmagini As Integer = 0
@@ -31,4 +33,14 @@
 	Public Function dataAttuale() As String
 		Return Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 	End Function
+
+	Public Sub ScriveLogGlobale(Path As String, Cosa As String)
+		If FaiLog = True Then
+			Dim gf As New GestioneFilesDirectory
+
+			gf.ApreFileDiTestoPerScrittura(Path)
+			gf.ScriveTestoSuFileAperto(dataAttuale() & ": " & Cosa)
+			gf.ChiudeFileDiTestoDopoScrittura()
+		End If
+	End Sub
 End Module
