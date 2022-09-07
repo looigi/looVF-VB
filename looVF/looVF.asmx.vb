@@ -705,7 +705,7 @@ Public Class looVF
 			DeveRinominareVideoConvertito = gf.LeggeFileIntero(NomeFile2)
 		End If
 
-		Dim Conv As String = IIf(StaEffettuandoConversioneAutomatica = True, "S", "N")
+		Dim Conv As String = IIf(StaEffettuandoConversioneAutomaticaFinale = True, "S", "N")
 
 		If StaLeggendoImmagini Then
 			Return "Sto caricando multimedia;" & StaConvertendoVideo & ";" & DeveRinominareVideoConvertito & ";" & Conv
@@ -1094,6 +1094,7 @@ Public Class looVF
 			Dim Rec As Object
 
 			StaEffettuandoConversioneAutomatica = True
+			StaEffettuandoConversioneAutomaticaFinale = True
 			If gf.EsisteFile(Server.MapPath(".") & "/Logs/VideoDaConvertire.txt") Then
 				gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
 
@@ -1101,74 +1102,102 @@ Public Class looVF
 				Dim Video() As String = Tutti.Split(vbCrLf)
 
 				For Each v As String In Video
-					Dim vv() As String = v.Replace(vbCrLf, "").Split(";")
-					Dim idCategoria As String = vv(0).Replace(vbCrLf, "")
-					Dim idMultimedia As String = vv(1).Replace(vbCrLf, "")
-					Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-					Dim Esegui As Boolean = False
+					v = v.Replace(vbCrLf, "").Replace(Chr(13), "").Replace(Chr(10), "")
 
+					'Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 					'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-					'gf.ScriveTestoSuFileAperto(Inizio & ": Inizio")
+					'gf.ScriveTestoSuFileAperto(Inizio & ": Riga " & v & " Primo carattere: " & Mid(v, 1, 1))
 					'gf.ChiudeFileDiTestoDopoScrittura()
 
-					Dim Sql As String = "Select * From InformazioniVideo " &
+					If Mid(v, 1, 1) <> "*" Then
+						Dim vv() As String = v.Split(";")
+						Dim idCategoria As String = vv(0)
+						Dim idMultimedia As String = vv(1)
+
+						Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+						Dim Esegui As Boolean = False
+
+						'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+						'gf.ScriveTestoSuFileAperto(Inizio & ": Inizio")
+						'gf.ChiudeFileDiTestoDopoScrittura()
+
+						Dim Sql As String = "Select * From InformazioniVideo " &
 							"Where idTipologia=2 And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
-					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL, False)
-					If Rec.Eof = True Then
-						Esegui = True
-					Else
-						Dim Infos As String = Rec("Jsone").Value.ToString
-						If Infos.ToUpper.Contains("H264") Then
+						Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL, False)
+						If Rec.Eof = True Then
+							Esegui = True
+						Else
+							Dim Infos As String = Rec("Jsone").Value.ToString
+							If Infos.ToUpper.Contains("H264") Then
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio & ": Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> Video già convertito")
+								gf.ChiudeFileDiTestoDopoScrittura()
+
+								Esegui = False
+							Else
+								Esegui = True
+							End If
+						End If
+						Rec.Close
+
+						If Esegui Then
+							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-							gf.ScriveTestoSuFileAperto(Inizio & ": Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> Video già convertito")
+							gf.ScriveTestoSuFileAperto(Inizio & ": Inizio Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
 							gf.ChiudeFileDiTestoDopoScrittura()
 
-							Esegui = False
-						Else
-							Esegui = True
-						End If
-					End If
-					Rec.Close
+							Dim Rit As String = ConverteVideo(2, idCategoria, idMultimedia, "N")
 
-					If Esegui Then
-						Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-						gf.ScriveTestoSuFileAperto(Inizio & ": Inizio Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
-						gf.ChiudeFileDiTestoDopoScrittura()
-
-						Dim Rit As String = ConverteVideo(2, idCategoria, idMultimedia, "N")
-
-						If Rit.Contains("ERROR:") Then
 							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
 							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
 							gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria. " & Rit)
 							gf.ChiudeFileDiTestoDopoScrittura()
-						Else
-							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-							gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
-							gf.ChiudeFileDiTestoDopoScrittura()
+							If Rit.Contains("ERROR:") Then
+								'Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-							RitornaInformazioniVideo(2, idCategoria, idMultimedia, "S")
+								'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								'gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria. " & Rit)
+								'gf.ChiudeFileDiTestoDopoScrittura()
+							Else
+								Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio & ": Ritorno informazioni video idCategoria " & idCategoria & " idMultimedia " & idMultimedia)
+								gf.ChiudeFileDiTestoDopoScrittura()
 
-							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-							gf.ScriveTestoSuFileAperto(Inizio & ": Fine Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> " & Rit)
-							gf.ChiudeFileDiTestoDopoScrittura()
+								RitornaInformazioniVideo(2, idCategoria, idMultimedia, "S")
+
+								Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio & ": Fine Conversione video idCategoria " & idCategoria & " idMultimedia " & idMultimedia & " -> " & Rit)
+								gf.ChiudeFileDiTestoDopoScrittura()
+							End If
 						End If
-					End If
 
-					If StaEffettuandoConversioneAutomatica = False Then
+						If StaEffettuandoConversioneAutomatica = False Then
+							StaEffettuandoConversioneAutomaticaFinale = False
+
+							Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio & ": Conversione Bloccata Da Sito WEB")
+							gf.ChiudeFileDiTestoDopoScrittura()
+
+							Exit For
+						End If
+					Else
+						Dim vv() As String = v.Replace("*", "").Split(";")
+						Dim idCategoria As String = vv(0)
+						Dim idMultimedia As String = vv(1)
+
 						Inizio = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
 						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-						gf.ScriveTestoSuFileAperto(Inizio & ": Conversione Bloccata Da Sito WEB")
+						gf.ScriveTestoSuFileAperto(Inizio & ": Skippato da asterisco. idCategoria: " & idCategoria & " idMultimedia: " & idMultimedia)
 						gf.ChiudeFileDiTestoDopoScrittura()
-
-						Exit For
 					End If
 
 					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
@@ -1479,34 +1508,89 @@ Public Class looVF
 
 		Dim NomeFile As String = Server.MapPath(".") & "/Logs/ffmpegout.txt"
 		If gf.EsisteFile(NomeFile) Then
-			Return "Error: Conversione in corso"
+			Return "ERROR: Conversione in corso"
 		End If
 
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		If ConnessioneSQL <> "" Then
 			Dim Rec As Object
+			Dim Inizio2 As String = ""
 
 			Sql = "Delete From InformazioniVideo " &
 				"Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
+
+			'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+			'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+			'gf.ScriveTestoSuFileAperto(Inizio2 & ": " & Sql)
+			'gf.ChiudeFileDiTestoDopoScrittura()
+
 			Dim rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
 			Sql = "Select B.Categoria, B.Percorso, A.NomeFile From Dati A " &
 				"Left Join Categorie B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria " &
 				"Where A.idTipologia=" & idTipologia & " And B.idCategoria=" & idCategoria & " And Progressivo=" & idMultimedia
+
+			'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+			'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+			'gf.ScriveTestoSuFileAperto(Inizio2 & ": " & Sql)
+			'gf.ChiudeFileDiTestoDopoScrittura()
+
 			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 			If Rec.Eof = False Then
 				PathVideoInput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value
 				NomeFileDaConvertire = Rec("NomeFile").Value
+
+				'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+				'gf.ScriveTestoSuFileAperto(Inizio2 & ": Nome File " & Rec("NomeFile").Value)
+				'gf.ChiudeFileDiTestoDopoScrittura()
+
 				Dim Estensione As String = gf.TornaEstensioneFileDaPath(Rec("NomeFile").Value)
+
+				'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+				'gf.ScriveTestoSuFileAperto(Inizio2 & ": Estensione " & Estensione)
+				'gf.ChiudeFileDiTestoDopoScrittura()
+
+				If Estensione = "" Then
+					Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+					gf.ScriveTestoSuFileAperto(Inizio2 & ": Nome File Non Valido " & Rec("NomeFile").Value)
+					gf.ChiudeFileDiTestoDopoScrittura()
+
+					Return "ERROR: Nome file non valido: " & Rec("NomeFile").Value
+				End If
+
 				NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+				NomeNuovo = Rec("NomeFile").Value.replace(Estensione, "") & ".mp4_CONV.mp4"
 				For i As Integer = Len(NomeNuovo) To 1 Step -1
 					If Mid(NomeNuovo, i, 1) = Barra Then
 						NomeNuovo = Mid(NomeNuovo, i + 1, NomeNuovo.Length)
 					End If
 				Next
-				PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+
+				'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+				'gf.ScriveTestoSuFileAperto(Inizio2 & ": Nome Nuovo " & NomeNuovo)
+				'gf.ChiudeFileDiTestoDopoScrittura()
+
+				If Not Rec("NomeFile").Value.ToString.Contains("_CONV") Then
+					PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & "_CONV.mp4"
+				Else
+					PathVideoOutput = Rec("Percorso").Value & Barra & Rec("NomeFile").Value.replace(Estensione, "") & ".mp4"
+				End If
+
+				'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+				'gf.ScriveTestoSuFileAperto(Inizio2 & ": Path Video Output " & PathVideoOutput)
+				'gf.ChiudeFileDiTestoDopoScrittura()
 
 				Rec.Close
+
+				'Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+				'gf.ScriveTestoSuFileAperto(Inizio2 & ": File input: " & PathVideoInput & " - File Output: " & PathVideoOutput & " - NomeNuovo: " & NomeNuovo & " - File esistente: " & gf.EsisteFile(PathVideoInput))
+				'gf.ChiudeFileDiTestoDopoScrittura()
 
 				'Return "ERROR: File input: " & PathVideoInput & " - File Output: " & PathVideoOutput & " - NomeNuovo: " & NomeNuovo
 
@@ -1523,7 +1607,16 @@ Public Class looVF
 					Dim Comando As String = ""
 
 					Comando = "ffprobe"
+					' 
 					pi.Arguments = "-v error -select_streams v:0 -count_frames -show_entries stream=nb_read_frames -print_format csv """ & PathVideoInput & """"
+
+					'If DaWebGlobale = True Then
+					Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+					gf.ScriveTestoSuFileAperto(Inizio2 & ": " & Comando & " " & pi.Arguments)
+					gf.ChiudeFileDiTestoDopoScrittura()
+					'End If
 
 					pi.FileName = Comando
 					pi.WindowStyle = ProcessWindowStyle.Normal
@@ -1541,9 +1634,38 @@ Public Class looVF
 					ffReader = processoFFMpeg2.StandardError
 					ffReader2 = processoFFMpeg2.StandardOutput
 
+					'If DaWebGlobale = True Then
+					Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+					gf.ScriveTestoSuFileAperto(Inizio2 & ": Lettura frames")
+					gf.ChiudeFileDiTestoDopoScrittura()
+					'End If
+
+					'Dim Secondi As Integer = 0
+					'Dim SecondiAttuali As Integer = Now.Second
+
 					NumeroFrames = ""
 					Try
 						Do
+							'Dim SecondiAttuali2 As Integer = Now.Second
+							'If SecondiAttuali <> SecondiAttuali2 Then
+							'	SecondiAttuali = SecondiAttuali2
+
+							'	Secondi += 1
+
+							'	gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							'	gf.ScriveTestoSuFileAperto(Inizio2 & ": Lettura frames. Secondi: " & Secondi)
+							'	gf.ChiudeFileDiTestoDopoScrittura()
+
+							'	If Secondi > 30 Then
+							'		processoFFMpeg2.Kill()
+							'		processoFFMpeg2.Dispose()
+
+							'		Return "ERROR: Uscito dal ciclo di attesa per lettura frames. Troppi secondi"
+							'	End If
+							'End If
+
 							strFFOUT = ffReader.ReadLine
 							strFFOUT2 = ffReader2.ReadLine
 
@@ -1555,13 +1677,39 @@ Public Class looVF
 							gf.ScriveTestoSuFileAperto(strFFOUT2)
 							gf.ChiudeFileDiTestoDopoScrittura()
 
-							If strFFOUT2.Contains("stream,") Then         'if the strFFOut contains the string
-								NumeroFrames = strFFOUT2.Replace("stream,", "")
+							If strFFOUT.Contains("moov atom not found") Then
+								NumeroFrames = ""
+
+								Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio2 & ": Rilevato moov atom not found")
+								gf.ChiudeFileDiTestoDopoScrittura()
+
 								Exit Do
 							End If
 
-							If strFFOUT.Contains("moov atom not found") Then
-								NumeroFrames = ""
+							If strFFOUT2.Contains("stream,") Then         'if the strFFOut contains the string
+								NumeroFrames = strFFOUT2.Replace("stream,", "")
+
+								Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio2 & ": Rilevato stream 1. Numero Frames: " & NumeroFrames)
+								gf.ChiudeFileDiTestoDopoScrittura()
+
+								Exit Do
+							End If
+
+							If strFFOUT.Contains("stream,") Then         'if the strFFOut contains the string
+								NumeroFrames = strFFOUT.Replace("stream,", "")
+
+								Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+								gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+								gf.ScriveTestoSuFileAperto(Inizio2 & ": Rilevato stream 2. Numero Frames: " & NumeroFrames)
+								gf.ChiudeFileDiTestoDopoScrittura()
+
 								Exit Do
 							End If
 
@@ -1571,17 +1719,24 @@ Public Class looVF
 						Loop Until strFFOUT = Nothing Or strFFOUT = ""
 					Catch ex As Exception
 						NumeroFrames = ""
+
+						Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+						gf.ScriveTestoSuFileAperto(Inizio2 & ": Errore su lettura frames: " & ex.Message)
+						gf.ChiudeFileDiTestoDopoScrittura()
+
 						Return "ERROR: " & ex.Message
 					End Try
 					' Ritorna numero frames
 
-					If DaWebGlobale = True Then
-						Dim Inizio2 As String = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					'If DaWebGlobale = True Then
+					Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-						gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
-						gf.ScriveTestoSuFileAperto(Inizio2 & ": Letto numero frames: " & NumeroFrames)
-						gf.ChiudeFileDiTestoDopoScrittura()
-					End If
+					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+					gf.ScriveTestoSuFileAperto(Inizio2 & ": Letto numero frames: " & NumeroFrames)
+					gf.ChiudeFileDiTestoDopoScrittura()
+					'End If
 
 					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames1.txt")
 					gf.EliminaFileFisico(Server.MapPath(".") & "/Logs/frames2.txt")
@@ -1627,6 +1782,15 @@ Public Class looVF
 						timerLog.Start()
 					Else
 						DaWebGlobale = True
+
+						If DaWebGlobale = True Then
+							Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio2 & ": Attesa termine conversione")
+							gf.ChiudeFileDiTestoDopoScrittura()
+						End If
+
 						ContinuaConversione()
 
 						'Dim Inizio2 As String = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
@@ -1634,6 +1798,14 @@ Public Class looVF
 						'gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
 						'gf.ScriveTestoSuFileAperto(Inizio2 & ": Uscita ciclo di attesa fine conversione 2")
 						'gf.ChiudeFileDiTestoDopoScrittura()
+
+						If DaWebGlobale = True Then
+							Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+							gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+							gf.ScriveTestoSuFileAperto(Inizio2 & ": Terminata conversione")
+							gf.ChiudeFileDiTestoDopoScrittura()
+						End If
 
 						Ritorno = FinisceConversioneVideo(idTipologia, idCategoria, idMultimedia, "N")
 
@@ -1652,11 +1824,18 @@ Public Class looVF
 					'	gf.EliminaFileFisico(PathVideoInput)
 					'End If
 				Else
+					Inizio2 = Now.Year & "/" & Format(Now.Month, "00") & "/" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "/Logs/ConversioneAutomatica.txt")
+					gf.ScriveTestoSuFileAperto(Inizio2 & ": File non esistente: " & PathVideoInput & " - File Output: " & PathVideoOutput & " - NomeNuovo: " & NomeNuovo)
+					gf.ChiudeFileDiTestoDopoScrittura()
+
 					Return "ERROR: File non rilevato -> " & PathVideoInput
 				End If
 			Else
 				Return "ERROR: Nessun multimedia rilevato"
 			End If
+		Else
+			Return "ERROR: Connessione non valida"
 		End If
 
 		Return "*"

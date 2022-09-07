@@ -17,6 +17,7 @@
 	Public UltimoMultimediaImm As Long
 	Public UltimoMultimediaVid As Long
 	Public StaEffettuandoConversioneAutomatica As Boolean = False
+	Public StaEffettuandoConversioneAutomaticaFinale As Boolean = False
 	Public NumeroFrames As String = ""
 	Public NomeFileDaConvertire As String = ""
 	Public DaWebGlobale As Boolean = False
