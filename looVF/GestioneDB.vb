@@ -131,7 +131,7 @@ Public Class clsGestioneDB
 			Sql2 = Sql
 		End If
 
-		If effettuaLog And Not HttpContext.Current Is Nothing Then
+		If effettuaLog Then
 			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
@@ -185,7 +185,7 @@ Public Class clsGestioneDB
 			Ritorno = Errore
 		End If
 
-		If effettuaLog And Not HttpContext.Current Is Nothing Then
+		If effettuaLog Then
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
 			ThreadScriveLog("")
 		End If
@@ -225,8 +225,8 @@ Public Class clsGestioneDB
 			Sql2 = Sql
 		End If
 
-		If effettuaLog And Not HttpContext.Current Is Nothing Then
-			nomeFileLogGenerale = MP & "\Logs\logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+		If effettuaLog Then
+			nomeFileLogGenerale = MP & "/Logs/logWS_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
 			ThreadScriveLog(Datella & ": Lettura Query")
@@ -280,7 +280,7 @@ Public Class clsGestioneDB
 			Rec = Errore
 		End If
 
-		If effettuaLog And Not HttpContext.Current Is Nothing Then
+		If effettuaLog Then
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
 			ThreadScriveLog("")
 		End If

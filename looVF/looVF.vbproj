@@ -128,6 +128,7 @@
     </Compile>
     <Compile Include="GestioneDB.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
+    <Compile Include="GestioneImmagini.vb" />
     <Compile Include="IIS.vb" />
     <Compile Include="looVF.asmx.vb">
       <DependentUpon>looVF.asmx</DependentUpon>
