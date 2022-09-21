@@ -33,6 +33,99 @@ Public Class looVF
 		Return idMultimedia
 	End Function
 
+	Private Function RitornaSuccessivoMultimediaPerPiccole(db As clsGestioneDB, ConnessioneSQL As String, idTipologia As String, Categoria As String, Filtro As String,
+															 Random As String, NomeFileLog As String, idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim QuanteRighePiccole As Long = 0
+		Dim Sql As String = ""
+		Dim NomeTabella As String = ""
+		Dim Altro As String = ""
+		Dim Rec As Object
+
+		If Filtro <> "" Then
+			Altro = " And Upper(B.NomeFile) Like '%" & Filtro.ToUpper & "%'"
+		End If
+
+		ScriveLogGlobale(NomeFileLog, "Ricerca Successivo per piccole: idTipologia " & idTipologia & " idCategoria " & idCategoria & " Categoria " & Categoria & " Filtro " & Filtro & " Random " & Random)
+
+		Sql = "Select Coalesce(Count(*), 0) As Quante From dati A " &
+			"Left Join Dati B On A.idTipologia=B.idTipologia And A.idCategoria=B.idCategoria And A.Progressivo=B.Progressivo " &
+			"Where (B.Eliminata = 'N' Or B.Eliminata = 'n') And A.idTipologia=" & idTipologia & " " & Altro
+		If idCategoria <> "" Then
+			Sql &= " And A.idCategoria=" & idCategoria
+		End If
+		ScriveLogGlobale(NomeFileLog, Sql)
+		Rec = db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+		QuanteRighePiccole = Rec("Quante").Value
+		Rec.Close
+		ScriveLogGlobale(NomeFileLog, "Quante righe piccole: " & QuanteRighePiccole)
+
+		Dim Ultimo As Integer = -1
+
+		Ultimo = UltimoMultimediaImm
+		ScriveLogGlobale(NomeFileLog, "Ultimo MM impostato: " & Ultimo)
+
+		Static x As Random = New Random()
+
+		Dim y As Long = -1
+
+		If Random = "S" Or Random = "" Then
+			y = x.Next(QuanteRighePiccole)
+			ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'S': " & y & "/" & QuanteRighePiccole)
+		Else
+			If Ultimo <> -1 Then
+				y = Ultimo + 1
+				If y > QuanteRighePiccole Then
+					y = 0
+				End If
+				ScriveLogGlobale(NomeFileLog, "Valore Sequenziale per Random 'N': " & y & "/" & QuanteRighePiccole)
+			Else
+				y = x.Next(QuanteRighePiccole)
+				ScriveLogGlobale(NomeFileLog, "Valore Random per Random 'N': " & y & "/" & QuanteRighePiccole & " Ultimo = -1")
+			End If
+		End If
+
+		If y = -1 Then
+			Return "ERROR: Non riesco a impostare il valore. Quante righe: " & QuanteRighePiccole
+		End If
+
+		UltimoMultimediaImm = y
+
+		Dim NumeroImmagine As Long
+		Dim idCategoriaRilevato As Integer
+		Dim CategoriaRilevata As String
+		Dim Altro2 As String = ""
+
+		If Filtro <> "" Then
+			Altro2 = " And Upper(C.NomeFile) Like '%" & Filtro.ToUpper & "%'"
+		End If
+
+		Sql = "Select idTipologia, idCategoria, Progressivo, Categoria, NomeFile From ( " &
+			"SELECT ROW_NUMBER() OVER(Order BY idTipologia, idCategoria, progressivo) As Numero, A.idTipologia, A.idCategoria, A.Progressivo, B.Categoria, A.NomeFile " &
+			"FROM dati A " &
+			"Left Join categorie B On A.idtipologia = B.idtipologia And A.idCategoria = B.idcategoria " &
+			"Where A.idCategoria=" & idCategoria & " " &
+			" " & Altro2 & " " &
+			") As a Where Numero=" & y
+		'"where idtipologia=" & idTipologia & " " & ' " and idcategoria=" & idCategoria & " " &
+		ScriveLogGlobale(NomeFileLog, Sql)
+		Rec = db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+		If Rec.Eof = False Then
+			NumeroImmagine = Rec("Progressivo").Value
+			idCategoriaRilevato = Rec("idCategoria").Value
+			CategoriaRilevata = Rec("Categoria").Value
+
+			Ritorno = NumeroImmagine.ToString & ";" & idCategoriaRilevato & ";" & QuanteRighePiccole & ";" & CategoriaRilevata & ";" & Ultimo & ";" & y
+		Else
+			Ritorno = "ERROR: Nessun multimedia rilevato"
+		End If
+		Rec.Close
+
+		ScriveLogGlobale(NomeFileLog, "Ritorno: " & Ritorno)
+
+		Return Ritorno
+	End Function
+
 	Private Function RitornaSuccessivoMultimediaPerPreferiti(db As clsGestioneDB, ConnessioneSQL As String, idTipologia As String, Categoria As String, Filtro As String,
 															 Random As String, NomeFileLog As String, idCategoria As String) As String
 		Dim Ritorno As String = ""
@@ -112,12 +205,15 @@ Public Class looVF
 		If Filtro <> "" Then
 			Altro2 = " Where Upper(C.NomeFile) Like '%" & Filtro.ToUpper & "%'"
 		End If
+		If idCategoria <> "" Then
+			Altro2 = " And C.idCategoria=" & idCategoria
+		End If
 
 		Sql = "Select idTipologia, idCategoria, Progressivo, Categoria, NomeFile From ( " &
 			"SELECT ROW_NUMBER() OVER(Order BY idTipologia, idCategoria, progressivo) As Numero, A.idTipologia, A.idCategoria, A.Progressivo, B.Categoria, C.NomeFile " &
 			"FROM " & NomeTabella & " A " &
 			"Left Join categorie B On A.idtipologia = B.idtipologia And A.idCategoria = B.idcategoria " &
-			"Left Join Dati C On A.idtipologia = C.idtipologia And A.idCategoria = C.idcategoria And A.Progressivo = C.Progressivo  " &
+			"Left Join Dati C On A.idtipologia = C.idtipologia And A.idCategoria = C.idcategoria And A.Progressivo = C.Progressivo " &
 			" " & Altro2 & " " &
 			") As a Where Numero=" & y
 		'"where idtipologia=" & idTipologia & " " & ' " and idcategoria=" & idCategoria & " " &
@@ -188,6 +284,14 @@ Public Class looVF
 				ScriveLogGlobale(NomeFileLog, "Categoria uguale a Preferiti: " & Categoria & ". Vado alla funzione adatta")
 
 				Ritorno = RitornaSuccessivoMultimediaPerPreferiti(Db, ConnessioneSQL, idTipologia, Categoria, Filtro, Random, NomeFileLog, idCategoria)
+
+				Return Ritorno
+			End If
+
+			If Categoria = "Piccole" Then
+				ScriveLogGlobale(NomeFileLog, "Categoria uguale a Piccole: " & Categoria & ". Vado alla funzione adatta")
+
+				Ritorno = RitornaSuccessivoMultimediaPerPiccole(Db, ConnessioneSQL, idTipologia, Categoria, Filtro, Random, NomeFileLog, idCategoria)
 
 				Return Ritorno
 			End If
@@ -613,6 +717,30 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaQuantiPreferiti(idTipologia As String, idCategoria As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim Sql As String
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+
+			Sql = "Select Coalesce(Count(*), 0) From Preferiti Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			Ritorno = Rec(0).Value & ";"
+			Rec.Close()
+
+			Sql = "Select Coalesce(Count(*), 0) From PreferitiProt Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			Ritorno &= Rec(0).Value
+			Rec.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ImpostaPreferito(idTipologia As String, idCategoria As String, idMultimedia As String, SiNo As String, Protetto As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
@@ -633,6 +761,20 @@ Public Class looVF
 			End If
 
 			Ritorno = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL)
+
+			If Not Ritorno.Contains("ERROR:") Then
+				Dim Rec As Object
+
+				Sql = "Select Coalesce(Count(*), 0) From Preferiti Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Ritorno = Rec(0).Value & ";"
+				Rec.Close()
+
+				Sql = "Select Coalesce(Count(*), 0) From PreferitiProt Where idTipologia=" & idTipologia & " And idCategoria=" & idCategoria
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Ritorno &= Rec(0).Value
+				Rec.Close()
+			End If
 		End If
 
 		Return Ritorno
@@ -2208,8 +2350,8 @@ Public Class looVF
 
 		Dim gf As New GestioneFilesDirectory
 
-		Dim NomeFileLog As String = Server.MapPath(".") & "\Logs\Log_" & dataAttuale() & ".txt"
-		gf.ApreFileDiTestoPerScrittura(NomeFileLog)
+		Dim NomeFileLog As String = Server.MapPath(".") & "\Logs\RefreshFiles_" & dataAttuale() & "_Categoria_" & Categoria & ".txt"
+		'gf.ApreFileDiTestoPerScrittura(NomeFileLog)
 
 		Try
 			Dim sPathsVideo As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiVideo.txt")
@@ -2251,8 +2393,8 @@ Public Class looVF
 
 				If idTipologia = "2" Then
 					Conta = 0
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " - VIDEO")
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
+					ScriveLogGlobale(NomeFileLog, "Acquisizione files VIDEO")
+					ScriveLogGlobale(NomeFileLog, " -----------------------------------------------------------")
 					Try
 						For Each p As String In PathVideo
 							Dim pp() As String = p.Split(";")
@@ -2264,20 +2406,20 @@ Public Class looVF
 								'	If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
 								'		idVecchioCategoria = idCategoria
 
-								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
+								'		ScriveLogGlobale(NomeFileLog,"Lettura categoria: " & Categoria)
 								'		Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
 								'		Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 								'		If Rec.Eof = False Then
 								'			idCategoria = Rec("idCategoria").Value
-								'			gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
+								'			ScriveLogGlobale(NomeFileLog,"Letto id categoria: " & idCategoria)
 								'		Else
-								'			gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
+								'			ScriveLogGlobale(NomeFileLog,"Lettura categoria: " & "ERROR: Categoria non trovata")
 								'			Return "ERROR: Categoria non trovata"
 								'		End If
 								'		Rec.Close
 								'	End If
 
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione video: " & p)
+								ScriveLogGlobale(NomeFileLog, "Elaborazione video: " & p)
 
 								'idCategoria += 1
 								'Sql = "Insert Into categorie Values (" & idCategoria & ", 2, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
@@ -2286,15 +2428,15 @@ Public Class looVF
 								If Strings.Right(pp(1), 1) <> Barra Then
 									pp(1) &= Barra
 								End If
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Scansione cartella: " & pp(1))
+								ScriveLogGlobale(NomeFileLog, "Scansione cartella: " & pp(1))
 								gf.ScansionaDirectorySingola(pp(1))
 								Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 								Dim Files() As String = gf.RitornaFilesRilevati
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Numero files rilevati: " & qFiles)
+								ScriveLogGlobale(NomeFileLog, "Numero files rilevati: " & qFiles)
 
 								For i As Integer = 1 To qFiles
 									If (i / 1000 = Int(i / 1000)) Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Scrittura: " & i & "/" & qFiles)
+										ScriveLogGlobale(NomeFileLog, "Scrittura: " & i & "/" & qFiles)
 									End If
 
 									Dim SoloNome As String = Files(i).Replace(pp(1), "").Replace("'", "''")
@@ -2309,12 +2451,14 @@ Public Class looVF
 									Sql = "Select * from dati where idTipologia=2 And idCategoria=" & idCategoria & " And (nomefile='" & SoloNome & "' Or nomefile = '" & SoloNomeConv & "')"
 									Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 									If Rec.Eof = True Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Aggiungo file " & Files(i))
+										ScriveLogGlobale(NomeFileLog, "Aggiungo file " & Files(i))
 
 										Dim Dime As String = gf.TornaDimensioneFile(Files(i))
 										Dim Datella As String = gf.TornaDataDiCreazione(Files(i))
 
 										Conta += 1
+
+										Dim NomeSingolo As String = gf.TornaNomeFileDaPath(SoloNome)
 
 										Sql = "Insert Into dati Values (" &
 											" " & Conta & ", " &
@@ -2323,24 +2467,28 @@ Public Class looVF
 											"'" & SoloNome & "', " &
 											" " & Dime & ", " &
 											"'" & Datella & "', " &
-											"'N' " &
+											"'N', " &
+											"'" & NomeSingolo.Replace("'", "''") & "' " &
 											")"
 										Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If sRitorno <> "OK" Then
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore: " & sRitorno)
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
+											ScriveLogGlobale(NomeFileLog, "Errore: " & sRitorno)
+											ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
 
 											StaLeggendoImmagini = False
 
 											gf.ChiudeFileDiTestoDopoScrittura()
 
 											Return "ERROR: " & sRitorno & " -> " & Sql
+										Else
+											ScriveLogGlobale(NomeFileLog, "Scrittura in tabella eseguita correttamente")
 										End If
 									End If
 								Next
 
 								Dim Eliminati As Integer = 0
 
+								ScriveLogGlobale(NomeFileLog, "Rimozione files non trovati")
 								Sql = "Select * from dati where idTipologia=2 And idCategoria=" & idCategoria & " and nomefile not like '%_CONV%'"
 								Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 								Do Until Rec.Eof
@@ -2355,13 +2503,13 @@ Public Class looVF
 									Next
 
 									If Ok = False Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Rimuovo file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
+										ScriveLogGlobale(NomeFileLog, "Rimuovo file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
 
 										Sql = "Update Dati Set Eliminata = 'S' Where idTipologia=2 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
 										Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If sRitorno <> "OK" Then
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore su eliminazione: " & sRitorno)
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
+											ScriveLogGlobale(NomeFileLog, "Errore su eliminazione: " & sRitorno)
+											ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
 
 											StaLeggendoImmagini = False
 
@@ -2377,24 +2525,24 @@ Public Class looVF
 								Loop
 								Rec.Close
 
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Fine Scrittura: " & qFiles & "/" & qFiles)
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Aggiunti: " & Conta)
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Eliminati: " & Eliminati)
+								ScriveLogGlobale(NomeFileLog, "Fine Scrittura: " & qFiles & "/" & qFiles)
+								ScriveLogGlobale(NomeFileLog, "Aggiunti: " & Conta)
+								ScriveLogGlobale(NomeFileLog, "Eliminati: " & Eliminati)
 							End If
 						Next
 					Catch ex As Exception
-						gf.ScriveTestoSuFileAperto(dataAttuale() & "ERRORE su elaborazione video: Tipologia: " & idTipologia & " Categoria:" & Categoria & " -> " & ex.Message)
+						ScriveLogGlobale(NomeFileLog, "ERRORE su elaborazione video: Tipologia: " & idTipologia & " Categoria:" & Categoria & " -> " & ex.Message)
 					End Try
 
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
+					ScriveLogGlobale(NomeFileLog, " -----------------------------------------------------------")
 
 					gf.ScriveTestoSuFileAperto("")
 					gf.ScriveTestoSuFileAperto("")
 				End If
 
 				If idTipologia = "1" Then
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " - IMMAGINI")
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
+					ScriveLogGlobale(NomeFileLog, "IMMAGINI")
+					ScriveLogGlobale(NomeFileLog, "-----------------------------------------------------------")
 					Conta = 0
 					'Dim idCategoria As Integer = -1
 					'Dim idVecchioCategoria As Integer = 0
@@ -2409,20 +2557,20 @@ Public Class looVF
 								'If idCategoria = -1 Or idCategoria <> idVecchioCategoria Then
 								'	idVecchioCategoria = idCategoria
 
-								'	gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & Categoria)
+								'	ScriveLogGlobale(NomeFileLog,"Lettura categoria: " & Categoria)
 								'	Sql = "Select * From Categorie Where idTipologia=" & idTipologia & " And Categoria='" & Categoria & "'"
 								'	Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 								'	If Rec.Eof = False Then
 								'		idCategoria = Rec("idCategoria").Value
-								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Letto id categoria: " & idCategoria)
+								'		ScriveLogGlobale(NomeFileLog,"Letto id categoria: " & idCategoria)
 								'	Else
-								'		gf.ScriveTestoSuFileAperto(dataAttuale() & " - Lettura categoria: " & "ERROR: Categoria non trovata")
+								'		ScriveLogGlobale(NomeFileLog,"Lettura categoria: " & "ERROR: Categoria non trovata")
 								'		Return "ERROR: Categoria non trovata"
 								'	End If
 								'	Rec.Close
 								'End If
 
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elaborazione immagini: " & p)
+								ScriveLogGlobale(NomeFileLog, "Elaborazione immagini: " & p)
 
 								'idCategoria += 1
 								'Sql = "Insert Into categorie Values (" & idCategoria & ", 1, '" & pp(0).Replace("'", "''") & "', '" & pp(1).Replace("'", "''") & "', '" & pp(2) & "', '" & pp(3) & "')"
@@ -2431,15 +2579,15 @@ Public Class looVF
 								If Strings.Right(pp(1), 1) <> Barra Then
 									pp(1) &= Barra
 								End If
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Scansione cartella: " & pp(1))
+								ScriveLogGlobale(NomeFileLog, "Scansione cartella: " & pp(1))
 								gf.ScansionaDirectorySingola(pp(1))
 								Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 								Dim Files() As String = gf.RitornaFilesRilevati
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Numero files: " & qFiles)
+								ScriveLogGlobale(NomeFileLog, "Numero files: " & qFiles)
 								Conta = 0
 								For i As Integer = 1 To qFiles
 									If (i / 1000 = Int(i / 1000)) Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Scrittura: " & i & "/" & qFiles)
+										ScriveLogGlobale(NomeFileLog, "Scrittura: " & i & "/" & qFiles)
 									End If
 
 									Dim SoloNome As String = Files(i).Replace(pp(1), "").Replace("'", "''")
@@ -2450,12 +2598,14 @@ Public Class looVF
 									Sql = "Select * from dati where idTipologia=1 And idCategoria=" & idCategoria & " And nomefile='" & SoloNome & "'"
 									Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 									If Rec.Eof = True Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Aggiungo file " & Files(i))
+										ScriveLogGlobale(NomeFileLog, "Aggiungo file " & Files(i))
 
 										Dim Dime As String = gf.TornaDimensioneFile(Files(i))
 										Dim Datella As String = gf.TornaDataDiCreazione(Files(i))
 
 										Conta += 1
+
+										Dim NomeSingolo As String = gf.TornaNomeFileDaPath(SoloNome)
 
 										Sql = "Insert Into dati Values (" &
 											" " & Conta & ", " &
@@ -2464,17 +2614,20 @@ Public Class looVF
 											"'" & SoloNome & "', " &
 											" " & Dime & ", " &
 											"'" & Datella & "', " &
-											"'N' " &
+											"'N', " &
+											"'" & NomeSingolo.Replace("'", "''") & "' " &
 											")"
 										Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If sRitorno <> "OK" Then
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore: " & sRitorno)
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
+											ScriveLogGlobale(NomeFileLog, "Errore: " & sRitorno)
+											ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
 											StaLeggendoImmagini = False
 
 											gf.ChiudeFileDiTestoDopoScrittura()
 
 											Return "ERROR: " & sRitorno
+										Else
+											ScriveLogGlobale(NomeFileLog, "Scrittura in tabella eseguita correttamente")
 										End If
 									End If
 								Next
@@ -2495,13 +2648,13 @@ Public Class looVF
 									Next
 
 									If Ok = False Then
-										gf.ScriveTestoSuFileAperto(dataAttuale() & " - Elimino file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
+										ScriveLogGlobale(NomeFileLog, "Elimino file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
 
 										Sql = "Update Dati Set Eliminata = 'N' Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
 										Dim sRitorno As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If sRitorno <> "OK" Then
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - Errore su eliminazione: " & sRitorno)
-											gf.ScriveTestoSuFileAperto(dataAttuale() & " - SQL: " & Sql)
+											ScriveLogGlobale(NomeFileLog, "Errore su eliminazione: " & sRitorno)
+											ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
 
 											StaLeggendoImmagini = False
 
@@ -2516,19 +2669,19 @@ Public Class looVF
 								Loop
 								Rec.Close
 
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Fine Scrittura: " & qFiles & "/" & qFiles)
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Aggiunti: " & Conta)
-								gf.ScriveTestoSuFileAperto(dataAttuale() & " - Eliminati: " & Eliminati)
+								ScriveLogGlobale(NomeFileLog, "Fine Scrittura: " & qFiles & "/" & qFiles)
+								ScriveLogGlobale(NomeFileLog, "Aggiunti: " & Conta)
+								ScriveLogGlobale(NomeFileLog, "Eliminati: " & Eliminati)
 							End If
 						Next
 					Catch ex As Exception
-						gf.ScriveTestoSuFileAperto(dataAttuale() & "ERRORE su elaborazione immagini: Tipologia: " & idTipologia & " Categoria:" & Categoria & " -> " & ex.Message)
+						ScriveLogGlobale(NomeFileLog, "ERRORE su elaborazione immagini: Tipologia: " & idTipologia & " Categoria:" & Categoria & " -> " & ex.Message)
 					End Try
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
+					ScriveLogGlobale(NomeFileLog, " -----------------------------------------------------------")
 				End If
 
 				gf.ScriveTestoSuFileAperto("")
-				gf.ScriveTestoSuFileAperto(dataAttuale() & " - RIEPILOGO")
+				ScriveLogGlobale(NomeFileLog, "RIEPILOGO")
 				Try
 					If TipoDB = "SQLSERVER" Then
 						Sql = "Select Tipologia, Categoria, Isnull(Count(*),0) As Quanti From Dati A " &
@@ -2552,18 +2705,18 @@ Public Class looVF
 						Dim Categoria2 As String = Rec("Categoria").Value
 						Dim Quanti As String = Rec("Quanti").Value
 
-						gf.ScriveTestoSuFileAperto(dataAttuale() & " - " & Tipologia & ": " & Categoria2 & " -> Files " & Quanti)
+						ScriveLogGlobale(NomeFileLog, "" & Tipologia & ": " & Categoria2 & " -> Files " & Quanti)
 
 						Rec.MoveNext
 					Loop
 					Rec.Close
 				Catch ex As Exception
-					gf.ScriveTestoSuFileAperto(dataAttuale() & " ERRORE Nel riepilogo: " & ex.Message)
+					ScriveLogGlobale(NomeFileLog, " ERRORE Nel riepilogo: " & ex.Message)
 				End Try
-				gf.ScriveTestoSuFileAperto(dataAttuale() & " -----------------------------------------------------------")
+				ScriveLogGlobale(NomeFileLog, " -----------------------------------------------------------")
 			End If
 		Catch ex As Exception
-			gf.ScriveTestoSuFileAperto(dataAttuale() & ex.Message)
+			ScriveLogGlobale(NomeFileLog, ex.Message)
 		End Try
 
 		VecchiaRicerca = ""
@@ -2688,13 +2841,17 @@ Public Class looVF
 							Dim Dime As String = gf.TornaDimensioneFile(Files(i))
 							Dim Datella As String = gf.TornaDataDiCreazione(Files(i))
 
+							Dim NomeSingolo As String = gf.TornaNomeFileDaPath(SoloNome)
+
 							Sql = "Insert Into dati Values (" &
 								" " & Conta & ", " &
 								"2, " &
 								" " & idCategoria & ", " &
 								"'" & SoloNome & "', " &
 								" " & Dime & ", " &
-								"'" & Datella & "' " &
+								"'" & Datella & "', " &
+								"'N', " &
+								"'" & NomeSingolo.Replace("'", "''") & "' " &
 								")"
 							sRitorno = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 							If sRitorno <> "OK" Then
@@ -2756,13 +2913,18 @@ Public Class looVF
 							Dim Datella As String = gf.TornaDataDiCreazione(Files(i))
 
 							Conta += 1
+
+							Dim NomeSingolo As String = gf.TornaNomeFileDaPath(SoloNome)
+
 							Sql = "Insert Into dati Values (" &
 								" " & Conta & ", " &
 								"1, " &
 								" " & idCategoria & ", " &
 								"'" & SoloNome & "', " &
 								" " & Dime & ", " &
-								"'" & Datella & "' " &
+								"'" & Datella & "', " &
+								"'N', " &
+								"'" & NomeSingolo.Replace("'", "''") & "' " &
 								")"
 							sRitorno = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 							If sRitorno <> "OK" Then
@@ -3113,17 +3275,23 @@ Public Class looVF
 				Try
 					R = gf.CopiaFileFisico(filetto, daCopiare, True)
 				Catch ex As Exception
-					If giaProvatoACancellare = False Then
-						Threading.Thread.Sleep(1000)
-						ScriveLogGlobale(NomeFileLog, "Problema con i permessi... Riprovo a eseguire la funzione")
-						giaProvatoACancellare = True
-						Dim Ritorno2 As String = EliminaMultimediaDaId(idTipologia, idCategoria, idMultimedia)
-						Return Ritorno2
-					Else
-						giaProvatoACancellare = False
-						Return "ERROR: " & ex.Message
-					End If
+					'If giaProvatoACancellare = False Then
+					'	Threading.Thread.Sleep(1000)
+					ScriveLogGlobale(NomeFileLog, "Problema con i permessi... Riprovo a eseguire la funzione. " & ex.Message)
+					'	giaProvatoACancellare = True
+					'	Dim Ritorno2 As String = EliminaMultimediaDaId(idTipologia, idCategoria, idMultimedia)
+					Return "ERROR: " & ex.Message
+					'Else
+					'	giaProvatoACancellare = False
+					'	Return "ERROR: " & ex.Message
+					'End If
 				End Try
+
+				If gf.EsisteFile(daCopiare) Then
+					ScriveLogGlobale(NomeFileLog, "File copiato")
+				Else
+					Return "ERROR: Copia file non riuscita"
+				End If
 
 				If r.Contains("ERROR:") Then
 					ScriveLogGlobale(NomeFileLog, r)
@@ -3303,8 +3471,33 @@ Public Class looVF
 	End Sub
 
 	' http://looigi.ddns.net:1050/looVF.asmx/CalcolaPuntiniImmagine?idCategoria=4&Refresh=S
+
 	<WebMethod()>
-	Public Function CalcolaPuntiniImmagine(idCategoria As String, Refresh As String) As String
+	Public Function CalcolaPuntiniImmagine2(idCategoria As String, Refresh As String) As String
+		Dim Ritorno As String = "*"
+
+		If staCaricandoPuntini = True Then
+			Ritorno = "ERROR: Caricamento punti già in corso"
+		Else
+			idCategoriaGlobalePerPuntini = idCategoria
+			RefreshPerPuntini = Refresh
+
+			timerConvP = New Timers.Timer(100)
+			AddHandler timerConvP.Elapsed, New ElapsedEventHandler(AddressOf CalcolaPuntiniImmagine)
+			timerConvP.Start()
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Sub CalcolaPuntiniImmagine()
+		timerConvP.Stop()
+
+		staCaricandoPuntini = True
+
+		Dim idCategoria As String = idCategoriaGlobalePerPuntini
+		Dim Refresh As String = RefreshPerPuntini
+
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		Dim gi As New GestioneImmagini
@@ -3321,14 +3514,14 @@ Public Class looVF
 			Dim NumeroImmagineConvertita As Long = 0
 
 			If Refresh = "S" Then
-				Sql = "Update informazioniimmagini Set PuntiDiagonale=null, PuntiCornice=null"
+				Sql = "Update informazioniimmagini Set PuntiDiagonale=null, PuntiCornice=null, Punti=null, Hash=null"
 				Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
 				If Rit = "OK" Then
 					ScriveLogGlobale(NomeFileLog, "Eliminazione tabella effettuata")
 				Else
 					ScriveLogGlobale(NomeFileLog, Rit)
-					Return Rit
+					Exit Sub
 				End If
 			End If
 
@@ -3356,12 +3549,15 @@ Public Class looVF
 
 					Dim PuntiDiagonale As String = Pv(0)
 					Dim PuntiCornice As String = Pv(1)
+					Dim PuntiCorpo As String = Pv(2)
+					Dim Hash As String = Pv(3)
 
 					ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti diagonale " & PuntiDiagonale)
 					ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti cornice " & PuntiCornice)
+					ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti corpo " & PuntiCorpo)
 
 					Sql = "Update informazioniimmagini " &
-						"Set PuntiDiagonale=" & PuntiDiagonale & ", PuntiCornice=" & PuntiCornice & " " &
+						"Set PuntiDiagonale=" & PuntiDiagonale & ", PuntiCornice=" & PuntiCornice & ", Punti=" & PuntiCorpo & ", Hash='" & Hash & "' " &
 						"Where idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
 					Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
@@ -3373,7 +3569,7 @@ Public Class looVF
 				End If
 
 				'q += 1
-				'If q > 0 Then
+				'If q > 10 Then
 				'	Exit Do
 				'End If
 
@@ -3384,9 +3580,11 @@ Public Class looVF
 			Ritorno = "*"
 			' Acquisizione puntini per ricerca più precisa
 		End If
+		ScriveLogGlobale(NomeFileLog, "Fine elaborazione")
+		staCaricandoPuntini = False
 
-		Return Ritorno
-	End Function
+		'Return Ritorno
+	End Sub
 
 	<WebMethod()>
 	Public Function CalcolaHashImmagine(idCategoria As String, idMultimedia As String, Refresh As String, NumeroImmagineConvertita As String) As String
@@ -3502,10 +3700,10 @@ Public Class looVF
 		Return Ritorno
 	End Function
 
-	' Select 'Punti pieni', count(*) From informazioniimmagini A Where (PuntiDiagonale is Not Null Or PuntiDiagonale <> '') And A.idCategoria=4 union ALL Select 'Punti nulli', count(*) From informazioniimmagini A where (PuntiDiagonale is Null Or PuntiDiagonale = '') And A.idCategoria = 4 Union ALL Select 'Tutto', Count(*) From informazioniimmagini A
-
 	<WebMethod()>
-	Public Function TrovaImmaginiUguali(idCategoria As String, ricercaPerHash As String, ricercaPerData As String, ricercaPerDimensioni As String, ricercaPerPunti As String, QuanteImmagini As String, Inizio As String) As String
+	Public Function TrovaImmaginiUguali(idCategoria As String, ricercaPerHash As String, ricercaPerData As String, ricercaPerDimensioni As String, ricercaPerPunti As String,
+										ricercaPerPuntiDiagonale As String, ricercaPerPuntiCornice As String, ricercaPerPuntiCorpo As String, ricercaPerNomeUguale As String,
+										ricercaPerPeso As String, QuanteImmagini As String, Inizio As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		Dim Ritorno As String = "*"
@@ -3515,6 +3713,8 @@ Public Class looVF
 			Dim RitornoPunti As String = ""
 			Dim RitornoDataOra As String = ""
 			Dim RitornoDimensioni As String = ""
+			Dim RitornoNomeUguale As String = ""
+			Dim RitornoPeso As String = ""
 
 			If ricercaPerHash = "S" Then
 				RitornoHash = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Hash", "HASH", idCategoria, QuanteImmagini, Inizio)
@@ -3532,14 +3732,389 @@ Public Class looVF
 			RitornoDimensioni &= "|"
 
 			If ricercaPerPunti = "S" Then
-				RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(PuntiDiagonale, '-', PuntiCornice)", "PUNTI", idCategoria, QuanteImmagini, Inizio)
+				Dim aTipo = New List(Of String)
+				Dim Tipo As String = ""
+				Dim q As Integer = 0
+				Dim Fai As Boolean = True
+
+				If ricercaPerPuntiDiagonale = "S" Then
+					aTipo.Add("PuntiDiagonale")
+				End If
+				If ricercaPerPuntiCornice = "S" Then
+					aTipo.Add("PuntiCornice")
+				End If
+				If ricercaPerPuntiCorpo = "S" Then
+					aTipo.Add("Punti")
+				End If
+
+				For Each t As String In aTipo
+					Tipo &= t & ", '-',"
+					q += 1
+				Next
+				If Tipo.Length > 0 Then
+					Tipo = Mid(Tipo, 1, Tipo.Length - 6)
+				End If
+
+				If q > 1 Then
+					Tipo = "Concat(" & Tipo & ")"
+				Else
+					If q = 0 Then
+						Fai = False
+					End If
+				End If
+
+				If Fai Then
+					RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, Tipo, "PUNTI", idCategoria, QuanteImmagini, Inizio)
+				End If
 			End If
 			RitornoPunti &= "|"
 
-			Ritorno = RitornoHash & RitornoDataOra & RitornoDimensioni & RitornoPunti
+			If ricercaPerNomeUguale = "S" Then
+				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio)
+			End If
+			RitornoNomeUguale &= "|"
+
+			If ricercaPerPeso = "S" Then
+				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio)
+			End If
+			RitornoPeso &= "|"
+
+			Ritorno = RitornoHash & RitornoDataOra & RitornoDimensioni & RitornoPunti & RitornoNomeUguale & RitornoPeso
 		End If
 
 		Return Ritorno
 	End Function
+
+	<WebMethod()>
+	Public Function TrovaImmaginiPiccole(idCategoria As String, QuanteImmagini As String, Inizio As String, Dimensioni As String, Width As String, Height As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		Dim Ritorno As String = ""
+
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Dim Sql As String = ""
+
+			Sql = "Select Coalesce(Count(*),0) From dati As A " &
+				"Left Join informazioniimmagini B On A.idcategoria = B.idCategoria And A.progressivo = B.idMultimedia " &
+				"Left Join categorie C On A.idtipologia = C.idtipologia And A.idcategoria = C.idcategoria " &
+				"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.progressivo=d.progressivo " &
+				"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.progressivo=e.progressivo " &
+				"Where A.idtipologia = 1 And A.idcategoria = " & idCategoria & " And (A.dimensioni < " & Dimensioni & " Or B.Width < " & Width & " Or B.Height < " & Height & ") " &
+				"And (A.Eliminata = 'N' Or A.Eliminata = 'n') And (B.Eliminata = 'N' Or B.Eliminata = 'n')"
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If TypeOf (Rec) Is String Then
+				Return Rec
+			End If
+
+			Dim QuanteRigheTotali As Integer = -1
+
+			If Rec.Eof = True Then
+				Ritorno = "ERROR: Nessun file rilevato"
+			Else
+				QuanteRigheTotali = Rec(0).Value
+				Rec.Close
+			End If
+
+			Sql = "Select * From (" &
+				"Select ROW_NUMBER() OVER(Order BY A.progressivo) As NumeroRiga, A.progressivo, B.DataOra, C.percorso, C.Protetta, A.nomefile, A.dimensioni, " &
+				"Coalesce(B.Width, 0) As Width, Coalesce(B.Height, 0) As Height, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, A.solonome From dati As A " &
+				"Left Join informazioniimmagini B On A.idcategoria = B.idCategoria And A.progressivo = B.idMultimedia " &
+				"Left Join categorie C On A.idtipologia = C.idtipologia And A.idcategoria = C.idcategoria " &
+				"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.progressivo=d.progressivo " &
+				"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.progressivo=e.progressivo " &
+				"Where A.idtipologia = 1 And A.idcategoria = " & idCategoria & " And (A.dimensioni < " & Dimensioni & " Or B.Width < " & Width & " Or B.Height < " & Height & ") " & ' And B.idCategoria Is Not Null " &
+				"And (A.Eliminata = 'N' Or A.Eliminata = 'n') And (B.Eliminata = 'N' Or B.Eliminata = 'n') " &
+				"Order By A.dimensioni, B.Width, B.Height, A.solonome " &
+				") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
+			' Return Sql
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If TypeOf (Rec) Is String Then
+				Return Rec
+			End If
+
+			If Rec.Eof = True Then
+				Ritorno = "ERROR: Nessun file rilevato"
+			Else
+				Do Until Rec.Eof
+					'If Not Rec("Nomefile").Value.ToString.Contains("PICCOLE/") Then
+					Ritorno &= Rec("Progressivo").Value & ";"
+					Ritorno &= Rec("percorso").Value & ";"
+					Ritorno &= Rec("nomefile").Value & ";"
+					Ritorno &= Rec("Preferito").Value & ";"
+					Ritorno &= Rec("PreferitoProt").Value & ";"
+					Ritorno &= Rec("dimensioni").Value & ";"
+					Ritorno &= Rec("Width").Value & ";"
+					Ritorno &= Rec("Height").Value & ";"
+					Ritorno &= Rec("DataOra").Value & ";"
+					Ritorno &= Rec("Protetta").Value & ";"
+					Ritorno &= "§"
+					'End If
+
+					Rec.MoveNext
+				Loop
+				Rec.Close
+
+				Ritorno &= "*" & QuanteRigheTotali
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function SpostaImmaginePiccole(idCategoria As String, idMultiMedia As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		Dim Ritorno As String = "*"
+		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/SpostamentoImmagine.txt"
+		Dim Barra As String = ""
+
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Dim Sql As String = ""
+
+			If TipoDB = "SQLSERVER" Then
+				Barra = "\"
+			Else
+				Barra = "/"
+			End If
+
+			Sql = "Select Dati.NomeFile, Dati.Dimensioni, Dati.Data, Dati.idCategoria, Categorie.Categoria, Categorie.Percorso, Categorie.LetteraDisco From Dati " &
+				"Left Join Categorie On Dati.idCategoria=Categorie.idCategoria And Dati.idTipologia=Categorie.idTipologia " &
+				"Where Dati.idTipologia=1 And Dati.idCategoria=" & idCategoria & " And Progressivo=" & idMultiMedia
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If Rec.Eof = False Then
+				Dim Conversione As String = "" & Rec("LetteraDisco").Value.ToString
+				Dim PathOriginale As String = Rec("Percorso").Value.ToString
+				If Conversione <> "" And Conversione <> "--" Then
+					Dim cc() As String = Conversione.Split("*")
+					PathOriginale = PathOriginale.Replace(cc(0), cc(1))
+				End If
+				If Right(PathOriginale, 1) <> Barra Then
+					PathOriginale &= Barra
+				End If
+
+				Dim gf As New GestioneFilesDirectory
+
+				Dim filetto As String = PathOriginale & Rec("NomeFile").value
+				Dim CartellaIntermedia As String = PathOriginale
+				If CartellaIntermedia.Contains("CartelleCondivise") Then
+					CartellaIntermedia = Mid(CartellaIntermedia, CartellaIntermedia.IndexOf("CartelleCondivise") + 18, CartellaIntermedia.Length)
+				End If
+				Dim daCopiare As String = Server.MapPath(".") & "Piccole" & CartellaIntermedia & Rec("NomeFile").value
+				Dim PercorsoDestinazione As String = Server.MapPath(".") & "Piccole" ' & CartellaIntermedia
+				gf.CreaDirectoryDaPercorso(daCopiare)
+				gf.ImpostaAttributiFile(Server.MapPath(".") & "Piccole" & CartellaIntermedia, FileAttribute.Normal)
+				ScriveLogGlobale(NomeFileLog, "Impostati attributi cartella di backup: " & Server.MapPath(".") & "BackupCancellazioni" & CartellaIntermedia)
+
+				ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
+				ScriveLogGlobale(NomeFileLog, "Spostamento idCategoria " & idCategoria & " idMultimedia " & idMultiMedia)
+				ScriveLogGlobale(NomeFileLog, "Nome File origine: " & filetto)
+				ScriveLogGlobale(NomeFileLog, "Nome File destinazione: " & daCopiare)
+				ScriveLogGlobale(NomeFileLog, "Percorso categoria destinazione: " & PercorsoDestinazione)
+
+				Dim R As String = ""
+				Try
+					R = gf.CopiaFileFisico(filetto, daCopiare, True)
+				Catch ex As Exception
+					'If giaProvatoACancellare = False Then
+					'	Threading.Thread.Sleep(1000)
+					ScriveLogGlobale(NomeFileLog, "Problema con i permessi... Riprovo a eseguire la funzione di spostamento: " & ex.Message)
+					'	giaProvatoACancellare = True
+					'	Dim Ritorno2 As String = SpostaImmaginePiccole(idCategoria, idMultiMedia)
+					'	Return Ritorno2
+					'Else
+					'	giaProvatoACancellare = False
+					Return "ERROR: " & ex.Message
+					'End If
+				End Try
+				If gf.EsisteFile(daCopiare) Then
+					ScriveLogGlobale(NomeFileLog, "File copiato")
+				Else
+					Return "ERROR: Copia file non riuscita"
+				End If
+
+				gf.ImpostaAttributiFile(filetto, FileAttribute.Normal)
+				Dim Rit As String = gf.EliminaFileFisico(filetto)
+				ScriveLogGlobale(NomeFileLog, "File eliminato " & Rit)
+
+				If Rit = "" Then
+					Dim idCategoriaPiccole As String = ""
+
+					Sql = "Select * From Categorie Where idTipologia=1 And Categoria='Piccole'"
+					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+					If TypeOf (Rec) Is String Then
+						Return Rec
+					End If
+
+					If Rec.Eof = True Then
+						Rec.Close
+						ScriveLogGlobale(NomeFileLog, "Categoria Non Trovata. La inserisco")
+
+						Sql = "Select Coalesce(Max(idCategoria) + 1, 1) From Categorie Where idTipologia = 1"
+						Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+						If TypeOf (Rec) Is String Then
+							Return Rec
+						End If
+						idCategoriaPiccole = Rec(0).Value
+						Rec.Close
+						ScriveLogGlobale(NomeFileLog, "Categoria Non Trovata. idCategoria: " & idCategoriaPiccole)
+
+						Sql = "Insert Into categorie Values (" & idCategoriaPiccole & ", 1, 'Piccole', '" & PercorsoDestinazione & "', 'S', '--')"
+						Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+						If Rit <> "OK" Then
+							Return Rit
+						End If
+					Else
+						idCategoriaPiccole = Rec("idCategoria").Value
+						ScriveLogGlobale(NomeFileLog, "Categoria Trovata. idCategoria: " & idCategoriaPiccole)
+						Rec.Close
+					End If
+
+					ScriveLogGlobale(NomeFileLog, "Aggiorno categoria immagine")
+					Sql = "Update dati Set idCategoria=" & idCategoriaPiccole & " Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & idMultiMedia
+					Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+					If Rit <> "OK" Then
+						ScriveLogGlobale(NomeFileLog, Rit)
+						Return Rit
+					Else
+						ScriveLogGlobale(NomeFileLog, "Aggiorno categoria preferito")
+						Sql = "Update preferiti Set idCategoria=" & idCategoriaPiccole & " Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & idMultiMedia
+						Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+						If Rit <> "OK" Then
+							ScriveLogGlobale(NomeFileLog, Rit)
+							Return Rit
+						Else
+							ScriveLogGlobale(NomeFileLog, "Aggiorno categoria preferito protetto")
+							Sql = "Update preferitiprot Set idCategoria=" & idCategoriaPiccole & " Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & idMultiMedia
+							Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+							If Rit <> "OK" Then
+								ScriveLogGlobale(NomeFileLog, Rit)
+								Return Rit
+							Else
+								Ritorno = "*"
+							End If
+						End If
+					End If
+				Else
+					Ritorno = Rit
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	'<WebMethod()>
+	'Public Function PrendeExif(idCategoria As String) As String
+	'	Dim gi As New GestioneImmagini
+	'	Dim Db As New clsGestioneDB(TipoDB)
+	'	Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+	'	Dim Ritorno As String = ""
+
+	'	If ConnessioneSQL <> "" Then
+	'		Dim Rec As Object
+	'		Dim Sql As String = ""
+
+	'		Sql = "Select B.Percorso, A.NomeFile From dati A " &
+	'			"Left Join categorie B On A.idTipologia = B.idTipologia And A.idCategoria = B.idCategoria " &
+	'			"Where A.idTipologia=1 And A.idCategoria=" & idCategoria
+	'		Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+	'		If TypeOf (Rec) Is String Then
+	'			Return Rec
+	'		End If
+
+	'		If Rec.Eof = True Then
+	'			Ritorno = "ERROR: Nessun file rilevato"
+	'		Else
+	'			Dim q As Integer = 0
+
+	'			Do Until Rec.Eof
+	'				Dim Nome As String = Rec("Percorso").Value & "/" & Rec("NomeFile").Value
+
+	'				Ritorno &= Nome & ";" & gi.RitornaExif(Nome) & "§"
+
+	'				q += 1
+	'				If q = 50 Then
+	'					Exit Do
+	'				End If
+
+	'				Rec.MoveNext
+	'			Loop
+	'			Rec.Close
+	'		End If
+	'	End If
+
+	'	Return Ritorno
+	'End Function
+
+	'<WebMethod()>
+	'Public Function AggiornaNomiFile() As String
+	'	Dim Db As New clsGestioneDB(TipoDB)
+	'	Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+	'	Dim Ritorno As String = "*"
+	'	Dim gf As New GestioneFilesDirectory
+
+	'	If ConnessioneSQL <> "" Then
+	'		Dim Rec As Object
+	'		Dim Sql As String = ""
+
+	'		Sql = "Select * From dati where solonome is null or solonome = ''"
+	'		Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+	'		If TypeOf (Rec) Is String Then
+	'			Return Rec
+	'		End If
+
+	'		If Rec.Eof = True Then
+	'			Ritorno = "ERROR: Nessun file rilevato"
+	'		Else
+	'			Do Until Rec.Eof
+	'				Dim Nome As String = Rec("nomefile").Value
+	'				If Nome.Contains("ERROR:") Then
+	'					Sql = "Delete From dati " &
+	'						"Where idTipologia=" & Rec("idTipologia").Value & " And idCategoria=" & Rec("idCategoria").Value & " And Progressivo=" & Rec("Progressivo").Value
+
+	'					Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+	'					If Rit <> "OK" Then
+	'						Ritorno = Rit & "  --- " & Sql
+	'						Exit Do
+	'					End If
+	'				Else
+	'					Dim SoloNome As String = gf.TornaNomeFileDaPath(Nome)
+	'					If SoloNome = "" Then SoloNome = Nome
+
+	'					Sql = "Update dati Set solonome='" & SoloNome.Replace("'", "''") & "' " &
+	'						"Where idTipologia=" & Rec("idTipologia").Value & " And idCategoria=" & Rec("idCategoria").Value & " And Progressivo=" & Rec("Progressivo").Value
+
+	'					Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+	'					If Rit <> "OK" Then
+	'						' Ritorno = Rit & "  --- " & Sql
+	'						' Exit Do
+	'					End If
+	'				End If
+
+	'				Rec.MoveNext
+	'			Loop
+	'			Rec.Close
+	'		End If
+	'	End If
+
+	'	Return Ritorno
+	'End Function
+
+	' Select 'Piccole', count(*) From dati where idtipologia=1 and idCategoria=5
+	' union ALL
+	' Select 'Punti pieni', count(*) From informazioniimmagini A Where (PuntiDiagonale is Not Null Or PuntiDiagonale <> '') And A.idCategoria=4
+	' union ALL
+	' Select 'Punti nulli', count(*) From informazioniimmagini A where (PuntiDiagonale is Null Or PuntiDiagonale = '') And A.idCategoria = 4
+	' Union ALL
+	' Select 'Tutto', Count(*) From informazioniimmagini A
 
 End Class

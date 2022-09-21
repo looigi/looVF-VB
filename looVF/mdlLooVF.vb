@@ -18,6 +18,7 @@ Module mdlLooVF
 	Public timerLog As New Timers.Timer
 	Public timerConv As New Timers.Timer
 	Public timerConvI As New Timers.Timer
+	Public timerConvP As New Timers.Timer
 	Public VecchiaRicerca As String = ""
 	Public VecchioQuante As Long
 	Public UltimoMultimediaImm As Long
@@ -39,7 +40,9 @@ Module mdlLooVF
 	Public bytesVecchiGlobale As String = ""
 	Public bytesNuoviGlobale As String = ""
 	Public idCategoriaGlobalePerConversione As String = ""
-	Public giaProvatoACancellare As Boolean = False
+	Public idCategoriaGlobalePerPuntini As String = ""
+	Public RefreshPerPuntini As String = ""
+	Public staCaricandoPuntini As Boolean = False
 
 	Public Function dataAttuale() As String
 		Return Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
@@ -66,9 +69,13 @@ Module mdlLooVF
 		Dim Sql As String = ""
 
 		Sql = "Select Coalesce(Count(*),0) From ( " &
-			"Select " & TipoRicerca & " As TipoRicerca FROM informazioniimmagini " &
-			"where eliminata='N' or eliminata='n' group by " & TipoRicerca & " having count(*) > 1 " &
+			"Select " & TipoRicerca & " As TipoRicerca FROM informazioniimmagini A " &
+			"Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo " &
+			"Where B.eliminata='N' Or B.eliminata='n' " &
+			"Group By " & TipoRicerca & " " &
+			"Having Count(*) > 1 " &
 			") As A"
+		'Return Sql
 		Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 		If TypeOf (Rec) Is String Then
 			Ok = False
@@ -77,9 +84,17 @@ Module mdlLooVF
 			Dim QuanteRigheTotali As Integer = Rec(0).Value
 			Rec.Close
 
-			Sql = "Select TipoRicerca From ( " &
-				"Select ROW_NUMBER() OVER(Order BY " & TipoRicerca & ") As NumeroRiga, " & TipoRicerca & " As TipoRicerca, count(*) FROM informazioniimmagini " &
-				"where eliminata='N' or eliminata='n' group by " & TipoRicerca & " having count(*) > 1 " &
+			'Sql = "Select TipoRicerca From ( " &
+			'	"Select ROW_NUMBER() OVER(Order BY " & TipoRicerca & ") As NumeroRiga, " & TipoRicerca & " As TipoRicerca, count(*) FROM informazioniimmagini " &
+			'	"where eliminata='N' or eliminata='n' group by " & TipoRicerca & " having count(*) > 1 " &
+			'	") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
+			Sql = "Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( " &
+				"Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, " & TipoRicerca & " As TipoRicerca, count(*) " &
+				"FROM informazioniimmagini A " &
+				"Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo " &
+				"Where B.eliminata='N' Or B.eliminata='n' " &
+				"Group By " & TipoRicerca & " " &
+				"Having Count(*) > 1 " &
 				") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
 			Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 			If TypeOf (Rec) Is String Then
@@ -89,7 +104,9 @@ Module mdlLooVF
 				Dim Lista As New List(Of String)
 
 				Do Until Rec.Eof
-					Lista.Add(Rec("TipoRicerca").Value)
+					If (Rec("TipoRicerca").Value <> "***") Then
+						Lista.Add(Rec("TipoRicerca").Value)
+					End If
 
 					Rec.MoveNext
 				Loop
@@ -98,12 +115,14 @@ Module mdlLooVF
 				For Each l As String In Lista
 					Ok = True
 
-					Sql = "Select A.*, b.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot From informazioniimmagini A " &
+					Sql = "Select A.*, b.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, b.solonome, b.Dimensioni " &
+						"From informazioniimmagini A " &
 						"left join dati b On b.idtipologia = 1 And A.idCategoria = b.idCategoria And A.idMultimedia=b.progressivo " &
 						"left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria " &
 						"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo " &
 						"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo " &
-						"where " & TipoRicerca & " = '" & l & "' And (A.Eliminata='N' Or A.Eliminata='n') And A.idCategoria=" & idCategoria
+						"Where " & TipoRicerca & " = '" & l & "' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And A.idCategoria=" & idCategoria & " " &
+						"Order By b.dimensioni, A.Width, A.Height, b.solonome"
 					Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 					If TypeOf (Rec) Is String Then
 						Ok = False
@@ -125,6 +144,8 @@ Module mdlLooVF
 							Ritorno &= Rec("Preferito").Value & ";"
 							Ritorno &= Rec("PreferitoProt").Value & ";"
 							Ritorno &= Rec("Protetta").Value & ";"
+							Ritorno &= Rec("SoloNome").Value & ";"
+							Ritorno &= Rec("Dimensioni").Value & ";"
 							Ritorno &= "§"
 
 							Rec.MoveNext

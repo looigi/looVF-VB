@@ -65,7 +65,7 @@ Public Class GestioneImmagini
 		Return RitornoImage
 	End Function
 
-	Public Function RidimensionaMantenendoProporzioni(Path As String, Path2 As String, Larghezza As Integer) As String
+	Public Function RidimensionaMantenendoProporzioni(Path As String, Path2 As String, Larghezza As Integer, Optional Adatta As Boolean = True) As String
 		Dim Ritorno As String = ""
 
 		Try
@@ -89,18 +89,23 @@ Public Class GestioneImmagini
 			Dim y As Integer = Dimensioni(1)
 
 			If x > Larghezza Or y > Larghezza Then
-				Dim propX As Single = Larghezza / x
-				Dim propY As Single = Larghezza / y
-
 				Dim largh As Integer
 				Dim alt As Integer
 
-				If propX < propY Then
-					largh = x * propX
-					alt = y * propX
+				If Adatta = True Then
+					Dim propX As Single = Larghezza / x
+					Dim propY As Single = Larghezza / y
+
+					If propX < propY Then
+						largh = x * propX
+						alt = y * propX
+					Else
+						largh = x * propY
+						alt = y * propY
+					End If
 				Else
-					largh = x * propY
-					alt = y * propY
+					largh = 100
+					alt = 100
 				End If
 
 				' img2 = New Bitmap(Path)
@@ -123,13 +128,13 @@ Public Class GestioneImmagini
 				jgpEncoder2 = Nothing
 				myEncoderParameter2 = Nothing
 
-				ritorno = "OK"
+				Ritorno = "OK"
 			End If
 		Catch ex As Exception
 			Ritorno = "ERROR: Ridimensiona " & ex.Message
 		End Try
 
-		Return ritorno
+		Return Ritorno
 	End Function
 
 	Public Function CentraImmagineNelPannello(PannelloX As Integer, PannelloY As Integer, ImmX As Integer, ImmY As Integer) As String
@@ -488,7 +493,7 @@ Public Class GestioneImmagini
 		End Try
 	End Sub
 
-	Public Sub Ridimensiona(Path As String, Path2 As String, Larghezza As Integer, Altezza As Integer, Optional Format As ImageFormat = Nothing)
+	Public Function Ridimensiona(Path As String, Path2 As String, Larghezza As Integer, Altezza As Integer, Optional Format As ImageFormat = Nothing) As String
 		Try
 			Dim myEncoder As System.Drawing.Imaging.Encoder
 			Dim myEncoderParameters As New Imaging.EncoderParameters(1)
@@ -520,9 +525,11 @@ Public Class GestioneImmagini
 			jgpEncoder2 = Nothing
 			myEncoderParameter2 = Nothing
 		Catch ex As Exception
-
+			Return "ERROR: " & ex.Message
 		End Try
-	End Sub
+
+		Return "OK"
+	End Function
 
 	Private Function Converte(ByVal inputImage As Image) As Image
 		Dim outputBitmap As Bitmap = New Bitmap(inputImage.Width, inputImage.Height)
@@ -1360,51 +1367,52 @@ Public Class GestioneImmagini
 
 			ScriveLogGlobale(fileLog, "Conversione per calcolo puntini immagine numero: ---" & numeroImmagineConvertita & "---")
 			ScriveLogGlobale(fileLog, "Conversione in BN per calcolo puntini")
+			'Dim imgOriginale As Bitmap = LoadBitmapSenzaLock(file_name)
+
 			Dim rit As String = ConverteImmaginInBN(file_name, Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", fileLog, False)
 			If rit <> "*" Then
 				ScriveLogGlobale(fileLog, rit)
 				Ritorno = rit
 			Else
 				ScriveLogGlobale(fileLog, "Ridimensionamento per calcolo puntini")
-				rit = RidimensionaMantenendoProporzioni(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg", 100)
+				rit = RidimensionaMantenendoProporzioni(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg", 75, False)
 				If rit <> "OK" Then
 					ScriveLogGlobale(fileLog, rit)
 					Ritorno = rit
 				Else
-					ScriveLogGlobale(fileLog, "Acquisizione punti per calcolo puntini")
+					'ScriveLogGlobale(fileLog, "Acquisizione punti per calcolo puntini")
 					Dim img As Bitmap = LoadBitmapSenzaLock(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
-					' Dim img As Bitmap = New Bitmap(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
-					Dim width2 As Integer = img.Width
-					Dim height2 As Integer = img.Height
-					Dim Punti = 0
-					Dim img2 As Bitmap = New Bitmap(width2, height2)
-					Dim Nero As Color = New Color()
-					Nero = Color.FromArgb(0, 0, 0)
-					Dim Bianco As Color = New Color()
-					Bianco = Color.FromArgb(255, 255, 255)
-					For i As Integer = 0 To width2 - 1
-						For k As Integer = 0 To height2 - 1
-							Dim pixelColor As Color = img.GetPixel(i, k)
-							If pixelColor.R > 128 Or pixelColor.G > 128 Or pixelColor.B > 128 Then
-								img2.SetPixel(i, k, Bianco)
-							Else
-								img2.SetPixel(i, k, Nero)
-								Punti += 1
-							End If
-						Next
-					Next
+					'' Dim img As Bitmap = New Bitmap(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
+					'Dim width2 As Integer = img.Width
+					'Dim height2 As Integer = img.Height
+					'Dim Punti = 0
+					'Dim img2 As Bitmap = New Bitmap(width2, height2)
+					'Dim Nero As Color = New Color()
+					'Nero = Color.FromArgb(0, 0, 0)
+					'Dim Bianco As Color = New Color()
+					'Bianco = Color.FromArgb(255, 255, 255)
+					'For i As Integer = 0 To width2 - 1
+					'	For k As Integer = 0 To height2 - 1
+					'		Dim pixelColor As Color = img.GetPixel(i, k)
+					'		If pixelColor.R > 128 Or pixelColor.G > 128 Or pixelColor.B > 128 Then
+					'			img2.SetPixel(i, k, Bianco)
+					'		Else
+					'			img2.SetPixel(i, k, Nero)
+					'			Punti += 1
+					'		End If
+					'	Next
+					'Next
 
-					Ritorno = AcquisizionePunti(Mp, img2, fileLog)
+					Ritorno = AcquisizionePunti(Mp, img, fileLog, Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
 
 					ScriveLogGlobale(fileLog, "Acquisizione punti per calcolo puntini. Rilevati: " & Ritorno)
 
-					img2.Dispose()
+					'img2.Dispose()
 				End If
 			End If
 		Catch ex As Exception
 			Ritorno = "ERROR: " & ex.Message
 		End Try
-
 
 		gf.EliminaFileFisico(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg")
 		gf.EliminaFileFisico(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
@@ -1442,7 +1450,7 @@ Public Class GestioneImmagini
 			gf.CreaDirectoryDaPercorso(Mp & "/Appoggio/")
 			gf.EliminaFileFisico(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg")
 			gf.EliminaFileFisico(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
-			gf.EliminaFileFisico(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
+			'gf.EliminaFileFisico(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
 
 			ScriveLogGlobale(fileLog, "Conversione in BN")
 			Dim rit As String = ConverteImmaginInBN(file_name, Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", fileLog, False)
@@ -1451,7 +1459,7 @@ Public Class GestioneImmagini
 				s.Hash = rit
 			Else
 				ScriveLogGlobale(fileLog, "Ridimensionamento")
-				rit = RidimensionaMantenendoProporzioni(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg", 100)
+				rit = RidimensionaMantenendoProporzioni(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg", Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg", 75, False)
 				If rit <> "OK" Then
 					ScriveLogGlobale(fileLog, rit)
 					s.Hash = rit
@@ -1459,58 +1467,40 @@ Public Class GestioneImmagini
 					ScriveLogGlobale(fileLog, "Acquisizione punti validi")
 					Dim img As Bitmap = LoadBitmapSenzaLock(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
 					' Dim img As Bitmap = New Bitmap(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
-					Dim width2 As Integer = img.Width
-					Dim height2 As Integer = img.Height
-					Dim Punti = 0
-					Dim img2 As Bitmap = New Bitmap(width2, height2)
-					Dim Nero As Color = New Color()
-					Nero = Color.FromArgb(0, 0, 0)
-					Dim Bianco As Color = New Color()
-					Bianco = Color.FromArgb(255, 255, 255)
-					For i As Integer = 0 To width2 - 1
-						For k As Integer = 0 To height2 - 1
-							Dim pixelColor As Color = img.GetPixel(i, k)
-							If pixelColor.R > 128 Or pixelColor.G > 128 Or pixelColor.B > 128 Then
-								img2.SetPixel(i, k, Bianco)
-							Else
-								img2.SetPixel(i, k, Nero)
-								Punti += 1
-							End If
-						Next
-					Next
+					'Dim width2 As Integer = img.Width
+					'Dim height2 As Integer = img.Height
+					'Dim Punti = 0
+					'Dim img2 As Bitmap = New Bitmap(width2, height2)
+					'Dim Nero As Color = New Color()
+					'Nero = Color.FromArgb(0, 0, 0)
+					'Dim Bianco As Color = New Color()
+					'Bianco = Color.FromArgb(255, 255, 255)
+					'For i As Integer = 0 To width2 - 1
+					'	For k As Integer = 0 To height2 - 1
+					'		Dim pixelColor As Color = img.GetPixel(i, k)
+					'		If pixelColor.R > 128 Or pixelColor.G > 128 Or pixelColor.B > 128 Then
+					'			img2.SetPixel(i, k, Bianco)
+					'		Else
+					'			img2.SetPixel(i, k, Nero)
+					'			Punti += 1
+					'		End If
+					'	Next
+					'Next
 
-					Dim PuntiVari As String = AcquisizionePunti(Mp, img2, fileLog)
+					Dim PuntiVari As String = AcquisizionePunti(Mp, img, fileLog, Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
 					ScriveLogGlobale(fileLog, "Acquisizione punti validi. Ritorno: " & PuntiVari)
 					If PuntiVari.Contains(";") Then
 						Dim Pv() As String = PuntiVari.Split(";")
 
 						s.PuntiDiagonale = Pv(0)
 						s.PuntiCornice = Pv(1)
+						s.Punti = Pv(2)
+						s.Hash = Pv(3)
 					End If
 
-					img2.Save(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
-					img2.Dispose()
+					'img2.Save(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
+					'img2.Dispose()
 
-					ScriveLogGlobale(fileLog, "Acquisizione hash")
-					Dim fs As FileStream = New FileStream(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg", FileMode.Open, FileAccess.Read)
-					Dim arr(fs.Length) As Byte
-					fs.Read(arr, 0, fs.Length)
-					fs.Close()
-
-					Dim tmpHash() As Byte
-					tmpHash = New MD5CryptoServiceProvider().ComputeHash(arr)
-
-					Dim Ritorno As String = ""
-					For Each b As Byte In tmpHash
-						Dim bb As String = b.ToString
-						For i As Integer = bb.Length + 1 To 3
-							bb = "0" & bb
-						Next
-						Ritorno &= bb
-					Next
-
-					s.Hash = Ritorno
-					s.Punti = Punti
 					s.Width = width
 					s.Height = height
 					s.DataOra = dataOra
@@ -1523,16 +1513,34 @@ Public Class GestioneImmagini
 
 		gf.EliminaFileFisico(Mp & "/Appoggio/BW_" & NomeEsteso & ".jpg")
 		gf.EliminaFileFisico(Mp & "/Appoggio/Rid_" & NomeEsteso & ".jpg")
-		gf.EliminaFileFisico(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
+		'gf.EliminaFileFisico(Mp & "/Appoggio/RidBN_" & NomeEsteso & ".jpg")
 
 		Return s
 	End Function
 
-	Private Function AcquisizionePunti(Mp As String, img As Bitmap, fileLog As String) As String
+	Private Function AcquisizionePunti(Mp As String, img As Bitmap, fileLog As String, NomeFileIMG As String) As String
 		Dim Ritorno As String = ""
 
 		Dim width2 As Integer = img.Width
 		Dim height2 As Integer = img.Height
+
+		ScriveLogGlobale(fileLog, "Acquisizione punti validi. Dimensione immagine: " & width2 & " x " & height2)
+		ScriveLogGlobale(fileLog, "Acquisizione punti validi per corpo.")
+
+		Dim PuntiCorpo As Long = 0
+
+		'Dim Nero As Color = New Color()
+		'Nero = Color.FromArgb(0, 0, 0)
+		'Dim Bianco As Color = New Color()
+		'Bianco = Color.FromArgb(255, 255, 255)
+		For i As Integer = 0 To width2 - 1
+			For k As Integer = 0 To height2 - 1
+				Dim pixelColor As Color = img.GetPixel(i, k)
+				Dim Colore As Long = (CInt(pixelColor.R) * 100) + (CInt(pixelColor.G) * 10) + CInt(pixelColor.B)
+
+				PuntiCorpo += Colore
+			Next
+		Next
 
 		ScriveLogGlobale(fileLog, "Acquisizione punti validi. Dimensione immagine: " & width2 & " x " & height2)
 
@@ -1560,44 +1568,47 @@ Public Class GestioneImmagini
 
 		Dim cX As Single = 0
 		Dim cY As Single = 0
-		Dim PuntiDiagonale As Integer = 0
-		Dim PuntiCornice As Integer = 0
+		Dim PuntiDiagonale As Long = 0
+		Dim PuntiCornice As Long = 0
 
 		'Dim Bianco As Color = New Color()
 		'Bianco = Color.FromArgb(255, 255, 255)
 
-		'Dim Rosso As Color = New Color()
-		'Rosso = Color.FromArgb(255, 0, 0)
-		'Dim Verde As Color = New Color()
-		'Verde = Color.FromArgb(0, 255, 0)
-		'Dim Blu As Color = New Color()
-		'Blu = Color.FromArgb(0, 0, 255)
+		Dim Rosso As Color = New Color()
+		Rosso = Color.FromArgb(255, 0, 0)
+		Dim Verde As Color = New Color()
+		Verde = Color.FromArgb(0, 255, 0)
+		Dim Blu As Color = New Color()
+		Blu = Color.FromArgb(0, 0, 255)
 
 		' Acquisizione punti in diagonale
 		While cX <= Fine
 			If (Int(cX) < width2 - 1 And Int(cY) < height2 - 1) Then
 				Dim pixelColor As Color = img.GetPixel(Int(cX), Int(cY))
+				Dim Colore As Long = (CInt(pixelColor.R) * 100) + (CInt(pixelColor.G) * 10) + CInt(pixelColor.B)
 
-				If pixelColor.R > 0 Then
-					PuntiDiagonale += 1
-				End If
-				'ScriveLogGlobale(fileLog, "1: " & CInt(cX) & " - " & CInt(cY) & " Colore: R. " & pixelColor.R & "  -> " & PuntiDiagonale)
-				'ScriveLogGlobale(fileLog, pixelColor.R > 0)
+				' If pixelColor.R > 0 Then
+				PuntiDiagonale += Colore
+				' End If
+				'ScriveLogGlobale(fileLog, "1: " & CInt(cX) & " - " & CInt(cY) & " Colore: R. " & pixelColor.R & "-" & pixelColor.G & "-" & pixelColor.B & " -> " & PuntiDiagonale)
+				''ScriveLogGlobale(fileLog, pixelColor.R > 0)
+				'ScriveLogGlobale(fileLog, "Colore: " & Colore & " - PuntiDiagonale: " & PuntiDiagonale)
 
 				Dim cX2 As Single = (width2 - 1) - cX
 				Dim cY2 As Single = cY ' (height2 - 1) - cY
 
 				If (Int(cX2) < width2 - 1 And Int(cY2) < height2 - 1) Then
-					Dim pixelColor2 As Color = img.GetPixel(Int(cX2), Int(cY2))
+					pixelColor = img.GetPixel(Int(cX2), Int(cY2))
+					Colore = (CInt(pixelColor.R) * 100) + (CInt(pixelColor.G) * 10) + CInt(pixelColor.B)
 
-					If pixelColor2.R > 0 Then
-						PuntiDiagonale += 1
-					End If
+					'If pixelColor2.R > 0 Then
+					PuntiDiagonale += Colore
+					'End If
 					'ScriveLogGlobale(fileLog, pixelColor2 = Bianco)
 					'ScriveLogGlobale(fileLog, "2: " & CInt(cX2) & " - " & CInt(cY2) & " Colore: R. " & pixelColor2.R & " -> " & PuntiDiagonale)
 
-					'img.SetPixel(CInt(cX), CInt(cY), Rosso)
-					'img.SetPixel(CInt(cX2), CInt(cY2), Rosso)
+					img.SetPixel(CInt(cX), CInt(cY), Rosso)
+					img.SetPixel(CInt(cX2), CInt(cY2), Rosso)
 				End If
 			End If
 
@@ -1611,44 +1622,70 @@ Public Class GestioneImmagini
 		cY = (height2 - 1) / 4
 		For cX = 0 To width2 - 1
 			Dim pixelColor As Color = img.GetPixel(cX, cY)
+			Dim Colore As Long = (CInt(pixelColor.R) * 100) + (CInt(pixelColor.G) * 10) + CInt(pixelColor.B)
 
-			If pixelColor.R > 0 Then
-				PuntiCornice += 1
-			End If
-			'img.SetPixel(CInt(cX), CInt(cY), Verde)
+			' If pixelColor.R > 0 Then
+			PuntiCornice += Colore
+			' End If
+			img.SetPixel(CInt(cX), CInt(cY), Verde)
 
 			Dim cY2 As Integer = (height2 - 1) - cY
 
-			Dim pixelColor2 As Color = img.GetPixel(cX, cY2)
-			'img.SetPixel(CInt(cX), CInt(cY2), Verde)
+			pixelColor = img.GetPixel(cX, cY2)
+			Colore = (CInt(pixelColor.R) * 100) + (CInt(pixelColor.G) * 10) + CInt(pixelColor.B)
+			img.SetPixel(CInt(cX), CInt(cY2), Verde)
 
-			If pixelColor2.R > 0 Then
-				PuntiCornice += 1
-			End If
+			'If pixelColor2.R > 0 Then
+			PuntiCornice += Colore
+			'End If
 		Next
 
 		ScriveLogGlobale(fileLog, "Acquisizione punti validi per cornice 2")
 		cX = (width2 - 1) / 4
 		For cY = 0 To height2 - 1
 			Dim pixelColor As Color = img.GetPixel(cX, cY)
+			Dim Colore As Long = CInt(pixelColor.R) + CInt(pixelColor.G) + CInt(pixelColor.B)
 
-			If pixelColor.R > 0 Then
-				PuntiCornice += 1
-			End If
-			'img.SetPixel(CInt(cX), CInt(cY), Blu)
+			' If pixelColor.R > 0 Then
+			PuntiCornice += Colore
+			' End If
+			img.SetPixel(CInt(cX), CInt(cY), Blu)
 
 			Dim cX2 As Integer = (width2 - 1) - cX
 
-			Dim pixelColor2 As Color = img.GetPixel(cX2, cY)
-			'img.SetPixel(CInt(cX2), CInt(cY), Blu)
+			pixelColor = img.GetPixel(cX2, cY)
+			Colore = CInt(pixelColor.R) + CInt(pixelColor.G) + CInt(pixelColor.B)
+			img.SetPixel(CInt(cX2), CInt(cY), Blu)
 
-			If pixelColor2.R > 0 Then
-				PuntiCornice += 1
-			End If
+			' If pixelColor2.R > 0 Then
+			PuntiCornice += Colore
+			' End If
 		Next
 		'Acquisizione punti cornice
 
-		Ritorno = PuntiDiagonale.ToString.Trim & ";" & PuntiCornice.ToString.Trim
+		PuntiDiagonale = (Math.Ceiling(PuntiDiagonale / 10) * 10)
+		PuntiCornice = (Math.Ceiling(PuntiCornice / 10) * 10)
+		PuntiCorpo = (Math.Ceiling(PuntiCorpo / 10) * 10)
+
+		ScriveLogGlobale(fileLog, "Acquisizione hash")
+		Dim fs As FileStream = New FileStream(NomeFileIMG, FileMode.Open, FileAccess.Read)
+		Dim arr(fs.Length) As Byte
+		fs.Read(arr, 0, fs.Length)
+		fs.Close()
+
+		Dim tmpHash() As Byte
+		tmpHash = New MD5CryptoServiceProvider().ComputeHash(arr)
+
+		Dim Hash As String = ""
+		For Each b As Byte In tmpHash
+			Dim bb As String = b.ToString
+			For i As Integer = bb.Length + 1 To 3
+				bb = "0" & bb
+			Next
+			Hash &= bb
+		Next
+
+		Ritorno = PuntiDiagonale.ToString.Trim & ";" & PuntiCornice.ToString.Trim & ";" & PuntiCorpo.ToString.Trim & ";" & Hash
 
 		'Dim NomeEsteso As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 		'img.Save(Mp & "/Appoggio/Finale_" & NomeEsteso & ".jpg")
