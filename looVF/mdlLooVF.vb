@@ -62,19 +62,92 @@ Module mdlLooVF
 		End If
 	End Sub
 
-	Public Function RitornaUguaglianze(Mp As String, db As clsGestioneDB, ConnessioneSql As String, TipoRicerca As String, ScrittaRitorno As String, idCategoria As String, QuanteImmagini As String, Inizio As String) As String
+	Public Function RitornaUguaglianze(Mp As String, db As clsGestioneDB, ConnessioneSql As String, TipoRicerca As String, ScrittaRitorno As String, idCategoria As String, QuanteImmagini As String, Inizio As String, StringaRicerca As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 		Dim Rec As Object
 		Dim Sql As String = ""
 
+		If TipoRicerca = "STRINGA" Then
+			Sql = "Select Coalesce(Count(*),0) FROM informazioniimmagini A " &
+				"Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo " &
+				"Left Join categorie C On A.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &
+				"Where (B.eliminata='N' Or B.eliminata='n') And A.idCategoria=" & idCategoria & " And Instr(C.Percorso, '/Videos/') = 0 " &
+				"And (InStr(C.Percorso, '" & StringaRicerca.Replace("'", "''") & "') > 0 Or Instr(B.NomeFile, '" & StringaRicerca.Replace("'", "''") & "') > 0) "
+			' Return Sql
+			Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
+			If TypeOf (Rec) Is String Then
+				Ok = False
+			End If
+			If Ok Then
+				Dim QuanteRigheTotali As Integer = Rec(0).Value
+				Rec.Close
+
+				'If QuanteRigheTotali > 1000 Then
+				'	Return "ERROR: Troppe righe ritornate (" & QuanteRigheTotali & ")"
+				'End If
+
+				Sql = "Select * From (" &
+					"Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, A.*, b.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, b.solonome, b.Dimensioni " &
+					"From informazioniimmagini A " &
+					"left join dati b On b.idtipologia = 1 And A.idCategoria = b.idCategoria And A.idMultimedia=b.progressivo " &
+					"left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria " &
+					"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo " &
+					"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo " &
+					"Where (A.Eliminata='N' Or A.Eliminata='n') And (b.Eliminata='N' Or b.Eliminata='n') And A.idCategoria=" & idCategoria & " And Instr(c.Percorso, '/Videos/') = 0 " &
+					"And (Instr(c.Percorso, '" & StringaRicerca.Replace("'", "''") & "') > 0 Or Instr(b.NomeFile, '" & StringaRicerca.Replace("'", "''") & "') > 0) " &
+					") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)) & " " &
+					"Order By percorso, nomefile, A.dimensioni, A.Width, A.Height"
+				Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
+				If TypeOf (Rec) Is String Then
+					Ok = False
+				End If
+				If Ok Then
+					Do Until Rec.Eof
+						Dim P As String = Rec("Percorso").Value
+						Dim N As String = Rec("NomeFile").Value
+
+						If Not P.ToUpper.Contains("/VIDEOS/") And Not N.ToUpper.Contains("/VIDEOS/") Then
+							Ritorno &= ScrittaRitorno & ";"
+							Ritorno &= Rec("idCategoria").Value & ";"
+							Ritorno &= Rec("idMultimedia").Value & ";"
+							Ritorno &= Rec("Hash").Value & ";"
+							Ritorno &= Rec("Punti").Value & ";"
+							Ritorno &= Rec("Width").Value & ";"
+							Ritorno &= Rec("Height").Value & ";"
+							Ritorno &= Rec("DataOra").Value & ";"
+							Ritorno &= Rec("PuntiDiagonale").Value & ";"
+							Ritorno &= Rec("PuntiCornice").Value & ";"
+							Ritorno &= N.Replace(";", "---PV---") & ";"
+							Ritorno &= P.Replace(";", "---PV---") & ";"
+							Ritorno &= Rec("Preferito").Value & ";"
+							Ritorno &= Rec("PreferitoProt").Value & ";"
+							Ritorno &= Rec("Protetta").Value & ";"
+							Ritorno &= Rec("SoloNome").Value & ";"
+							Ritorno &= Rec("Dimensioni").Value & ";"
+							Ritorno &= "§"
+						End If
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+
+					Ritorno &= "*" & QuanteRigheTotali
+				End If
+			End If
+
+			Return Ritorno
+		End If
+
 		Sql = "Select Coalesce(Count(*),0) From ( " &
 			"Select " & TipoRicerca & " As TipoRicerca FROM informazioniimmagini A " &
 			"Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo " &
-			"Where B.eliminata='N' Or B.eliminata='n' " &
+			"Where (B.eliminata='N' Or B.eliminata='n') " &
 			"Group By " & TipoRicerca & " " &
 			"Having Count(*) > 1 " &
 			") As A"
+		'"Left Join categorie C On A.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &
+		'"Where (B.eliminata='N' Or B.eliminata='n') And Instr(C.Percorso, '/Videos/') = 0 " &
 		'Return Sql
 		Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 		If TypeOf (Rec) Is String Then
@@ -96,6 +169,9 @@ Module mdlLooVF
 				"Group By " & TipoRicerca & " " &
 				"Having Count(*) > 1 " &
 				") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
+
+			'"Left Join categorie C On A.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &
+			'"Where B.eliminata='N' Or B.eliminata='n' And Instr(C.Percorso, '/Videos/') = 0 " &
 			Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 			If TypeOf (Rec) Is String Then
 				Ok = False
@@ -122,31 +198,37 @@ Module mdlLooVF
 						"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo " &
 						"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo " &
 						"Where " & TipoRicerca & " = '" & l & "' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And A.idCategoria=" & idCategoria & " " &
-						"Order By b.dimensioni, A.Width, A.Height, b.solonome"
+						"Order By " & TipoRicerca & ", b.dimensioni, A.Width, A.Height, b.solonome"
 					Rec = db.LeggeQuery(Mp, Sql, ConnessioneSql)
 					If TypeOf (Rec) Is String Then
 						Ok = False
 					End If
 					If Ok Then
 						Do Until Rec.Eof
-							Ritorno &= ScrittaRitorno & ";"
-							Ritorno &= Rec("idCategoria").Value & ";"
-							Ritorno &= Rec("idMultimedia").Value & ";"
-							Ritorno &= Rec("Hash").Value & ";"
-							Ritorno &= Rec("Punti").Value & ";"
-							Ritorno &= Rec("Width").Value & ";"
-							Ritorno &= Rec("Height").Value & ";"
-							Ritorno &= Rec("DataOra").Value & ";"
-							Ritorno &= Rec("PuntiDiagonale").Value & ";"
-							Ritorno &= Rec("PuntiCornice").Value & ";"
-							Ritorno &= Rec("NomeFile").Value & ";"
-							Ritorno &= Rec("Percorso").Value & ";"
-							Ritorno &= Rec("Preferito").Value & ";"
-							Ritorno &= Rec("PreferitoProt").Value & ";"
-							Ritorno &= Rec("Protetta").Value & ";"
-							Ritorno &= Rec("SoloNome").Value & ";"
-							Ritorno &= Rec("Dimensioni").Value & ";"
-							Ritorno &= "§"
+							Dim P As String = Rec("Percorso").Value
+							Dim N As String = Rec("NomeFile").Value
+
+							If Not P.ToUpper.Contains("/VIDEOS/") And Not N.ToUpper.Contains("/VIDEOS/") Then
+								Ritorno &= ScrittaRitorno & ";"
+								Ritorno &= Rec("idCategoria").Value & ";"
+								Ritorno &= Rec("idMultimedia").Value & ";"
+								Ritorno &= Rec("Hash").Value & ";"
+								Ritorno &= Rec("Punti").Value & ";"
+								Ritorno &= Rec("Width").Value & ";"
+								Ritorno &= Rec("Height").Value & ";"
+								Ritorno &= Rec("DataOra").Value & ";"
+								Ritorno &= Rec("PuntiDiagonale").Value & ";"
+								Ritorno &= Rec("PuntiCornice").Value & ";"
+								Ritorno &= N.Replace(";", "---PV---") & ";"
+								Ritorno &= P.Replace(";", "---PV---") & ";"
+								Ritorno &= Rec("Preferito").Value & ";"
+								Ritorno &= Rec("PreferitoProt").Value & ";"
+								Ritorno &= Rec("Protetta").Value & ";"
+								Ritorno &= Rec("SoloNome").Value & ";"
+								Ritorno &= Rec("Dimensioni").Value & ";"
+								Ritorno &= "§"
+							End If
+
 
 							Rec.MoveNext
 						Loop

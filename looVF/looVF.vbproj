@@ -116,6 +116,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ffmpeg.exe" />
+    <Content Include="modifiche.asmx" />
     <Content Include="looVF.asmx" />
     <Content Include="PercorsiImmagini.txt" />
     <Content Include="PercorsiVideo.txt" />
@@ -130,6 +131,10 @@
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="GestioneImmagini.vb" />
     <Compile Include="IIS.vb" />
+    <Compile Include="modifiche.asmx.vb">
+      <DependentUpon>modifiche.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="looVF.asmx.vb">
       <DependentUpon>looVF.asmx</DependentUpon>
       <SubType>Component</SubType>
