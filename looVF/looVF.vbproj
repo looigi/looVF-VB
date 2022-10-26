@@ -45,6 +45,10 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ExifMetadata, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Exif\ExifMetadata.dll</HintPath>
+    </Reference>
     <Reference Include="MySqlConnector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92, processorArchitecture=MSIL">
       <HintPath>..\packages\MySqlConnector.2.1.6\lib\net45\MySqlConnector.dll</HintPath>
     </Reference>
@@ -115,6 +119,8 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Exif\ExifMetadata.dll" />
+    <Content Include="Exif\ExifMetadata.pdb" />
     <Content Include="ffmpeg.exe" />
     <Content Include="modifiche.asmx" />
     <Content Include="looVF.asmx" />
