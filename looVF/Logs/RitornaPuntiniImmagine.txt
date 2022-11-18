@@ -1,0 +1,252 @@
+20221102151112: Conversione per calcolo puntini immagine numero: ---1---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\06.jpg
+20221102151112: DimeX-DimeY: 17-17
+20221102151112: RangeX: 0-15
+20221102151112: RangeY: 0-15
+20221102151112: Quanti Pixel diversi: 254
+20221102151112: Pixel 1: Color [A=255, R=150, G=77, B=60] -> 2
+20221102151112: Pixel 2: Color [A=255, R=132, G=147, B=154] -> 1
+20221102151112: Pixel 3: Color [A=255, R=146, G=156, B=155] -> 1
+20221102151112: Pixel 4: Color [A=255, R=135, G=149, B=150] -> 1
+20221102151112: Pixel 5: Color [A=255, R=113, G=139, B=152] -> 1
+20221102151112: Quanti Pixel diversi arrotondati: 185
+20221102151112: Pixel 1: 220-230-240 -> 5
+20221102151112: Pixel 2: 210-220-230 -> 5
+20221102151112: Pixel 3: 160-100-80 -> 5
+20221102151112: Pixel 4: 180-110-90 -> 5
+20221102151112: Pixel 5: 230-220-220 -> 4
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 09/11/2016 17:39:00
+20221102151112: Width: 735
+20221102151112: Height: 748
+20221102151112: Conversione per calcolo puntini immagine numero: ---2---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\wallpaper-di-carmen-.JPG
+20221102151112: DimeX-DimeY: 17-13
+20221102151112: RangeX: 0-15
+20221102151112: RangeY: 0-11
+20221102151112: Quanti Pixel diversi: 190
+20221102151112: Pixel 1: Color [A=255, R=246, G=247, B=242] -> 2
+20221102151112: Pixel 2: Color [A=255, R=180, G=189, B=198] -> 1
+20221102151112: Pixel 3: Color [A=255, R=201, G=204, B=209] -> 1
+20221102151112: Pixel 4: Color [A=255, R=210, G=211, B=206] -> 1
+20221102151112: Pixel 5: Color [A=255, R=219, G=220, B=204] -> 1
+20221102151112: Quanti Pixel diversi arrotondati: 103
+20221102151112: Pixel 1: 240-240-240 -> 11
+20221102151112: Pixel 2: 210-210-200 -> 7
+20221102151112: Pixel 3: 200-200-190 -> 7
+20221102151112: Pixel 4: 190-160-130 -> 7
+20221102151112: Pixel 5: 180-190-190 -> 6
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 09/11/2016 12:33:28
+20221102151112: Width: 997
+20221102151112: Height: 748
+20221102151112: Conversione per calcolo puntini immagine numero: ---3---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\6\65.MEDIA.TUMBLR.COM\12645e924905c2d984222dd52488b26e\Tumblr Nojm1fpax51tlnximo9 540.jpg
+20221102151112: DimeX-DimeY: 12-17
+20221102151112: RangeX: 0-10
+20221102151112: RangeY: 0-15
+20221102151112: Quanti Pixel diversi: 175
+20221102151112: Pixel 1: Color [A=255, R=163, G=162, B=168] -> 1
+20221102151112: Pixel 2: Color [A=255, R=204, G=202, B=207] -> 1
+20221102151112: Pixel 3: Color [A=255, R=222, G=218, B=217] -> 1
+20221102151112: Pixel 4: Color [A=255, R=225, G=220, B=216] -> 1
+20221102151112: Pixel 5: Color [A=255, R=231, G=226, B=223] -> 1
+20221102151112: Quanti Pixel diversi arrotondati: 109
+20221102151112: Pixel 1: 220-210-210 -> 7
+20221102151112: Pixel 2: 230-220-220 -> 7
+20221102151112: Pixel 3: 200-190-190 -> 7
+20221102151112: Pixel 4: 180-180-190 -> 5
+20221102151112: Pixel 5: 210-200-200 -> 4
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 12/10/2022 10:28:31
+20221102151112: Width: 531
+20221102151112: Height: 800
+20221102151112: Conversione per calcolo puntini immagine numero: ---4---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\C\CDN.MOVIESTILLSDB.COM\sm\f25283235a9db5f73e9c696ee970c197\Scary Movie.jpg
+20221102151112: DimeX-DimeY: 11-17
+20221102151112: RangeX: 0-9
+20221102151112: RangeY: 0-15
+20221102151112: Quanti Pixel diversi: 159
+20221102151112: Pixel 1: Color [A=255, R=6, G=6, B=6] -> 1
+20221102151112: Pixel 2: Color [A=255, R=0, G=2, B=1] -> 1
+20221102151112: Pixel 3: Color [A=255, R=1, G=7, B=7] -> 1
+20221102151112: Pixel 4: Color [A=255, R=0, G=9, B=8] -> 1
+20221102151112: Pixel 5: Color [A=255, R=6, G=17, B=13] -> 1
+20221102151112: Quanti Pixel diversi arrotondati: 109
+20221102151112: Pixel 1: 0-0-0 -> 14
+20221102151112: Pixel 2: 0-10-0 -> 7
+20221102151112: Pixel 3: 10-30-20 -> 4
+20221102151112: Pixel 4: 10-20-10 -> 4
+20221102151112: Pixel 5: 10-10-0 -> 4
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 22/10/2022 16:03:22
+20221102151112: Width: 327
+20221102151112: Height: 500
+20221102151112: Conversione per calcolo puntini immagine numero: ---5---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\S\S.MLV-CDN.COM\img\933-Df33da76723bf7a350b1cd649c.600x.jpg
+20221102151112: DimeX-DimeY: 17-11
+20221102151112: RangeX: 0-15
+20221102151112: RangeY: 0-9
+20221102151112: Quanti Pixel diversi: 110
+20221102151112: Pixel 1: Color [A=255, R=4, G=0, B=0] -> 11
+20221102151112: Pixel 2: Color [A=255, R=3, G=0, B=0] -> 8
+20221102151112: Pixel 3: Color [A=255, R=7, G=0, B=0] -> 7
+20221102151112: Pixel 4: Color [A=255, R=6, G=0, B=0] -> 6
+20221102151112: Pixel 5: Color [A=255, R=8, G=0, B=0] -> 5
+20221102151112: Quanti Pixel diversi arrotondati: 56
+20221102151112: Pixel 1: 0-0-0 -> 72
+20221102151112: Pixel 2: 10-0-0 -> 18
+20221102151112: Pixel 3: 20-0-0 -> 6
+20221102151112: Pixel 4: 30-0-0 -> 4
+20221102151112: Pixel 5: 160-110-80 -> 2
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 02/11/2022 08:21:14
+20221102151112: Width: 600
+20221102151112: Height: 375
+20221102151112: Conversione per calcolo puntini immagine numero: ---6---
+20221102151112: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\Recordset\TUMBLR\V\Tumblr No86ytwlmt1szvlx8o2 1280.jpg
+20221102151112: DimeX-DimeY: 9-17
+20221102151112: RangeX: 0-7
+20221102151112: RangeY: 0-15
+20221102151112: Quanti Pixel diversi: 126
+20221102151112: Pixel 1: Color [A=255, R=171, G=167, B=166] -> 2
+20221102151112: Pixel 2: Color [A=255, R=243, G=227, B=212] -> 1
+20221102151112: Pixel 3: Color [A=255, R=240, G=227, B=210] -> 1
+20221102151112: Pixel 4: Color [A=255, R=242, G=229, B=212] -> 1
+20221102151112: Pixel 5: Color [A=255, R=240, G=227, B=208] -> 1
+20221102151112: Quanti Pixel diversi arrotondati: 78
+20221102151112: Pixel 1: 230-220-200 -> 7
+20221102151112: Pixel 2: 240-220-200 -> 7
+20221102151112: Pixel 3: 230-220-210 -> 7
+20221102151112: Pixel 4: 240-220-210 -> 4
+20221102151112: Pixel 5: 220-210-200 -> 4
+20221102151112: Salvataggio file
+20221102151112: Data Ora: 07/10/2022 13:32:54
+20221102151112: Width: 495
+20221102151112: Height: 1024
+20221102151823: Conversione per calcolo puntini immagine numero: ---1---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\06.jpg
+20221102151823: DimeX-DimeY: 17-17
+20221102151823: RangeX: 0-15
+20221102151823: RangeY: 0-15
+20221102151823: Quanti Pixel diversi: 254
+20221102151823: Pixel 1: Color [A=255, R=150, G=77, B=60] -> 2
+20221102151823: Pixel 2: Color [A=255, R=132, G=147, B=154] -> 1
+20221102151823: Pixel 3: Color [A=255, R=146, G=156, B=155] -> 1
+20221102151823: Pixel 4: Color [A=255, R=135, G=149, B=150] -> 1
+20221102151823: Pixel 5: Color [A=255, R=113, G=139, B=152] -> 1
+20221102151823: Quanti Pixel diversi arrotondati: 185
+20221102151823: Pixel 1: 220-230-240 -> 5
+20221102151823: Pixel 2: 210-220-230 -> 5
+20221102151823: Pixel 3: 160-100-80 -> 5
+20221102151823: Pixel 4: 180-110-90 -> 5
+20221102151823: Pixel 5: 230-220-220 -> 4
+20221102151823: Salvataggio file
+20221102151823: Data Ora: 09/11/2016 17:39:00
+20221102151823: Width: 735
+20221102151823: Height: 748
+20221102151823: Conversione per calcolo puntini immagine numero: ---2---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\wallpaper-di-carmen-.JPG
+20221102151823: DimeX-DimeY: 17-13
+20221102151823: RangeX: 0-15
+20221102151823: RangeY: 0-11
+20221102151823: Quanti Pixel diversi: 190
+20221102151823: Pixel 1: Color [A=255, R=246, G=247, B=242] -> 2
+20221102151823: Pixel 2: Color [A=255, R=180, G=189, B=198] -> 1
+20221102151823: Pixel 3: Color [A=255, R=201, G=204, B=209] -> 1
+20221102151823: Pixel 4: Color [A=255, R=210, G=211, B=206] -> 1
+20221102151823: Pixel 5: Color [A=255, R=219, G=220, B=204] -> 1
+20221102151823: Quanti Pixel diversi arrotondati: 103
+20221102151823: Pixel 1: 240-240-240 -> 11
+20221102151823: Pixel 2: 210-210-200 -> 7
+20221102151823: Pixel 3: 200-200-190 -> 7
+20221102151823: Pixel 4: 190-160-130 -> 7
+20221102151823: Pixel 5: 180-190-190 -> 6
+20221102151823: Salvataggio file
+20221102151823: Data Ora: 09/11/2016 12:33:28
+20221102151823: Width: 997
+20221102151823: Height: 748
+20221102151823: Conversione per calcolo puntini immagine numero: ---3---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\6\65.MEDIA.TUMBLR.COM\12645e924905c2d984222dd52488b26e\Tumblr Nojm1fpax51tlnximo9 540.jpg
+20221102151823: DimeX-DimeY: 12-17
+20221102151823: RangeX: 0-10
+20221102151823: RangeY: 0-15
+20221102151823: Quanti Pixel diversi: 175
+20221102151823: Pixel 1: Color [A=255, R=163, G=162, B=168] -> 1
+20221102151823: Pixel 2: Color [A=255, R=204, G=202, B=207] -> 1
+20221102151823: Pixel 3: Color [A=255, R=222, G=218, B=217] -> 1
+20221102151823: Pixel 4: Color [A=255, R=225, G=220, B=216] -> 1
+20221102151823: Pixel 5: Color [A=255, R=231, G=226, B=223] -> 1
+20221102151823: Quanti Pixel diversi arrotondati: 109
+20221102151823: Pixel 1: 220-210-210 -> 7
+20221102151823: Pixel 2: 230-220-220 -> 7
+20221102151823: Pixel 3: 200-190-190 -> 7
+20221102151823: Pixel 4: 180-180-190 -> 5
+20221102151823: Pixel 5: 210-200-200 -> 4
+20221102151823: Salvataggio file
+20221102151823: Data Ora: 12/10/2022 10:28:31
+20221102151823: Width: 531
+20221102151823: Height: 800
+20221102151823: Conversione per calcolo puntini immagine numero: ---4---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\C\CDN.MOVIESTILLSDB.COM\sm\f25283235a9db5f73e9c696ee970c197\Scary Movie.jpg
+20221102151823: DimeX-DimeY: 11-17
+20221102151823: RangeX: 0-9
+20221102151823: RangeY: 0-15
+20221102151823: Quanti Pixel diversi: 159
+20221102151823: Pixel 1: Color [A=255, R=6, G=6, B=6] -> 1
+20221102151823: Pixel 2: Color [A=255, R=0, G=2, B=1] -> 1
+20221102151823: Pixel 3: Color [A=255, R=1, G=7, B=7] -> 1
+20221102151823: Pixel 4: Color [A=255, R=0, G=9, B=8] -> 1
+20221102151823: Pixel 5: Color [A=255, R=6, G=17, B=13] -> 1
+20221102151823: Quanti Pixel diversi arrotondati: 109
+20221102151823: Pixel 1: 0-0-0 -> 14
+20221102151823: Pixel 2: 0-10-0 -> 7
+20221102151823: Pixel 3: 10-30-20 -> 4
+20221102151823: Pixel 4: 10-20-10 -> 4
+20221102151823: Pixel 5: 10-10-0 -> 4
+20221102151823: Salvataggio file
+20221102151823: Data Ora: 22/10/2022 16:03:22
+20221102151823: Width: 327
+20221102151823: Height: 500
+20221102151823: Conversione per calcolo puntini immagine numero: ---5---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\picDrop\S\S.MLV-CDN.COM\img\933-Df33da76723bf7a350b1cd649c.600x.jpg
+20221102151823: DimeX-DimeY: 17-11
+20221102151823: RangeX: 0-15
+20221102151823: RangeY: 0-9
+20221102151823: Quanti Pixel diversi: 110
+20221102151823: Pixel 1: Color [A=255, R=4, G=0, B=0] -> 11
+20221102151823: Pixel 2: Color [A=255, R=3, G=0, B=0] -> 8
+20221102151823: Pixel 3: Color [A=255, R=7, G=0, B=0] -> 7
+20221102151823: Pixel 4: Color [A=255, R=6, G=0, B=0] -> 6
+20221102151823: Pixel 5: Color [A=255, R=8, G=0, B=0] -> 5
+20221102151823: Quanti Pixel diversi arrotondati: 56
+20221102151823: Pixel 1: 0-0-0 -> 72
+20221102151823: Pixel 2: 10-0-0 -> 18
+20221102151823: Pixel 3: 20-0-0 -> 6
+20221102151823: Pixel 4: 30-0-0 -> 4
+20221102151823: Pixel 5: 160-110-80 -> 2
+20221102151823: Salvataggio file
+20221102151823: Data Ora: 02/11/2022 08:21:14
+20221102151823: Width: 600
+20221102151823: Height: 375
+20221102151823: Conversione per calcolo puntini immagine numero: ---6---
+20221102151823: Conteggio punti: X:\pLibrary\Categorie\Carmen_Electra\Rows\Recordset\TUMBLR\V\Tumblr No86ytwlmt1szvlx8o2 1280.jpg
+20221102151824: DimeX-DimeY: 9-17
+20221102151824: RangeX: 0-7
+20221102151824: RangeY: 0-15
+20221102151824: Quanti Pixel diversi: 126
+20221102151824: Pixel 1: Color [A=255, R=171, G=167, B=166] -> 2
+20221102151824: Pixel 2: Color [A=255, R=243, G=227, B=212] -> 1
+20221102151824: Pixel 3: Color [A=255, R=240, G=227, B=210] -> 1
+20221102151824: Pixel 4: Color [A=255, R=242, G=229, B=212] -> 1
+20221102151824: Pixel 5: Color [A=255, R=240, G=227, B=208] -> 1
+20221102151824: Quanti Pixel diversi arrotondati: 78
+20221102151824: Pixel 1: 230-220-200 -> 7
+20221102151824: Pixel 2: 240-220-200 -> 7
+20221102151824: Pixel 3: 230-220-210 -> 7
+20221102151824: Pixel 4: 240-220-210 -> 4
+20221102151824: Pixel 5: 220-210-200 -> 4
+20221102151824: Salvataggio file
+20221102151824: Data Ora: 07/10/2022 13:32:54
+20221102151824: Width: 495
+20221102151824: Height: 1024

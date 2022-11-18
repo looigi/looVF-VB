@@ -763,7 +763,7 @@ Public Class looVF
 				"Where Progressivo=" & id
 			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 			If Rec.Eof = False Then
-				Ritorno &= Rec("idCategoria").Value & ";" & Rec("Categoria").Value
+				Ritorno &= Rec("idCategoria").Value & ";" & Rec("Categoria").Value & ";" & Rec("QuanteAggiunte").Value & ";"
 			End If
 			Rec.Close()
 		End If
@@ -781,10 +781,10 @@ Public Class looVF
 		If ConnessioneSQL <> "" Then
 			Dim Rec As Object
 
-			Sql = "Select * From Categorie"
+			Sql = "Select * From Categorie Order By QuanteAggiunte Desc, Categoria"
 			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 			Do Until Rec.Eof
-				Ritorno &= Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Protetta").Value & ";§"
+				Ritorno &= Rec("idCategoria").Value & ";" & Rec("idTipologia").Value & ";" & Rec("Categoria").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Protetta").Value & ";" & Rec("QuanteAggiunte").Value & ";" & Rec("Percorso").Value & ";§"
 
 				Rec.MoveNext
 			Loop
@@ -996,7 +996,7 @@ Public Class looVF
 					Sql = "Select * From informazioniimmagini Where idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
 					Rec2 = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 					If Rec2.Eof = False Then
-						DatiHash = Rec2("Hash").Value & ";" & Rec2("Punti").Value & ";" & Rec2("Width").Value & ";" & Rec2("Height").Value & ";" & Rec2("DataOra").Value
+						DatiHash = Rec2("Sezione1").Value & ";" & Rec2("Punti").Value & ";" & Rec2("Width").Value & ";" & Rec2("Height").Value & ";" & Rec2("DataOra").Value
 					Else
 						'If StaEffettuandoConversioneAutomaticaI = False Then
 						DatiHash = CalcolaHashImmagine(idCategoria, idMultimedia, "S", -1)
@@ -2702,7 +2702,7 @@ Public Class looVF
 											ScriveLogGlobale(NomeFileLog, "Elimino file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
 										End If
 
-										Sql = "Update Dati Set Eliminata = 'S' Where idTipologia=2 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
+										Sql = "Update dati Set Eliminata = 'S' Where idTipologia=2 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
 										Dim sRitorno As String = ""
 										If EseguiSoloTest = True Then
 											sRitorno = "OK"
@@ -2873,7 +2873,7 @@ Public Class looVF
 											ScriveLogGlobale(NomeFileLog, "Elimino file " & Nometto & " Progressivo " & Rec("Progressivo").Value)
 										End If
 
-										Sql = "Update Dati Set Eliminata = 'N' Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
+										Sql = "Update dati Set Eliminata = 'N' Where idTipologia=1 And idCategoria=" & idCategoria & " And Progressivo=" & Rec("Progressivo").Value
 										Dim sRitorno As String = ""
 										If EseguiSoloTest = True Then
 											sRitorno = "OK"
@@ -3668,9 +3668,19 @@ Public Class looVF
 										Sql = "Update exifimmagini Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
 										Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If Rit = "OK" Then
-											ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni exif immagini effettuato")
+											ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella quante aggiunte su categorie")
 
-											Ritorno = "*"
+											Sql = "Update categorie Set QuanteAggiunte = QuanteAggiunte + 1 Where idCategoria=" & idNuovaCategoria & " And idTipologia=" & idTipologia
+											Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+											If Rit = "OK" Then
+												ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella quante aggiunte su categorie")
+
+												Ritorno = "*"
+											Else
+												ScriveLogGlobale(NomeFileLog, Sql)
+												ScriveLogGlobale(NomeFileLog, Rit)
+												Ritorno = Rit
+											End If
 										Else
 											ScriveLogGlobale(NomeFileLog, Sql)
 											ScriveLogGlobale(NomeFileLog, Rit)
@@ -3795,7 +3805,8 @@ Public Class looVF
 							"'" & NomeCategoria.Replace("'", "''") & "', " &
 							"'" & Path & "', " &
 							"'" & Protetta.ToUpper & "', " &
-							"'--'" &
+							"'--', " &
+							"0 " &
 							")"
 						Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
@@ -4049,7 +4060,7 @@ Public Class looVF
 
 				Dim Sql As String = "Select A.idCategoria, A.Progressivo From Dati A " &
 					"Left Join informazioniimmagini B On A.idcategoria = B.idCategoria And A.progressivo = B.idMultimedia " &
-					"Where A.idTipologia=1 And A.idCategoria = " & idCategoriaGlobalePerConversione & " And (A.Eliminata='N' Or A.Eliminata='n') And B.Hash is Null" '  And (B.Eliminata='N' Or B.Eliminata='n') "
+					"Where A.idTipologia=1 And A.idCategoria = " & idCategoriaGlobalePerConversione & " And (A.Eliminata='N' Or A.Eliminata='n') And B.Sezione1 is Null" '  And (B.Eliminata='N' Or B.Eliminata='n') "
 				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
 				If TypeOf (Rec) Is String Then
 					ScriveLogGlobale(NomeFileLog, Rec)
@@ -4111,7 +4122,7 @@ Public Class looVF
 		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/RitornaPuntiniImmagine.txt"
 		Dim gi As New GestioneImmagini
 		Dim gf As New GestioneFilesDirectory
-		gf.ScansionaDirectorySingola("D:\MP3daPassare")
+		gf.ScansionaDirectorySingola("X:\pLibrary\Categorie\Carmen_Electra")
 		Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 		Dim Files() As String = gf.RitornaFilesRilevati
 
@@ -4119,12 +4130,12 @@ Public Class looVF
 			Dim NomeFile As String = Files(i)
 			Dim Puntini1 As StrutturaJPG = gi.CalcolaPuntini(Server.MapPath("."), NomeFile, NomeFileLog, i, True, False)
 
-			If Puntini1.Hash.Contains("ERROR") Then
-				ScriveLogGlobale(NomeFileLog, Puntini1.Hash)
+			If Puntini1.Sezione1.Contains("ERROR") Then
+				ScriveLogGlobale(NomeFileLog, Puntini1.Sezione1)
 			Else
-				Ritorno &= vbCrLf & Puntini1.PuntiDiagonale & ";" & Puntini1.PuntiCornice & ";" & Puntini1.Punti & ";" & Puntini1.Hash & ";" & Puntini1.Width & ";" & Puntini1.Height & ";" &
-					Puntini1.DataOra & ";" & Puntini1.HashColore & ";" & Puntini1.Descrizione & ";" & Puntini1.Commento & ";" & Puntini1.DateTimeTag & ";" & Puntini1.Software & ";" &
-					Puntini1.XRes & ";" & Puntini1.YRes
+				Ritorno &= vbCrLf & Puntini1.PuntiDiagonale & ";" & Puntini1.PuntiCornice & ";" & Puntini1.Punti & ";" & Puntini1.Sezione1 & ";" & Puntini1.Width & ";" & Puntini1.Height & ";" &
+					Puntini1.DataOra & ";" & Puntini1.Sezione2 & ";" & Puntini1.Descrizione & ";" & Puntini1.Commento & ";" & Puntini1.DateTimeTag & ";" & Puntini1.Software & ";" &
+					Puntini1.XRes & ";" & Puntini1.YRes & ";" & Puntini1.Hash
 			End If
 
 			If i > 5 Then
@@ -4186,7 +4197,7 @@ Public Class looVF
 			End If
 
 			If Refresh = "S" Then
-				Sql = "Update informazioniimmagini Set PuntiDiagonale=null, PuntiCornice=null, Punti=null, Hash=null, HashColore=null " & Altro
+				Sql = "Update informazioniimmagini Set PuntiDiagonale=null, PuntiCornice=null, Punti=null, Sezione1=null, Sezione2=null " & Altro
 				Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
 				If Rit = "OK" Then
@@ -4230,8 +4241,8 @@ Public Class looVF
 
 					NumeroImmagineConvertita += 1
 					Dim Puntini As StrutturaJPG = gi.CalcolaPuntini(Server.MapPath("."), Percorso & "/" & NomeFile, NomeFileLog, NumeroImmagineConvertita)
-					If Puntini.Hash.Contains("ERROR") Then
-						ScriveLogGlobale(NomeFileLog, Puntini.Hash)
+					If Puntini.Sezione1.Contains("ERROR") Then
+						ScriveLogGlobale(NomeFileLog, Puntini.Sezione1)
 					Else
 						'Dim Pv() As String = Puntini.Split(";")
 
@@ -4247,8 +4258,8 @@ Public Class looVF
 						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti diagonale " & Puntini.PuntiDiagonale)
 						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti cornice " & Puntini.PuntiCornice)
 						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti corpo " & Puntini.Punti)
-						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti negativi " & Puntini.Hash)
-						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti essenziali " & Puntini.HashColore)
+						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti negativi " & Puntini.Sezione1)
+						ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. Punti essenziali " & Puntini.Sezione2)
 						If idCategoria = -1 Then
 							ScriveLogGlobale(NomeFileLog, "Acquisizione puntini. ID Categoria Integer tabella: " & idCategoriaLetta)
 						End If
@@ -4261,20 +4272,24 @@ Public Class looVF
 							Sql = "Insert Into informazioniimmagini Values (" &
 								" " & idCategoriaLetta & ", " &
 								" " & idMultimedia & ", " &
-								"'" & Puntini.Hash & "', " &
-								" " & Puntini.Punti & ", " &
+								"'" & Puntini.Sezione1 & "', " &
+								"'" & Puntini.Punti & "', " &
 								" " & Puntini.Width & ", " &
 								" " & Puntini.Height & ", " &
 								"'" & Puntini.DataOra & "', " &
-								" " & Puntini.PuntiDiagonale & ", " &
-								" " & Puntini.PuntiCornice & ", " &
+								"'" & Puntini.PuntiDiagonale & "', " &
+								"'" & Puntini.PuntiCornice & "', " &
 								"'N', " &
-								"'" & Puntini.HashColore & "' " &
+								"'" & Puntini.Sezione2 & "', " &
+								"'" & Puntini.Hash & "' " &
 								")"
 						Else
 							ScriveLogGlobale(NomeFileLog, "Riga esistente. La modifico")
 							Sql = "Update informazioniimmagini " &
-								"Set PuntiDiagonale=" & Puntini.PuntiDiagonale & ", PuntiCornice=" & Puntini.PuntiCornice & ", Punti=" & Puntini.Punti & ", Hash='" & Puntini.Hash & "', Width=" & Puntini.Width & ", Height=" & Puntini.Height & ", DataOra='" & Puntini.DataOra & "', HashColore='" & Puntini.HashColore & "' " &
+								"Set PuntiDiagonale='" & Puntini.PuntiDiagonale & "', " &
+								"PuntiCornice='" & Puntini.PuntiCornice & "', " &
+								"Punti='" & Puntini.Punti & "', " &
+								"Sezione1='" & Puntini.Sezione1 & "', Width=" & Puntini.Width & ", Height=" & Puntini.Height & ", DataOra='" & Puntini.DataOra & "', Sezione2='" & Puntini.Sezione2 & "', Hash='" & Puntini.Hash & "' " &
 								"Where idCategoria=" & idCategoriaLetta & " And idMultimedia=" & idMultimedia
 						End If
 						Rec2.Close
@@ -4435,11 +4450,11 @@ Public Class looVF
 							"'" & RitornoHash.Software & "' " &
 							")"
 					Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-						If Rit = "OK" Then
-							ScriveLogGlobale(NomeFileLog, "Scrittura effettuata in tabella")
-						Else
-							ScriveLogGlobale(NomeFileLog, Rit)
-						End If
+					If Rit = "OK" Then
+						ScriveLogGlobale(NomeFileLog, "Scrittura effettuata in tabella")
+					Else
+						ScriveLogGlobale(NomeFileLog, Rit)
+					End If
 					'End If
 
 					Rec.MoveNext
@@ -4481,7 +4496,7 @@ Public Class looVF
 						ScriveLogGlobale(NomeFileLog, "Dati rilevati in tabella")
 
 						EsegueRicerca = False
-						Ritorno = Rec("Hash").Value & ";" & Rec("Punti").Value & ";" & Rec("Width").Value & ";" & Rec("Height").Value & ";" & Rec("DataOra").Value
+						Ritorno = Rec("Sezione1").Value & ";" & Rec("Punti").Value & ";" & Rec("Width").Value & ";" & Rec("Height").Value & ";" & Rec("DataOra").Value
 					Else
 						EsegueRicerca = True
 					End If
@@ -4518,8 +4533,8 @@ Public Class looVF
 
 							Dim RitornoHash As StrutturaJPG = gi.CalcolaPuntini(Server.MapPath("."), Percorso & "/" & NomeFile, NomeFileLog, NumeroImmagineConvertita)
 
-							If RitornoHash.Hash.Contains("ERROR:") Then
-								Ritorno = RitornoHash.Hash
+							If RitornoHash.Sezione1.Contains("ERROR:") Then
+								Ritorno = RitornoHash.Sezione1
 
 								''ScriveLogGlobale(NomeFileLog, Ritorno)
 							Else
@@ -4528,7 +4543,7 @@ Public Class looVF
 								Sql = "Delete From informazioniimmagini Where idCategoria=" & idCategoria & " And idMultimedia=" & idMultimedia
 								Dim Rit As String = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 								If Rit = "OK" Then
-									Sql = "Insert Into informazioniimmagini Values (" & idCategoria & ", " & idMultimedia & ", '" & RitornoHash.Hash & "', " & RitornoHash.Punti & ", " & RitornoHash.Width & ", " & RitornoHash.Height & ", '" & RitornoHash.DataOra & "', " & RitornoHash.PuntiDiagonale & ", " & RitornoHash.PuntiCornice & ", '" & RitornoHash.HashColore & "', 'N')"
+									Sql = "Insert Into informazioniimmagini Values (" & idCategoria & ", " & idMultimedia & ", '" & RitornoHash.Sezione1 & "', " & RitornoHash.Punti & ", " & RitornoHash.Width & ", " & RitornoHash.Height & ", '" & RitornoHash.DataOra & "', " & RitornoHash.PuntiDiagonale & ", " & RitornoHash.PuntiCornice & ", '" & RitornoHash.Sezione2 & "', '" & RitornoHash.Hash & "', 'N')"
 									Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 
 									If Rit = "OK" Then
@@ -4549,7 +4564,7 @@ Public Class looVF
 										'If Rit = "OK" Then
 										'	ScriveLogGlobale(NomeFileLog, "Scrittura 2 effettuata in tabella")
 
-										Ritorno = RitornoHash.Hash & ";" & RitornoHash.Punti & ";" & RitornoHash.Width & ";" & RitornoHash.Height & ";" & RitornoHash.DataOra & ";" & RitornoHash.HashColore
+										Ritorno = RitornoHash.Sezione1 & ";" & RitornoHash.Punti & ";" & RitornoHash.Width & ";" & RitornoHash.Height & ";" & RitornoHash.DataOra & ";" & RitornoHash.Sezione2 & ";" & RitornoHash.Hash
 										'Else
 										'	Ritorno = "ERROR: Errore sull'inserimento dei dati in tabella 2. " & Sql
 
@@ -4611,10 +4626,11 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function TrovaImmaginiUguali(idCategoria As String, ricercaPerHash As String, ricercaPerHashColore As String, ricercaPerData As String, ricercaPerDimensioni As String, ricercaPerPunti As String,
+	Public Function TrovaImmaginiUguali(idCategoria As String, ricercaPerMetodo1 As String, ricercaPerMetodo2 As String, ricercaPerData As String, ricercaPerDimensioni As String, ricercaPerPunti As String,
 										ricercaPerPuntiDiagonale As String, ricercaPerPuntiCornice As String, ricercaPerPuntiCorpo As String, ricercaPerNomeUguale As String,
 										ricercaPerPeso As String, ricercaPerStringa As String, stringaRicerca As String, QuanteImmagini As String, Inizio As String, AndOr As String,
-										TutteLeCategorie As String, ricercaPerNegativo As String, ricercaPerEssenziale As String, ricercaPer1280 As String, Caratteri As String) As String
+										TutteLeCategorie As String, ricercaPerNegativo As String, ricercaPerEssenziale As String, ricercaPer1280 As String, Caratteri As String,
+										Ordinamento As String, ricercaPerHash As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		Dim Ritorno As String = "*"
@@ -4636,28 +4652,28 @@ Public Class looVF
 			End If
 			Ritorno1280 &= "|"
 
-			If ricercaPerHash = "S" Then
-				RitornoHash = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF DESCR.", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+			If ricercaPerMetodo1 = "S" Then
+				RitornoHash = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF DESCR.", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoHash &= "|"
 
-			If ricercaPerHashColore = "S" Then
-				RitornoHashColore = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF COMMENTO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+			If ricercaPerMetodo2 = "S" Then
+				RitornoHashColore = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF COMMENTO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoHashColore &= "|"
 
 			If ricercaPerData = "S" Then
-				RitornoDataOra = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+				RitornoDataOra = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoDataOra &= "|"
 
 			If ricercaPerDimensioni = "S" Then
-				RitornoDimensioni = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+				RitornoDimensioni = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoDimensioni &= "|"
 
 			If ricercaPerEssenziale = "S" Then
-				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "DIMENSIONI")
+				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "DIMENSIONI", Ordinamento)
 			End If
 			RitornoEssenziale &= "|"
 
@@ -4677,11 +4693,11 @@ Public Class looVF
 					aTipo.Add("Punti")
 				End If
 				If ricercaPerNegativo = "S" Then
+					aTipo.Add("Sezione1")
+				End If
+				If ricercaPerHash = "S" Then
 					aTipo.Add("Hash")
 				End If
-				''If ricercaPerEssenziale = "S" Then
-				''	aTipo.Add("HashColore")
-				''End If
 
 				For Each t As String In aTipo
 					Tipo &= t & ", '-',"
@@ -4700,27 +4716,27 @@ Public Class looVF
 				End If
 
 				If Fai Then
-					RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, Tipo, "PUNTI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+					RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, Tipo, "PUNTI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 				End If
 			End If
 			RitornoPunti &= "|"
 
 			If ricercaPerNomeUguale = "S" Then
-				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoNomeUguale &= "|"
 
 			If ricercaPerPeso = "S" Then
-				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri)
+				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoPeso &= "|"
 
 			If ricercaPerStringa = "S" Then
-				RitornoStringa = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "STRINGA", "STRINGA", idCategoria, QuanteImmagini, Inizio, stringaRicerca, AndOr, TutteLeCategorie, Caratteri)
+				RitornoStringa = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "STRINGA", "STRINGA", idCategoria, QuanteImmagini, Inizio, stringaRicerca, AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			End If
 			RitornoStringa &= "|"
 
-			Ritorno = RitornoHash & RitornoDataOra & RitornoDimensioni & RitornoPunti & RitornoNomeUguale & RitornoPeso & RitornoStringa & RitornoHashColore & Ritorno1280 & ritornoEssenziale
+			Ritorno = RitornoHash & RitornoDataOra & RitornoDimensioni & RitornoPunti & RitornoNomeUguale & RitornoPeso & RitornoStringa & RitornoHashColore & Ritorno1280 & RitornoEssenziale
 		End If
 
 		Return Ritorno
