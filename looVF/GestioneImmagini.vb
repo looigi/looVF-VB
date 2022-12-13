@@ -1383,16 +1383,18 @@ Public Class GestioneImmagini
 		ScriveLogGlobale(filelog, "Conteggio punti: " & filename)
 
 		Dim NomeFileRidotto As String = MP & "/Appoggio/Rid_" & NomeEsteso & ".jpg"
-		Dim rit As String = RidimensionaMantenendoProporzioni(filename, NomeFileRidotto, 16, True)
-		'Dim NomeFileRidottoBN As String = MP & "/Appoggio/RidBN_" & NomeEsteso & ".jpg"
-		'rit = ConverteImmaginInBN(NomeFileRidotto, NomeFileRidottoBN, filelog, False)
-		Dim NomeFileRidottoBN2 As String = MP & "/Appoggio/RidBN2_" & NomeEsteso & ".jpg"
+		Dim rit As String = RidimensionaMantenendoProporzioni(filename, NomeFileRidotto, 100, False)
+
+		Dim NomeFileRidottoBN As String = MP & "/Appoggio/RidBN_" & NomeEsteso & ".jpg"
+		rit = ConverteImmaginInBN(NomeFileRidotto, NomeFileRidottoBN, filelog, False)
+		'Dim NomeFileRidottoBN2 As String = MP & "/Appoggio/RidBN2_" & NomeEsteso & ".jpg"
 
 		Try
 			Dim img As Bitmap = LoadBitmapSenzaLock(NomeFileRidotto)
 			Dim width2 As Integer = img.Width
 			Dim height2 As Integer = img.Height
-			'Dim DimensioneDaControllare As Integer = width2
+			Dim DimensioneDaControllare As Integer = 50 ' width2
+			Dim imgBN As Bitmap = LoadBitmapSenzaLock(NomeFileRidottoBN)
 
 			Dim quantoX As Integer = width2 + 1
 			Dim quantoY As Integer = height2 + 1
@@ -1408,14 +1410,14 @@ Public Class GestioneImmagini
 			'Dim PuntiNeg As Integer = 0
 			'Dim PuntiNeg2 As Integer = 0
 
-			'Dim inizioX As Integer = ((width2 - 1) / 2) - (DimensioneDaControllare / 2)
-			'Dim fineX As Integer = ((width2 - 1) / 2) + (DimensioneDaControllare / 2)
-			'Dim inizioY As Integer = ((height2 - 1) / 2) - (DimensioneDaControllare / 2)
-			'Dim fineY As Integer = ((height2 - 1) / 2) + (DimensioneDaControllare / 2)
-			Dim inizioX As Integer = 0
-			Dim fineX As Integer = width2 - 1
-			Dim inizioY As Integer = 0
-			Dim fineY As Integer = height2 - 1
+			Dim inizioX As Integer = ((width2 - 1) / 2) - (DimensioneDaControllare / 2)
+			Dim fineX As Integer = ((width2 - 1) / 2) + (DimensioneDaControllare / 2)
+			Dim inizioY As Integer = ((height2 - 1) / 2) - (DimensioneDaControllare / 2)
+			Dim fineY As Integer = ((height2 - 1) / 2) + (DimensioneDaControllare / 2)
+			'Dim inizioX As Integer = 0
+			'Dim fineX As Integer = width2 - 1
+			'Dim inizioY As Integer = 0
+			'Dim fineY As Integer = height2 - 1
 			Dim posX As Integer = 0
 			Dim posY As Integer = 0
 
@@ -1428,61 +1430,167 @@ Public Class GestioneImmagini
 			ScriveLogGlobale(filelog, "RangeX: " & inizioX & "-" & fineX)
 			ScriveLogGlobale(filelog, "RangeY: " & inizioY & "-" & fineY)
 
-			Dim listaPunti As New List(Of Color)
-			Dim quantiPunti As New List(Of Integer)
-			Dim listaPuntiArr As New List(Of String)
-			Dim quantiPuntiArr As New List(Of Integer)
-			Dim Colore As New List(Of Color)
+			'Dim listaPunti As New List(Of Color)
+			'Dim quantiPunti As New List(Of Integer)
+			'Dim listaPuntiArr As New List(Of String)
+			'Dim quantiPuntiArr As New List(Of Integer)
+			'Dim Colore As New List(Of Color)
+			Dim QQ1 As Integer = 0
+			Dim QQ2 As Integer = 0
+			Dim QQ3 As Integer = 0
+			Dim QQBn As Integer = 0
+			Dim QQTot As Integer = 0
 
 			For i As Integer = inizioX To fineX
 				posY = 0
 				For k As Integer = inizioY To fineY
 					Dim pixelColor As Color = img.GetPixel(i, k)
 
-					Dim Red As Integer = Int(Val(pixelColor.R.ToString()) / 10) * 10
-					Dim Green As Integer = Int(Val(pixelColor.G.ToString()) / 10) * 10
-					Dim Blue As Integer = Int(Val(pixelColor.B.ToString()) / 10) * 10
-					Dim Colorone As String = Red & "-" & Green & "-" & Blue
+					Dim Alfa As Integer = pixelColor.A ' Int(Val(pixelColor.R.ToString()) / 10) * 10
+					Dim Red As Integer = pixelColor.R ' Int(Val(pixelColor.R.ToString()) / 10) * 10
+					Dim Green As Integer = pixelColor.G ' Int(Val(pixelColor.G.ToString()) / 10) * 10
+					Dim Blue As Integer = pixelColor.B '  Int(Val(pixelColor.B.ToString()) / 10) * 10
+					'Dim Colorone As String = Red & "-" & Green & "-" & Blue
 
-					Dim Ok3 As Boolean = True
-					Dim Quale As Integer = 0
+					'Dim Alfa2 As Integer = (CInt(Alfa / 10) * 10) ' + ((i + k) * 25)
+					'Dim Red2 As Integer = (CInt(Red / 10) * 10) ' + ((i + k) * 25)
+					'Dim Green2 As Integer = (CInt(Green / 10) * 10) ' + ((i + k) * 25)
+					'Dim Blue2 As Integer = (CInt(Blue / 10) * 10) ' + ((i + k) * 25)
 
-					For Each v As Color In listaPunti
-						If v = pixelColor Then
-							Ok3 = False
-							quantiPunti.Item(Quale) += 1
-							Exit For
-						End If
-						Quale += 1
-					Next
+					QQ1 += IIf(Red > 128, 1, 0)
+					QQ2 += IIf(Green > 128, 1, 0)
+					QQ3 += IIf(Blue > 128, 1, 0)
 
-					If Ok3 Then
-						listaPunti.Add(pixelColor)
-						quantiPunti.Add(1)
-						'Dim Colorello As Color = Color.FromArgb(Quale, Quale, Quale)
-						'Colore.Add(Colorello)
-						Quale = listaPunti.Count - 1
-					End If
+					'If Red2 > 230 Then
+					'	QQ1 += 15
+					'Else
+					'	If Red2 > 200 Then
+					'		QQ1 += 11
+					'	Else
+					'		If Red2 > 128 Then
+					'			QQ1 += 6
+					'		Else
+					'			If Red2 > 60 Then
+					'				QQ1 += 2
+					'			Else
+					'				If Red2 > 30 Then
+					'					QQ1 += 1
+					'				End If
+					'			End If
+					'		End If
+					'	End If
+					'End If
 
-					Ok3 = True
-					Quale = 0
+					'If Green2 > 230 Then
+					'	QQ2 += 15
+					'Else
+					'	If Green2 > 200 Then
+					'		QQ2 += 11
+					'	Else
+					'		If Green2 > 128 Then
+					'			QQ2 += 6
+					'		Else
+					'			If Green2 > 60 Then
+					'				QQ2 += 2
+					'			Else
+					'				If Green2 > 30 Then
+					'					QQ2 += 1
+					'				End If
+					'			End If
+					'		End If
+					'	End If
+					'End If
 
-					For Each v As String In listaPuntiArr
-						If v = Colorone Then
-							Ok3 = False
-							quantiPuntiArr.Item(Quale) += 1
-							Exit For
-						End If
-						Quale += 1
-					Next
+					'If Blue2 > 230 Then
+					'	QQ3 += 15
+					'Else
+					'	If Blue2 > 200 Then
+					'		QQ3 += 11
+					'	Else
+					'		If Blue2 > 128 Then
+					'			QQ3 += 6
+					'		Else
+					'			If Blue2 > 60 Then
+					'				QQ3 += 2
+					'			Else
+					'				If Blue2 > 30 Then
+					'					QQ3 += 1
+					'				End If
+					'			End If
+					'		End If
+					'	End If
+					'End If
 
-					If Ok3 Then
-						listaPuntiArr.Add(Colorone)
-						quantiPuntiArr.Add(1)
-						Dim Colorello As Color = Color.FromArgb(Red, Green, Blue)
-						Colore.Add(Colorello)
-						Quale = listaPuntiArr.Count - 1
-					End If
+					Dim pixelColor2 As Color = imgBN.GetPixel(i, k)
+					Dim BN As Integer = pixelColor2.R ' CInt(pixelColor2.R / 10) * 10
+
+					QQBn += IIf(BN > 128, 1, 0)
+
+					'If BN > 230 Then
+					'	QQBn += 15
+					'Else
+					'	If BN > 200 Then
+					'		QQBn += 11
+					'		QQTot += 1
+					'	Else
+					'		If BN > 128 Then
+					'			QQBn += 6
+					'		Else
+					'			If BN > 60 Then
+					'				QQBn += 2
+					'			Else
+					'				If BN > 30 Then
+					'					QQBn += 1
+					'				End If
+					'			End If
+					'		End If
+					'	End If
+					'End If
+
+					'Dim Media As Integer = CInt(((CInt(Red / 100) * 100) + (CInt(Green / 100) * 100) + (CInt(Blue / 100) * 100) + BN) / 4)
+
+					'Media = (CInt(Media / 100) * 100)
+					'QQTot += Media
+
+					'Dim Ok3 As Boolean = True
+					'Dim Quale As Integer = 0
+
+					'For Each v As Color In listaPunti
+					'	If v = pixelColor Then
+					'		Ok3 = False
+					'		quantiPunti.Item(Quale) += 1
+					'		Exit For
+					'	End If
+					'	Quale += 1
+					'Next
+
+					'If Ok3 Then
+					'	listaPunti.Add(pixelColor)
+					'	quantiPunti.Add(1)
+					'	'Dim Colorello As Color = Color.FromArgb(Quale, Quale, Quale)
+					'	'Colore.Add(Colorello)
+					'	Quale = listaPunti.Count - 1
+					'End If
+
+					'Ok3 = True
+					'Quale = 0
+
+					'For Each v As String In listaPuntiArr
+					'	If v = Colorone Then
+					'		Ok3 = False
+					'		quantiPuntiArr.Item(Quale) += 1
+					'		Exit For
+					'	End If
+					'	Quale += 1
+					'Next
+
+					'If Ok3 Then
+					'	listaPuntiArr.Add(Colorone)
+					'	quantiPuntiArr.Add(1)
+					'	Dim Colorello As Color = Color.FromArgb(Red, Green, Blue)
+					'	Colore.Add(Colorello)
+					'	Quale = listaPuntiArr.Count - 1
+					'End If
 
 					'img2.SetPixel(posX, posY, Colore.Item(Quale))
 					' ScriveLogGlobale(fileLog, "Colori " & i & "," & k & ": R. " & pixelColor.R & " G. " & pixelColor.G & " B. " & pixelColor.B)
@@ -1539,75 +1647,85 @@ Public Class GestioneImmagini
 
 			'Dim Quale2 As Integer = 0
 
-			For i As Integer = 0 To listaPunti.Count - 1
-				For K As Integer = i + 1 To listaPunti.Count - 1
-					If quantiPunti.Item(i) < quantiPunti.Item(K) Then
-						Dim Appoggio2 As Integer = quantiPunti.Item(i)
-						quantiPunti.Item(i) = quantiPunti.Item(K)
-						quantiPunti.Item(K) = Appoggio2
-						Dim AppoggioC As Color = listaPunti.Item(i)
-						listaPunti.Item(i) = listaPunti.Item(K)
-						listaPunti.Item(K) = AppoggioC
-					End If
-				Next
-			Next
-			ScriveLogGlobale(filelog, "Quanti Pixel diversi: " & listaPunti.Count - 1)
-			Try
-				ScriveLogGlobale(filelog, "Pixel 1: " & listaPunti.Item(0).ToString() & " -> " & quantiPunti.Item(0))
-				ScriveLogGlobale(filelog, "Pixel 2: " & listaPunti.Item(1).ToString() & " -> " & quantiPunti.Item(1))
-				ScriveLogGlobale(filelog, "Pixel 3: " & listaPunti.Item(2).ToString() & " -> " & quantiPunti.Item(2))
-				ScriveLogGlobale(filelog, "Pixel 4: " & listaPunti.Item(3).ToString() & " -> " & quantiPunti.Item(3))
-				ScriveLogGlobale(filelog, "Pixel 5: " & listaPunti.Item(4).ToString() & " -> " & quantiPunti.Item(4))
-			Catch ex As Exception
+			'For i As Integer = 0 To listaPunti.Count - 1
+			'	For K As Integer = i + 1 To listaPunti.Count - 1
+			'		If quantiPunti.Item(i) < quantiPunti.Item(K) Then
+			'			Dim Appoggio2 As Integer = quantiPunti.Item(i)
+			'			quantiPunti.Item(i) = quantiPunti.Item(K)
+			'			quantiPunti.Item(K) = Appoggio2
+			'			Dim AppoggioC As Color = listaPunti.Item(i)
+			'			listaPunti.Item(i) = listaPunti.Item(K)
+			'			listaPunti.Item(K) = AppoggioC
+			'		End If
+			'	Next
+			'Next
+			'ScriveLogGlobale(filelog, "Quanti Pixel diversi: " & listaPunti.Count - 1)
+			'Try
+			'	ScriveLogGlobale(filelog, "Pixel 1: " & listaPunti.Item(0).ToString() & " -> " & quantiPunti.Item(0))
+			'	ScriveLogGlobale(filelog, "Pixel 2: " & listaPunti.Item(1).ToString() & " -> " & quantiPunti.Item(1))
+			'	ScriveLogGlobale(filelog, "Pixel 3: " & listaPunti.Item(2).ToString() & " -> " & quantiPunti.Item(2))
+			'	ScriveLogGlobale(filelog, "Pixel 4: " & listaPunti.Item(3).ToString() & " -> " & quantiPunti.Item(3))
+			'	ScriveLogGlobale(filelog, "Pixel 5: " & listaPunti.Item(4).ToString() & " -> " & quantiPunti.Item(4))
+			'Catch ex As Exception
 
-			End Try
+			'End Try
 
-			PuntiDiagonale = listaPunti.Item(0).R.ToString() & "-" & listaPunti.Item(0).G.ToString() & "-" & listaPunti.Item(0).B.ToString() & "-" & quantiPunti.Item(0)
-			Hash = listaPunti.Item(1).R.ToString() & "-" & listaPunti.Item(1).G.ToString() & "-" & listaPunti.Item(1).B.ToString() & "-" & quantiPunti.Item(1)
+			QQ1 = CInt(QQ1 / 5) * 5
+			QQ2 = CInt(QQ2 / 5) * 5
+			QQ3 = CInt(QQ3 / 5) * 5
+			QQBn = CInt(QQBn / 5) * 5
+			QQTot = ((QQ1 + QQ2 + QQ3 + QQBn) / 4) * 0.7
 
-			For i As Integer = 0 To listaPuntiArr.Count - 1
-				For K As Integer = i + 1 To listaPuntiArr.Count - 1
-					If quantiPuntiArr.Item(i) < quantiPuntiArr.Item(K) Then
-						Dim Appoggio2 As Integer = quantiPuntiArr.Item(i)
-						quantiPuntiArr.Item(i) = quantiPuntiArr.Item(K)
-						quantiPuntiArr.Item(K) = Appoggio2
-						Dim AppoggioS As String = listaPuntiArr.Item(i)
-						listaPuntiArr.Item(i) = listaPuntiArr.Item(K)
-						listaPuntiArr.Item(K) = AppoggioS
-					End If
-				Next
-			Next
-			Try
-				ScriveLogGlobale(filelog, "Quanti Pixel diversi arrotondati: " & listaPuntiArr.Count - 1)
-				ScriveLogGlobale(filelog, "Pixel 1: " & listaPuntiArr.Item(0).ToString() & " -> " & quantiPuntiArr.Item(0))
-				ScriveLogGlobale(filelog, "Pixel 2: " & listaPuntiArr.Item(1).ToString() & " -> " & quantiPuntiArr.Item(1))
-				ScriveLogGlobale(filelog, "Pixel 3: " & listaPuntiArr.Item(2).ToString() & " -> " & quantiPuntiArr.Item(2))
-				ScriveLogGlobale(filelog, "Pixel 4: " & listaPuntiArr.Item(3).ToString() & " -> " & quantiPuntiArr.Item(3))
-				ScriveLogGlobale(filelog, "Pixel 5: " & listaPuntiArr.Item(4).ToString() & " -> " & quantiPuntiArr.Item(4))
-			Catch ex As Exception
+			PuntiDiagonale = QQ2 '  listaPunti.Item(0).R.ToString() & "-" & listaPunti.Item(0).G.ToString() & "-" & listaPunti.Item(0).B.ToString() & "-" & quantiPunti.Item(0)
+			Hash = QQBn ' QQ2 ' listaPunti.Item(1).R.ToString() & "-" & listaPunti.Item(1).G.ToString() & "-" & listaPunti.Item(1).B.ToString() & "-" & quantiPunti.Item(1)
 
-			End Try
+			'For i As Integer = 0 To listaPuntiArr.Count - 1
+			'	For K As Integer = i + 1 To listaPuntiArr.Count - 1
+			'		If quantiPuntiArr.Item(i) < quantiPuntiArr.Item(K) Then
+			'			Dim Appoggio2 As Integer = quantiPuntiArr.Item(i)
+			'			quantiPuntiArr.Item(i) = quantiPuntiArr.Item(K)
+			'			quantiPuntiArr.Item(K) = Appoggio2
+			'			Dim AppoggioS As String = listaPuntiArr.Item(i)
+			'			listaPuntiArr.Item(i) = listaPuntiArr.Item(K)
+			'			listaPuntiArr.Item(K) = AppoggioS
+			'		End If
+			'	Next
+			'Next
+			'Try
+			'	ScriveLogGlobale(filelog, "Quanti Pixel diversi arrotondati: " & listaPuntiArr.Count - 1)
+			'	ScriveLogGlobale(filelog, "Pixel 1: " & listaPuntiArr.Item(0).ToString() & " -> " & quantiPuntiArr.Item(0))
+			'	ScriveLogGlobale(filelog, "Pixel 2: " & listaPuntiArr.Item(1).ToString() & " -> " & quantiPuntiArr.Item(1))
+			'	ScriveLogGlobale(filelog, "Pixel 3: " & listaPuntiArr.Item(2).ToString() & " -> " & quantiPuntiArr.Item(2))
+			'	ScriveLogGlobale(filelog, "Pixel 4: " & listaPuntiArr.Item(3).ToString() & " -> " & quantiPuntiArr.Item(3))
+			'	ScriveLogGlobale(filelog, "Pixel 5: " & listaPuntiArr.Item(4).ToString() & " -> " & quantiPuntiArr.Item(4))
+			'Catch ex As Exception
+
+			'End Try
 			' Dim Nome As String = MP & "/Appoggio/RidBN_" & NomeEsteso & ".jpg"
 
-			Punti = listaPunti.Count - 1 & "-" & quantiPunti.Item(0) & "-" & quantiPuntiArr.Item(0)
+			'QQ3 = (CInt(QQ3 / 100) * 100)
+			Punti = QQ3 ' listaPunti.Count - 1 & "-" & quantiPunti.Item(0) & "-" & quantiPuntiArr.Item(0)
 
-			PuntiCornice = listaPuntiArr.Item(0) & "-" & quantiPuntiArr.Item(0)
-			HashColore = listaPuntiArr.Item(1) & "-" & quantiPuntiArr.Item(1)
+			'QQ1 = QQ1 * 80 / 100
+			PuntiCornice = QQ1 ' listaPuntiArr.Item(0) & "-" & quantiPuntiArr.Item(0)
+
+			HashColore = QQTot ' QQ1 ' listaPuntiArr.Item(1) & "-" & quantiPuntiArr.Item(1)
 
 			'ScriveLogGlobale(filelog, "Salvataggio file")
 			'img2.Save(NomeFileRidottoBN2)
 
 			'img2.Dispose()
 		Catch ex As Exception
-			NomeFileRidottoBN2 = ""
+			'NomeFileRidottoBN2 = ""
 			Punti = -1
 			ScriveLogGlobale(filelog, "ERROR: " & ex.Message)
 		End Try
 
 		Dim gf As New GestioneFilesDirectory
 		gf.EliminaFileFisico(NomeFileRidotto)
+		'gf.EliminaFileFisico(NomeFileRidottoBN)
 
-		Return NomeFileRidottoBN2 & ";" & Punti & ";" & PuntiDiagonale & ";" & PuntiCornice & ";" & Hash & ";" & HashColore & ";"
+		Return NomeFileRidottoBN & ";" & Punti & ";" & PuntiDiagonale & ";" & PuntiCornice & ";" & Hash & ";" & HashColore & ";"
 	End Function
 
 	Public Function AcquisisceExif(fileLog As String, file_name As String) As StrutturaJPG
