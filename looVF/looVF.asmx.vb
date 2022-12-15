@@ -3730,6 +3730,29 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
+	Public Function SpostaTuttiMultimediaACategoria(idTipologia As String, idMultimedia As String, idNuovaCategoria As String) As String
+		Dim Ritorno As String = ""
+
+		If idMultimedia = "" Or Not idMultimedia.Contains("§") Then
+			Ritorno = "ERROR: Nessun id passato"
+		Else
+			Dim id() As String = idMultimedia.Split("§")
+
+			For Each i As String In id
+				If i <> "" Then
+					Dim c() As String = i.Split(";")
+
+					Ritorno = SpostaMultimediaACategoria(idTipologia, c(0), c(1), idNuovaCategoria)
+				End If
+			Next
+
+			Ritorno = "*"
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SpostaMultimediaACategoria(idTipologia As String, idVecchiaCategoria As String, idMultimedia As String, idNuovaCategoria As String) As String
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -3792,69 +3815,65 @@ Public Class looVF
 				ScriveLogGlobale(NomeFileLog, "File non esistente... Skippo la copia")
 				EffettuaCopia = False
 				Rit = "ERROR: Skippata copia per problemi di mancanza file di origine"
+				ScriveLogGlobale(NomeFileLog, Rit)
 			End If
 
-			If Rit.Contains("ERROR") Then
-				ScriveLogGlobale(NomeFileLog, Rit)
-				Ritorno = Rit
-			Else
-				If gf.EsisteFile(pathNuovaCategoria & "/" & NomeFile) Or EffettuaCopia = False Then
-					If EffettuaCopia Then
-						ScriveLogGlobale(NomeFileLog, "File copiato")
+			'If Rit.Contains("ERROR") Then
+			'	ScriveLogGlobale(NomeFileLog, Rit)
+			'	Ritorno = Rit
+			'Else
+			If gf.EsisteFile(pathNuovaCategoria & "/" & NomeFile) Or EffettuaCopia = False Then
+				If EffettuaCopia Then
+					ScriveLogGlobale(NomeFileLog, "File copiato")
 
-						gf.EliminaFileFisico(pathVecchiaCategoria & "/" & NomeFile)
-						ScriveLogGlobale(NomeFileLog, "File di origine eliminato")
-					End If
+					gf.EliminaFileFisico(pathVecchiaCategoria & "/" & NomeFile)
+					ScriveLogGlobale(NomeFileLog, "File di origine eliminato")
+				End If
 
-					ScriveLogGlobale(NomeFileLog, "Acquisizione nuovo id per categoria")
-					Sql = "Select Coalesce(Max(Progressivo)+1,1) From Dati  Where idTipologia=" & idTipologia & " And idCategoria=" & idNuovaCategoria
-					Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
-					Dim Progressivo As String = Rec(0).Value
-					Rec.Close
-					ScriveLogGlobale(NomeFileLog, "ID acquisito per categoria: " & Progressivo)
+				ScriveLogGlobale(NomeFileLog, "Acquisizione nuovo id per categoria")
+				Sql = "Select Coalesce(Max(Progressivo)+1,1) From Dati  Where idTipologia=" & idTipologia & " And idCategoria=" & idNuovaCategoria
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+				Dim Progressivo As String = Rec(0).Value
+				Rec.Close
+				ScriveLogGlobale(NomeFileLog, "ID acquisito per categoria: " & Progressivo)
 
-					ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella dati")
-					Sql = "Update dati Set progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
+				ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella dati")
+				Sql = "Update dati Set progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
+				Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+
+				If Rit = "OK" Then
+					ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella effettuato")
+
+					ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti")
+					Sql = "Update preferiti Set Progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
 					Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-
 					If Rit = "OK" Then
-						ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella effettuato")
+						ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti effettuato")
 
-						ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti")
-						Sql = "Update preferiti Set Progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
+						ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti protetti")
+						Sql = "Update preferitiprot Set Progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
 						Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 						If Rit = "OK" Then
-							ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti effettuato")
+							ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti protetti effettuato")
 
-							ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti protetti")
-							Sql = "Update preferitiprot Set Progressivo=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And Progressivo=" & idMultimedia
-							Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-							If Rit = "OK" Then
-								ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella preferiti protetti effettuato")
+							If idTipologia = "1" Or idTipologia = 1 Then
+								ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni immagini")
+								Sql = "Update informazioniimmagini Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
+								Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+								If Rit = "OK" Then
+									ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni immagini effettuato")
 
-								If idTipologia = "1" Or idTipologia = 1 Then
-									ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni immagini")
-									Sql = "Update informazioniimmagini Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
+									Sql = "Update exifimmagini Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
 									Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 									If Rit = "OK" Then
-										ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni immagini effettuato")
+										ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella quante aggiunte su categorie")
 
-										Sql = "Update exifimmagini Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
+										Sql = "Update categorie Set QuanteAggiunte = QuanteAggiunte + 1 Where idCategoria=" & idNuovaCategoria & " And idTipologia=" & idTipologia
 										Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
 										If Rit = "OK" Then
 											ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella quante aggiunte su categorie")
 
-											Sql = "Update categorie Set QuanteAggiunte = QuanteAggiunte + 1 Where idCategoria=" & idNuovaCategoria & " And idTipologia=" & idTipologia
-											Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-											If Rit = "OK" Then
-												ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella quante aggiunte su categorie")
-
-												Ritorno = "*"
-											Else
-												ScriveLogGlobale(NomeFileLog, Sql)
-												ScriveLogGlobale(NomeFileLog, Rit)
-												Ritorno = Rit
-											End If
+											Ritorno = "*"
 										Else
 											ScriveLogGlobale(NomeFileLog, Sql)
 											ScriveLogGlobale(NomeFileLog, Rit)
@@ -3866,23 +3885,23 @@ Public Class looVF
 										Ritorno = Rit
 									End If
 								Else
-									ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni video")
-									Sql = "Update InformazioniVideo Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
-									Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
-									If Rit = "OK" Then
-										ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni video effettuato")
-
-										Ritorno = "*"
-									Else
-										ScriveLogGlobale(NomeFileLog, Sql)
-										ScriveLogGlobale(NomeFileLog, Rit)
-										Ritorno = Rit
-									End If
+									ScriveLogGlobale(NomeFileLog, Sql)
+									ScriveLogGlobale(NomeFileLog, Rit)
+									Ritorno = Rit
 								End If
 							Else
-								ScriveLogGlobale(NomeFileLog, Sql)
-								ScriveLogGlobale(NomeFileLog, Rit)
-								Ritorno = Rit
+								ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni video")
+								Sql = "Update InformazioniVideo Set idMultimedia=" & Progressivo & ", idCategoria=" & idNuovaCategoria & " Where idTipologia=" & idTipologia & " And idCategoria=" & idVecchiaCategoria & " And idMultimedia=" & idMultimedia
+								Rit = Db.EsegueSql(Server.MapPath("."), Sql, ConnessioneSQL, False)
+								If Rit = "OK" Then
+									ScriveLogGlobale(NomeFileLog, "Aggiornamento tabella informazioni video effettuato")
+
+									Ritorno = "*"
+								Else
+									ScriveLogGlobale(NomeFileLog, Sql)
+									ScriveLogGlobale(NomeFileLog, Rit)
+									Ritorno = Rit
+								End If
 							End If
 						Else
 							ScriveLogGlobale(NomeFileLog, Sql)
@@ -3895,11 +3914,16 @@ Public Class looVF
 						Ritorno = Rit
 					End If
 				Else
-					ScriveLogGlobale(NomeFileLog, "File NON copiato")
-
-					Ritorno = "ERROR: Nessun file copiato"
+					ScriveLogGlobale(NomeFileLog, Sql)
+					ScriveLogGlobale(NomeFileLog, Rit)
+					Ritorno = Rit
 				End If
+			Else
+				ScriveLogGlobale(NomeFileLog, "File NON copiato")
+
+				Ritorno = "ERROR: Nessun file copiato"
 			End If
+			'End If
 		End If
 
 		Return Ritorno
