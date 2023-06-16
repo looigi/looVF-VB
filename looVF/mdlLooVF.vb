@@ -216,12 +216,23 @@ Module mdlLooVF
 				Filtro = "Or "
 			End If
 
+			Dim NomeCampo As String = ""
+
+			Select Case Ordinamento
+				Case "SoloNome"
+					NomeCampo = "solonome"
+				Case "Percorso"
+					NomeCampo = "nomefile"
+				Case "NomeFile"
+					NomeCampo = "solonome"
+			End Select
+
 			If StringaRicerca.IndexOf(";") > 0 Then
 				Dim StringheRicerca() As String = StringaRicerca.Split(";")
 
 				For Each s As String In StringheRicerca
 					If s <> "" Then
-						StringonaRicerca &= "B.NomeFile Like '%" & s.Replace("'", "''") & "%' " & Filtro & " "
+						StringonaRicerca &= "B." & NomeCampo & " Like '%" & s.Replace("'", "''") & "%' " & Filtro & " "
 						'StringonaRicerca &= "B.Percorso Like '%" & s.Replace("'", "''") & "%' " & Filtro & " "
 					End If
 				Next
@@ -232,7 +243,7 @@ Module mdlLooVF
 				If StringaRicerca = "" Then
 					StringonaRicerca = ""
 				Else
-					StringonaRicerca = "And (B.NomeFile Like '%" & StringaRicerca & "%' )" ' Or C.Percorso Like '%" & StringaRicerca & "%'
+					StringonaRicerca = "And (B." & NomeCampo & " Like '%" & StringaRicerca & "%' )" ' Or C.Percorso Like '%" & StringaRicerca & "%'
 				End If
 			End If
 

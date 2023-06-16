@@ -5499,4 +5499,68 @@ Public Class looVF
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function TornaProssimaImmagine() As String
+		Dim gf As New GestioneFilesDirectory
+		Dim P As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim pp() As String = P.Split(";")
+		Dim PathSfondi As String = pp(0).Replace(vbCrLf, "")
+		Dim PathSfondiDir As String = pp(1).Replace(vbCrLf, "")
+
+		Dim Immagine As String = ""
+
+		If TipoDB <> "SQLSERVER" Then
+			PathSfondi = PathSfondi.Replace("\", "/")
+			PathSfondi = PathSfondi.Replace("//", "/")
+			PathSfondi = PathSfondi.Replace("/\", "/")
+
+			PathSfondiDir = PathSfondiDir.Replace("\", "/")
+			PathSfondiDir = PathSfondiDir.Replace("//", "/")
+			PathSfondiDir = PathSfondiDir.Replace("/\", "/")
+		End If
+
+		Try
+			MkDir(PathSfondi)
+		Catch ex As Exception
+
+		End Try
+
+		If ContatoreRiletturaImmagini = 10 Then
+			ContatoreRiletturaImmagini = 0
+			QuanteImmaginiSfondi = 0
+			ListaImmagini = New List(Of String)
+		End If
+
+		Dim Barra As String = "\"
+
+		If TipoDB = "SQLSERVER" Then
+			Barra = "\"
+		Else
+			Barra = "/"
+		End If
+
+		If QuanteImmaginiSfondi = 0 Then
+			gf.ScansionaDirectorySingola(PathSfondiDir)
+			Dim filetti() As String = gf.RitornaFilesRilevati
+			QuanteImmaginiSfondi = gf.RitornaQuantiFilesRilevati
+
+			For i As Integer = 1 To QuanteImmaginiSfondi
+				ListaImmagini.Add(filetti(i))
+			Next
+		Else
+			ContatoreRiletturaImmagini += 1
+		End If
+
+		Static x As Random = New Random()
+
+		Dim y As Long = -1
+
+		y = x.Next(ListaImmagini.Count - 1)
+		Dim Datella As String = gf.TornaDataUltimoAccesso(ListaImmagini.Item(y))
+		Dim Dimensioni As Integer = gf.TornaDimensioneFile(ListaImmagini.Item(y))
+
+		Immagine = (ListaImmagini.Count - 1) & ";" & ListaImmagini.Item(y) & ";" & Datella & ";" & Dimensioni
+
+		Return Immagine
+	End Function
 End Class
