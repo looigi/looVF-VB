@@ -334,7 +334,52 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String) As String
+	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String, Attuale As String) As String
+		Dim Db As New clsGestioneDB(TipoDB)
+		Dim Ritorno As String = ""
+		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/RitornaMultimediaSuccessivo2.txt"
+
+		Dim Sql As String = "Select A.*, A.idCategoria, " &
+			"(Select Count(*) From dati AA " &
+			"Left Join categorie BB On AA.idcategoria = BB.idcategoria And AA.idtipologia = BB.idtipologia " &
+			"Where BB.Categoria='" & Categoria & "' And AA.idtipologia=" & idTipologia & " And Upper(NomeFile) Like '%" & Filtro.ToUpper.Trim & "%') As Quante " &
+			"From dati A " &
+			"Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia " &
+			"Where B.Categoria = '" & Categoria & "' And A.idTipologia = " & idTipologia & " And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " &
+			IIf(Filtro <> "", "And Upper(NomeFile) Like '%" & Filtro.ToUpper.Trim & "%'", "") & " " &
+			IIf(Random <> "N", "Order By Rand() Limit 1", "And progressivo > " & Attuale & " Limit 1") & " "
+
+		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
+		ScriveLogGlobale(NomeFileLog, "Id Categoria:  " & Categoria)
+		ScriveLogGlobale(NomeFileLog, "Id Tipologia: " & idTipologia)
+		ScriveLogGlobale(NomeFileLog, "Filtro: " & Filtro)
+		ScriveLogGlobale(NomeFileLog, "Random: " & Random)
+		ScriveLogGlobale(NomeFileLog, "Attuale MM Precedente: " & Attuale)
+		ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
+
+		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
+		If ConnessioneSQL <> "" Then
+			Dim Rec As Object
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			If Not Rec.Eof Then
+				Dim y As Integer = Rec("progressivo").Value
+
+				Attuale = y
+				ScriveLogGlobale(NomeFileLog, "Attuale MM: " & Attuale)
+
+				Ritorno = y & ";" & Categoria & ";" & Rec("Quante").Value & ";" & Rec("idCategoria").Value & ";" & Attuale & ";-1"
+			End If
+			Rec.Close
+		End If
+
+		ScriveLogGlobale(NomeFileLog, "Fine")
+		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaSuccessivoMultimediaNuovoVecchio(idTipologia As String, Categoria As String, Filtro As String, Random As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim Sql As String
@@ -386,13 +431,13 @@ Public Class looVF
 				Return Ritorno
 			End If
 
-			If Categoria = "Piccole" Then
-				ScriveLogGlobale(NomeFileLog, "Categoria uguale a Piccole: " & Categoria & ". Vado alla funzione adatta")
+			'If Categoria = "Piccole" Then
+			'	ScriveLogGlobale(NomeFileLog, "Categoria uguale a Piccole: " & Categoria & ". Vado alla funzione adatta")
 
-				Ritorno = RitornaSuccessivoMultimediaPerPiccole(Db, ConnessioneSQL, idTipologia, Categoria, Filtro, Random, NomeFileLog, idCategoria)
+			'	Ritorno = RitornaSuccessivoMultimediaPerPiccole(Db, ConnessioneSQL, idTipologia, Categoria, Filtro, Random, NomeFileLog, idCategoria)
 
-				Return Ritorno
-			End If
+			'	Return Ritorno
+			'End If
 
 			If Categoria = "Tutto" Then
 				ScriveLogGlobale(NomeFileLog, "Categoria uguale a Tutto: " & Categoria & ". Vado alla funzione adatta")
@@ -1196,7 +1241,16 @@ Public Class looVF
 
 				End If
 
-				Ritorno = Thumb & "§" & Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" & Rec("Dimensioni").Value & ";" & Rec("Data").Value & ";" & Rec("idCategoria").Value & ";" & idMultimedia.ToString & ";" & Preferito & ";" & DatiHash & ";" & FilePresente & "|" & Uguali
+				Ritorno = Thumb & "§" &
+					Rec("NomeFile").Value.ToString.Replace(";", "***PV***") & ";" &
+					Rec("Dimensioni").Value & ";" &
+					Rec("Data").Value & ";" &
+					Rec("idCategoria").Value & ";" &
+					idMultimedia.ToString & ";" &
+					Preferito & ";" &
+					DatiHash & ";" &
+					FilePresente & "|" &
+					Uguali
 			Else
 				Ritorno = "ERROR: Nessun file rilevato"
 			End If
