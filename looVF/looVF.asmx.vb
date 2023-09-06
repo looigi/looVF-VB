@@ -338,42 +338,88 @@ Public Class looVF
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/RitornaMultimediaSuccessivo2.txt"
+		Dim Filtrone As String = ""
+		If Filtro <> "" Then
+			If Filtro.Contains(";") Then
+				Dim F() As String = Filtro.Split(";")
+				For Each ff As String In F
+					Filtrone &= "Upper(NomeFile) Like '%" & Filtro.Trim.ToUpper & "%' Or "
+				Next
+				If Filtrone.Length > 0 Then
+					Filtrone = "And (" & Mid(Filtrone, 1, Filtrone.Length - 4) & ")"
+				End If
+			Else
+				Filtrone = "And Upper(NomeFile) Like '%" & Filtro.Trim.ToUpper & "%'"
+			End If
+		End If
 
 		Dim Sql As String = "Select A.*, A.idCategoria, " &
 			"(Select Count(*) From dati AA " &
 			"Left Join categorie BB On AA.idcategoria = BB.idcategoria And AA.idtipologia = BB.idtipologia " &
-			"Where BB.Categoria='" & Categoria & "' And AA.idtipologia=" & idTipologia & " And Upper(NomeFile) Like '%" & Filtro.ToUpper.Trim & "%') As Quante " &
+			"Where " & IIf(Categoria = "Tutti" Or Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "", "BB.Categoria='" & Categoria & "' And") & " AA.idtipologia=" & idTipologia & " " &
+			"And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " & Filtrone & ") As Quante " &
+			IIf(Categoria = "Preferiti" Or Categoria = "Preferiti Prot", ", C.progressivo", "") & " " &
+			", B.Categoria " &
 			"From dati A " &
 			"Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia " &
-			"Where B.Categoria = '" & Categoria & "' And A.idTipologia = " & idTipologia & " And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " &
-			IIf(Filtro <> "", "And Upper(NomeFile) Like '%" & Filtro.ToUpper.Trim & "%'", "") & " " &
-			IIf(Random <> "N", "Order By Rand() Limit 1", "And progressivo > " & Attuale & " Limit 1") & " "
+			IIf(Categoria = "Tutti", "", "") & " " &
+			IIf(Categoria = "Preferiti", "Left Join preferiti C On A.idcategoria = C.idcategoria And A.idtipologia = C.idtipologia And A.progressivo = C.progressivo", "") & " " &
+			IIf(Categoria = "Preferiti Prot", "Left Join preferitiprot C On A.idcategoria = C.idcategoria And A.idtipologia = C.idtipologia And A.progressivo = C.progressivo", "") & " " &
+			"Where " & IIf(Categoria = "Tutti" Or Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "", "B.Categoria='" & Categoria & "' And") & " A.idTipologia = " & idTipologia & " " &
+			"And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " &
+			Filtrone & " " &
+			IIf(Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "And C.Progressivo Is Not Null", "") & " "
+		Dim Sql2 As String = Sql &
+			IIf(Random <> "N", "Order By Rand() Limit 1", "And A.progressivo > " & Attuale & " Limit 1") & " "
 
 		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
-		ScriveLogGlobale(NomeFileLog, "Id Categoria:  " & Categoria)
+		ScriveLogGlobale(NomeFileLog, "Categoria Passata:  " & Categoria)
 		ScriveLogGlobale(NomeFileLog, "Id Tipologia: " & idTipologia)
 		ScriveLogGlobale(NomeFileLog, "Filtro: " & Filtro)
 		ScriveLogGlobale(NomeFileLog, "Random: " & Random)
 		ScriveLogGlobale(NomeFileLog, "Attuale MM Precedente: " & Attuale)
-		ScriveLogGlobale(NomeFileLog, "SQL: " & Sql)
+		ScriveLogGlobale(NomeFileLog, "SQL: " & Sql2)
 
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		If ConnessioneSQL <> "" Then
 			Dim Rec As Object
-			Rec = Db.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSQL)
+			Rec = Db.LeggeQuery(Server.MapPath("."), Sql2, ConnessioneSQL)
+			If TypeOf (Rec) Is String Then
+				ScriveLogGlobale(NomeFileLog, "Ritorno SQL: " & Rec)
+			End If
+
+			If Rec.Eof Then
+				Rec.Close
+
+				ScriveLogGlobale(NomeFileLog, "Non ho trovato nulla. Imposto altra query")
+				Sql2 = Sql &
+				IIf(Random <> "N", "Order By Rand() Limit 1", "Limit 1") & " "
+				ScriveLogGlobale(NomeFileLog, "SQL: " & Sql2)
+				Rec = Db.LeggeQuery(Server.MapPath("."), Sql2, ConnessioneSQL)
+				If TypeOf (Rec) Is String Then
+					ScriveLogGlobale(NomeFileLog, "Ritorno SQL 2: " & Rec)
+				End If
+			End If
 			If Not Rec.Eof Then
 				Dim y As Integer = Rec("progressivo").Value
+				Dim CategoriaLetta As String = ""
+				If Categoria = "Preferiti" Or Categoria = "Preferiti Prot" Or Categoria = "Tutte" Then
+					CategoriaLetta = Rec("Categoria").Value
+					ScriveLogGlobale(NomeFileLog, "Categoria Letta per preferiti:  " & CategoriaLetta)
+				Else
+					CategoriaLetta = Categoria
+				End If
 
 				Attuale = y
 				ScriveLogGlobale(NomeFileLog, "Attuale MM: " & Attuale)
 
-				Ritorno = y & ";" & Categoria & ";" & Rec("Quante").Value & ";" & Rec("idCategoria").Value & ";" & Attuale & ";-1"
+				Ritorno = y & ";" & CategoriaLetta & ";" & Rec("Quante").Value & ";" & Rec("idCategoria").Value & ";" & Attuale & ";-1"
+			Else
+				Ritorno = "ERROR: Nessuna immagine rilevata con i filtri impostati"
 			End If
+
 			Rec.Close
 		End If
-
-		ScriveLogGlobale(NomeFileLog, "Fine")
-		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
 
 		Return Ritorno
 	End Function
