@@ -185,7 +185,8 @@ Module mdlLooVF
 	End Function
 
 	Public Function RitornaUguaglianze(Mp As String, db As clsGestioneDB, ConnessioneSql As String, TipoRicerca As String, ScrittaRitorno As String, idCategoria As String, QuanteImmagini As String,
-									   Inizio As String, StringaRicerca As String, AndOr As String, TutteLeCategorie As String, Caratteri As String, Ordinamento As String) As String
+									   Inizio As String, StringaRicerca As String, AndOr As String, TutteLeCategorie As String, Caratteri As String, Ordinamento As String,
+									   TuttiIMetodi As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 		Dim Rec As Object
@@ -280,7 +281,7 @@ Module mdlLooVF
 					"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo " &
 					"Where (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') " & RicercaCategoria & " " &
 					" " & StringonaRicerca & " " &
-					") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)) & " " &
+					") As A " & IIf(TuttiIMetodi = "S", "Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)), "") & " " &
 					"Order By " & Ordinamento & ", A.dimensioni, A.Width, A.Height"
 				'Return Sql
 				ScriveLogGlobale(NomeFileLog, "Query di ritorno righe: " & Sql)
@@ -387,7 +388,7 @@ Module mdlLooVF
 					"Where " & RicercaCate & " " & Campo & " <> '' " &
 					"group by " & Campo & " " &
 					"having count(*) > 1 " &
-					") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
+					") As A " & IIf(TuttiIMetodi = "S", "Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)), "")
 				'Return Sql
 				ScriveLogGlobale(NomeFileLog, "Query di ritorno righe: " & Sql)
 
@@ -513,7 +514,7 @@ Module mdlLooVF
 					"Where (B.eliminata='N' Or B.eliminata='n') " & RicercaCategoria & " And " & TipoRicerca & " Is Not Null And " & TipoRicerca & " <> '' " &
 					"Group By " & TipoRicerca & " " &
 					"Having Count(*) > 1 " &
-					") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini))
+					") As A " & IIf(TuttiIMetodi = "S", "Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)), "")
 
 				ScriveLogGlobale(NomeFileLog, "Query 2: " & Sql)
 				'"Left Join categorie C On A.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &

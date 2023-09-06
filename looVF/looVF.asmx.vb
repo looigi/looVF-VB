@@ -353,11 +353,12 @@ Public Class looVF
 			End If
 		End If
 
+		'"(Select Count(*) From dati AA " &
+		'"Left Join categorie BB On AA.idcategoria = BB.idcategoria And AA.idtipologia = BB.idtipologia " &
+		'"Where " & IIf(Categoria = "Tutti" Or Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "", "BB.Categoria='" & Categoria & "' And") & " AA.idtipologia=" & idTipologia & " " &
+		'"And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " & Filtrone & ") As Quante " &
 		Dim Sql As String = "Select A.*, A.idCategoria, " &
-			"(Select Count(*) From dati AA " &
-			"Left Join categorie BB On AA.idcategoria = BB.idcategoria And AA.idtipologia = BB.idtipologia " &
-			"Where " & IIf(Categoria = "Tutti" Or Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "", "BB.Categoria='" & Categoria & "' And") & " AA.idtipologia=" & idTipologia & " " &
-			"And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%' " & Filtrone & ") As Quante " &
+			"0 As Quante" &
 			IIf(Categoria = "Preferiti" Or Categoria = "Preferiti Prot", ", C.progressivo", "") & " " &
 			", B.Categoria " &
 			"From dati A " &
@@ -4947,7 +4948,7 @@ Public Class looVF
 										ricercaPerPuntiDiagonale As String, ricercaPerPuntiCornice As String, ricercaPerPuntiCorpo As String, ricercaPerNomeUguale As String,
 										ricercaPerPeso As String, ricercaPerStringa As String, stringaRicerca As String, QuanteImmagini As String, Inizio As String, AndOr As String,
 										TutteLeCategorie As String, ricercaPerNegativo As String, ricercaPerEssenziale As String, ricercaPer1280 As String, Caratteri As String,
-										Ordinamento As String, ricercaPerHash As String) As String
+										Ordinamento As String, ricercaPerHash As String, TuttiIMetodi As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
 		Dim Ritorno As String = "*"
@@ -4964,92 +4965,61 @@ Public Class looVF
 			Dim Ritorno1280 As String = ""
 			Dim RitornoEssenziale As String = ""
 
-			If ricercaPer1280 = "S" Then
+			If ricercaPer1280 = "S" Or TuttiIMetodi = "S" Then
 				Ritorno1280 = TrovaImmagini1280(IIf(TutteLeCategorie = "S", "-1", idCategoria), Inizio, QuanteImmagini)
 			End If
 			Ritorno1280 &= "|"
 
 			If ricercaPerMetodo1 = "S" Then
-				RitornoHash = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF DESCR.", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+				RitornoHash = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF DESCR.", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoHash &= "|"
 
 			If ricercaPerMetodo2 = "S" Then
-				RitornoHashColore = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF COMMENTO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+				RitornoHashColore = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Exif", "EXIF COMMENTO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoHashColore &= "|"
 
-			If ricercaPerData = "S" Then
-				RitornoDataOra = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			If ricercaPerData = "S" Or TuttiIMetodi = "S" Then
+				RitornoDataOra = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoDataOra &= "|"
 
-			If ricercaPerDimensioni = "S" Then
-				RitornoDimensioni = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			If ricercaPerDimensioni = "S" Or TuttiIMetodi = "S" Then
+				RitornoDimensioni = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoDimensioni &= "|"
 
-			If ricercaPerEssenziale = "S" Then
+			If ricercaPerEssenziale = "S" Or TuttiIMetodi = "S" Then
 				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "DIMENSIONI", Ordinamento)
 			End If
 			RitornoEssenziale &= "|"
 
-			If ricercaPerPunti = "S" Then
-				Dim aTipo = New List(Of String)
-				Dim Tipo As String = ""
-				Dim q As Integer = 0
-				Dim Fai As Boolean = True
-
-				If ricercaPerPuntiDiagonale = "S" Then
-					aTipo.Add("PuntiDiagonale")
-				End If
-				If ricercaPerPuntiCornice = "S" Then
-					aTipo.Add("PuntiCornice")
-				End If
-				If ricercaPerPuntiCorpo = "S" Then
-					aTipo.Add("Punti")
-				End If
-				If ricercaPerNegativo = "S" Then
-					aTipo.Add("Sezione1")
-				End If
-				If ricercaPerHash = "S" Then
-					aTipo.Add("Hash")
-				End If
-
-				For Each t As String In aTipo
-					Tipo &= t & ", '-',"
-					q += 1
-				Next
-				If Tipo.Length > 0 Then
-					Tipo = Mid(Tipo, 1, Tipo.Length - 6)
-				End If
-
-				If q > 1 Then
-					Tipo = "Concat(" & Tipo & ")"
-				Else
-					If q = 0 Then
-						Fai = False
-					End If
-				End If
-
-				If Fai Then
-					RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, Tipo, "PUNTI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			If TuttiIMetodi = "S" Then
+				RitornoPunti &= RitornaTuttiIPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
+							  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			Else
+				If ricercaPerPunti = "S" Then
+					RitornoPunti &= RitornaPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
+							  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+							  ricercaPerPuntiDiagonale, ricercaPerPuntiCornice,
+							  ricercaPerPuntiCorpo, ricercaPerNegativo, ricercaPerHash, "N", "PUNTI")
 				End If
 			End If
 			RitornoPunti &= "|"
 
-			If ricercaPerNomeUguale = "S" Then
-				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			If ricercaPerNomeUguale = "S" Or TuttiIMetodi = "S" Then
+				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoNomeUguale &= "|"
 
-			If ricercaPerPeso = "S" Then
-				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+			If ricercaPerPeso = "S" Or TuttiIMetodi = "S" Then
+				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoPeso &= "|"
 
 			If ricercaPerStringa = "S" Then
-				RitornoStringa = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "STRINGA", "STRINGA", idCategoria, QuanteImmagini, Inizio, stringaRicerca, AndOr, TutteLeCategorie, Caratteri, Ordinamento)
+				RitornoStringa = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "STRINGA", "STRINGA", idCategoria, QuanteImmagini, Inizio, stringaRicerca, AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
 			End If
 			RitornoStringa &= "|"
 
@@ -5057,6 +5027,139 @@ Public Class looVF
 		End If
 
 		Return Ritorno
+	End Function
+
+	Private Function RitornaTuttiIPunti(Db As clsGestioneDB, connessioneSql As String, idCategoria As String, QuanteImmagini As Integer,
+								  Inizio As String, AndOr As String, TutteLeCategorie As String, Caratteri As String, Ordinamento As String) As String
+		Dim RitornoPunti As String = ""
+		Dim Appoggio As String = ""
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "S", "N", "N", "N", "N", "S", "SNNNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "S", "N", "N", "N", "S", "NSNNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "S", "N", "N", "S", "NNSNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "N", "S", "N", "S", "NNNSN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "N", "N", "S", "S", "NNNNS")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "S", "S", "N", "N", "N", "S", "SSNNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "S", "N", "S", "N", "N", "S", "SNSNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "S", "N", "N", "S", "N", "S", "SNNSN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "S", "N", "N", "N", "S", "S", "SNNNS")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "S", "S", "N", "N", "S", "NSSNN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "S", "N", "S", "N", "S", "NSNSN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "S", "N", "N", "S", "S", "NSNNS")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "S", "S", "N", "S", "NNSSN")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "S", "N", "S", "S", "NNSNS")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Appoggio = RitornaPunti(Db, connessioneSql, idCategoria, QuanteImmagini,
+								  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
+								  "N", "N", "N", "S", "S", "S", "NNNSS")
+		If Not Appoggio.Contains("ERROR") Then RitornoPunti &= Appoggio
+
+		Return RitornoPunti
+	End Function
+
+	Private Function RitornaPunti(Db As clsGestioneDB, connessioneSql As String, idCategoria As String, QuanteImmagini As Integer,
+								  Inizio As String, AndOr As String, TutteLeCategorie As String, Caratteri As String, Ordinamento As String,
+								  ricercaPerPuntiDiagonale As String, ricercaPerPuntiCornice As String,
+								  ricercaPerPuntiCorpo As String, ricercaPerNegativo As String, ricercaPerHash As String,
+								  TuttiIMetodi As String, ScrittaRitorno As String) As String
+		Dim RitornoPunti As String = ""
+		Dim aTipo = New List(Of String)
+		Dim Tipo As String = ""
+		Dim q As Integer = 0
+		Dim Fai As Boolean = True
+
+		If ricercaPerPuntiDiagonale = "S" Then
+			aTipo.Add("PuntiDiagonale")
+		End If
+		If ricercaPerPuntiCornice = "S" Then
+			aTipo.Add("PuntiCornice")
+		End If
+		If ricercaPerPuntiCorpo = "S" Then
+			aTipo.Add("Punti")
+		End If
+		If ricercaPerNegativo = "S" Then
+			aTipo.Add("Sezione1")
+		End If
+		If ricercaPerHash = "S" Then
+			aTipo.Add("Hash")
+		End If
+
+		For Each t As String In aTipo
+			Tipo &= t & ", '-',"
+			q += 1
+		Next
+		If Tipo.Length > 0 Then
+			Tipo = Mid(Tipo, 1, Tipo.Length - 6)
+		End If
+
+		If q > 1 Then
+			Tipo = "Concat(" & Tipo & ")"
+		Else
+			If q = 0 Then
+				Fai = False
+			End If
+		End If
+
+		If Fai Then
+			RitornoPunti = RitornaUguaglianze(Server.MapPath("."), Db, connessioneSql, Tipo, ScrittaRitorno, idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+		End If
+
+		Return RitornoPunti
 	End Function
 
 	<WebMethod()>
