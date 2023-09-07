@@ -4991,7 +4991,7 @@ Public Class looVF
 			RitornoDimensioni &= "|"
 
 			If ricercaPerEssenziale = "S" Or TuttiIMetodi = "S" Then
-				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "DIMENSIONI", Ordinamento)
+				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "ESSENZIALE", Ordinamento)
 			End If
 			RitornoEssenziale &= "|"
 
