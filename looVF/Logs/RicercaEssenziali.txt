@@ -1,0 +1,10 @@
+20230908133220: -----------------------------------------------
+20230908133220: Query di conteggio: Select Coalesce(Count(*),0) From (Select dimensioni, Width, Height, count(*) From dati As A Left Join informazioniimmagini B On A.progressivo = B.idMultimedia And A.idcategoria = B.idCategoria Where A.idtipologia = 1  And A.idCategoria=29 And Width Is Not Null And height Is Not Null And (A.eliminata = 'N' Or A.eliminata = 'n') Group By dimensioni, Width, Height Having Count(*) > 1) As Aa
+20230908133220: Righe rilevate: 0
+20230908133220: Query di dettaglio: Select * From (Select ROW_NUMBER() OVER(Order BY dimensioni, Width, Height) As NumeroRiga, dimensioni, Width, Height, count(*) From dati As A Left Join informazioniimmagini B On A.progressivo = B.idMultimedia And A.idcategoria = B.idCategoria Where A.idtipologia = 1  And A.idCategoria=29 And Width Is Not Null And height Is Not Null And (A.eliminata = 'N' Or A.eliminata = 'n') Group By dimensioni, Width, Height Having Count(*) > 1) As Aa Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Uscita: 
+20230908133506: -----------------------------------------------
+20230908133506: Query di conteggio: Select Coalesce(Count(*),0) From (Select dimensioni, Width, Height, count(*) From dati As A Left Join informazioniimmagini B On A.progressivo = B.idMultimedia And A.idcategoria = B.idCategoria Where A.idtipologia = 1  And A.idCategoria=29 And Width Is Not Null And height Is Not Null And (A.eliminata = 'N' Or A.eliminata = 'n') Group By dimensioni, Width, Height Having Count(*) > 1) As Aa
+20230908133506: Righe rilevate: 0
+20230908133506: Query di dettaglio: Select * From (Select ROW_NUMBER() OVER(Order BY dimensioni, Width, Height) As NumeroRiga, dimensioni, Width, Height, count(*) From dati As A Left Join informazioniimmagini B On A.progressivo = B.idMultimedia And A.idcategoria = B.idCategoria Where A.idtipologia = 1  And A.idCategoria=29 And Width Is Not Null And height Is Not Null And (A.eliminata = 'N' Or A.eliminata = 'n') Group By dimensioni, Width, Height Having Count(*) > 1) As Aa Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133506: Uscita: 

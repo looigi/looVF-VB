@@ -1408,3 +1408,275 @@
 20230906100707:  
 20230906100707: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Sezione1, '-',Hash) = '7860-054057052237059050184065112036026070082173234053' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=3  Order By SoloNome, B.dimensioni, A.Width, A.Height
 20230906100707: Righe rilevate per lista: 7860-054057052237059050184065112036026070082173234053 -> 2
+20230908133220: -----------------------------------------
+20230908133220: Ricerca per categoria 29
+20230908133220: Ricerca di altro tipo
+20230908133220: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select DataOra As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And DataOra Is Not Null And DataOra <> '' Group By DataOra Having Count(*) > 1 ) As A
+20230908133220: Righe ritornate: 14
+20230908133220: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, DataOra As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And DataOra Is Not Null And DataOra <> '' Group By DataOra Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Liste rilevate: 0
+20230908133220: -----------------------------------------
+20230908133220: Ricerca per categoria 29
+20230908133220: Ricerca di altro tipo
+20230908133220: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Width, 'x', height) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Width, 'x', height) Is Not Null And Concat(Width, 'x', height) <> '' Group By Concat(Width, 'x', height) Having Count(*) > 1 ) As A
+20230908133220: Righe ritornate: 6
+20230908133220: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Concat(Width, 'x', height) As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Width, 'x', height) Is Not Null And Concat(Width, 'x', height) <> '' Group By Concat(Width, 'x', height) Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Liste rilevate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select PuntiDiagonale As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And PuntiDiagonale Is Not Null And PuntiDiagonale <> '' Group By PuntiDiagonale Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select PuntiCornice As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And PuntiCornice Is Not Null And PuntiCornice <> '' Group By PuntiCornice Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Punti As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Punti Is Not Null And Punti <> '' Group By Punti Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 1
+20230908133235: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Punti As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Punti Is Not Null And Punti <> '' Group By Punti Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133235: Liste rilevate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Sezione1 As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Sezione1 Is Not Null And Sezione1 <> '' Group By Sezione1 Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 1
+20230908133235: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Sezione1 As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Sezione1 Is Not Null And Sezione1 <> '' Group By Sezione1 Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133235: Liste rilevate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Hash As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Hash Is Not Null And Hash <> '' Group By Hash Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',PuntiCornice) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',PuntiCornice) Is Not Null And Concat(PuntiDiagonale, '-',PuntiCornice) <> '' Group By Concat(PuntiDiagonale, '-',PuntiCornice) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Punti) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Punti) Is Not Null And Concat(PuntiDiagonale, '-',Punti) <> '' Group By Concat(PuntiDiagonale, '-',Punti) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Sezione1) Is Not Null And Concat(PuntiDiagonale, '-',Sezione1) <> '' Group By Concat(PuntiDiagonale, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Hash) Is Not Null And Concat(PuntiDiagonale, '-',Hash) <> '' Group By Concat(PuntiDiagonale, '-',Hash) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Punti) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Punti) Is Not Null And Concat(PuntiCornice, '-',Punti) <> '' Group By Concat(PuntiCornice, '-',Punti) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Sezione1) Is Not Null And Concat(PuntiCornice, '-',Sezione1) <> '' Group By Concat(PuntiCornice, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Hash) Is Not Null And Concat(PuntiCornice, '-',Hash) <> '' Group By Concat(PuntiCornice, '-',Hash) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Punti, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Punti, '-',Sezione1) Is Not Null And Concat(Punti, '-',Sezione1) <> '' Group By Concat(Punti, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Punti, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Punti, '-',Hash) Is Not Null And Concat(Punti, '-',Hash) <> '' Group By Concat(Punti, '-',Hash) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Sezione1, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Sezione1, '-',Hash) Is Not Null And Concat(Sezione1, '-',Hash) <> '' Group By Concat(Sezione1, '-',Hash) Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select B.solonome As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And B.solonome Is Not Null And B.solonome <> '' Group By B.solonome Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133235: -----------------------------------------
+20230908133235: Ricerca per categoria 29
+20230908133235: Ricerca di altro tipo
+20230908133235: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select B.Dimensioni As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And B.Dimensioni Is Not Null And B.Dimensioni <> '' Group By B.Dimensioni Having Count(*) > 1 ) As A
+20230908133235: Righe ritornate: 0
+20230908133500: -----------------------------------------
+20230908133500: Ricerca per categoria 29
+20230908133500: Ricerca di altro tipo
+20230908133500: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select DataOra As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And DataOra Is Not Null And DataOra <> '' Group By DataOra Having Count(*) > 1 ) As A
+20230908133500: Righe ritornate: 14
+20230908133500: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, DataOra As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And DataOra Is Not Null And DataOra <> '' Group By DataOra Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133500: Liste rilevate: 14
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '02/25/2021 10:05:05' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 02/25/2021 10:05:05 -> 3
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:20' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:20 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:21' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:21 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:23' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:23 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:24' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:24 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:25' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:25 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:27' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:27 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:28' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:28 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:30' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:30 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:31' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:31 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:32' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:32 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:33' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:33 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 05:52:37' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 05:52:37 -> 2
+20230908133500:  
+20230908133500: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where DataOra = '10/26/2022 06:00:17' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133500: Righe rilevate per lista: 10/26/2022 06:00:17 -> 2
+20230908133506: -----------------------------------------
+20230908133506: Ricerca per categoria 29
+20230908133506: Ricerca di altro tipo
+20230908133506: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Width, 'x', height) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Width, 'x', height) Is Not Null And Concat(Width, 'x', height) <> '' Group By Concat(Width, 'x', height) Having Count(*) > 1 ) As A
+20230908133506: Righe ritornate: 6
+20230908133506: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Concat(Width, 'x', height) As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Width, 'x', height) Is Not Null And Concat(Width, 'x', height) <> '' Group By Concat(Width, 'x', height) Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133506: Liste rilevate: 6
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '1260x840' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 1260x840 -> 2
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '350x470' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 350x470 -> 2
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '350x492' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 350x492 -> 2
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '478x720' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 478x720 -> 2
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '614x900' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 614x900 -> 2
+20230908133506:  
+20230908133506: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Concat(Width, 'x', height) = '682x1024' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133506: Righe rilevate per lista: 682x1024 -> 5
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select PuntiDiagonale As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And PuntiDiagonale Is Not Null And PuntiDiagonale <> '' Group By PuntiDiagonale Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 0
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select PuntiCornice As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And PuntiCornice Is Not Null And PuntiCornice <> '' Group By PuntiCornice Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 0
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Punti As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Punti Is Not Null And Punti <> '' Group By Punti Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 1
+20230908133509: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Punti As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Punti Is Not Null And Punti <> '' Group By Punti Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133509: Liste rilevate: 1
+20230908133509:  
+20230908133509: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Punti = '3325' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133509: Righe rilevate per lista: 3325 -> 2
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Sezione1 As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Sezione1 Is Not Null And Sezione1 <> '' Group By Sezione1 Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 1
+20230908133509: Query 2: Select Coalesce(TipoRicerca, '***') As TipoRicerca From ( Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, Sezione1 As TipoRicerca, count(*) FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Sezione1 Is Not Null And Sezione1 <> '' Group By Sezione1 Having Count(*) > 1 ) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133509: Liste rilevate: 1
+20230908133509:  
+20230908133509: Ricerco per lista: Select A.*, B.nomefile, c.percorso, c.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni From informazioniimmagini A left join dati b On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo left join categorie c On c.idtipologia = 1 And A.idCategoria = c.idcategoria left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo Where Sezione1 = '2340' And (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') And length(substr(b.solonome,1,instr(b.solonome,'.')-1)) > 2  And A.idCategoria=29  Order By SoloNome, B.dimensioni, A.Width, A.Height
+20230908133509: Righe rilevate per lista: 2340 -> 2
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Hash As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Hash Is Not Null And Hash <> '' Group By Hash Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 0
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',PuntiCornice) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',PuntiCornice) Is Not Null And Concat(PuntiDiagonale, '-',PuntiCornice) <> '' Group By Concat(PuntiDiagonale, '-',PuntiCornice) Having Count(*) > 1 ) As A
+20230908133509: Righe ritornate: 0
+20230908133509: -----------------------------------------
+20230908133509: Ricerca per categoria 29
+20230908133509: Ricerca di altro tipo
+20230908133509: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Punti) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Punti) Is Not Null And Concat(PuntiDiagonale, '-',Punti) <> '' Group By Concat(PuntiDiagonale, '-',Punti) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Sezione1) Is Not Null And Concat(PuntiDiagonale, '-',Sezione1) <> '' Group By Concat(PuntiDiagonale, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiDiagonale, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiDiagonale, '-',Hash) Is Not Null And Concat(PuntiDiagonale, '-',Hash) <> '' Group By Concat(PuntiDiagonale, '-',Hash) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Punti) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Punti) Is Not Null And Concat(PuntiCornice, '-',Punti) <> '' Group By Concat(PuntiCornice, '-',Punti) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Sezione1) Is Not Null And Concat(PuntiCornice, '-',Sezione1) <> '' Group By Concat(PuntiCornice, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(PuntiCornice, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(PuntiCornice, '-',Hash) Is Not Null And Concat(PuntiCornice, '-',Hash) <> '' Group By Concat(PuntiCornice, '-',Hash) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Punti, '-',Sezione1) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Punti, '-',Sezione1) Is Not Null And Concat(Punti, '-',Sezione1) <> '' Group By Concat(Punti, '-',Sezione1) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Punti, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Punti, '-',Hash) Is Not Null And Concat(Punti, '-',Hash) <> '' Group By Concat(Punti, '-',Hash) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select Concat(Sezione1, '-',Hash) As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And Concat(Sezione1, '-',Hash) Is Not Null And Concat(Sezione1, '-',Hash) <> '' Group By Concat(Sezione1, '-',Hash) Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select B.solonome As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And B.solonome Is Not Null And B.solonome <> '' Group By B.solonome Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0
+20230908133510: -----------------------------------------
+20230908133510: Ricerca per categoria 29
+20230908133510: Ricerca di altro tipo
+20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select B.Dimensioni As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And B.Dimensioni Is Not Null And B.Dimensioni <> '' Group By B.Dimensioni Having Count(*) > 1 ) As A
+20230908133510: Righe ritornate: 0

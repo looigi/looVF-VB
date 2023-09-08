@@ -334,7 +334,7 @@ Public Class looVF
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String, Attuale As String) As String
+	Public Function RitornaSuccessivoMultimediaNuovo(idTipologia As String, Categoria As String, Filtro As String, Random As String, Attuale As String, Avanti As String) As String
 		Dim Db As New clsGestioneDB(TipoDB)
 		Dim Ritorno As String = ""
 		Dim NomeFileLog As String = Server.MapPath(".") & "/Logs/RitornaMultimediaSuccessivo2.txt"
@@ -371,7 +371,7 @@ Public Class looVF
 			Filtrone & " " &
 			IIf(Categoria = "Preferiti" Or Categoria = "Preferiti Prot", "And C.Progressivo Is Not Null", "") & " "
 		Dim Sql2 As String = Sql &
-			IIf(Random <> "N", "Order By Rand() Limit 1", "And A.progressivo > " & Attuale & " Limit 1") & " "
+			IIf(Random <> "N", "Order By Rand() Limit 1", "And A.progressivo " & IIf(Avanti = "S", ">", "<") & Attuale & " Order By A.Progressivo" & IIf(Avanti = "S", "", " desc") & " Limit 1") & " "
 
 		ScriveLogGlobale(NomeFileLog, "-----------------------------------------")
 		ScriveLogGlobale(NomeFileLog, "Categoria Passata:  " & Categoria)
@@ -379,6 +379,7 @@ Public Class looVF
 		ScriveLogGlobale(NomeFileLog, "Filtro: " & Filtro)
 		ScriveLogGlobale(NomeFileLog, "Random: " & Random)
 		ScriveLogGlobale(NomeFileLog, "Attuale MM Precedente: " & Attuale)
+		ScriveLogGlobale(NomeFileLog, "Avanti: " & Avanti)
 		ScriveLogGlobale(NomeFileLog, "SQL: " & Sql2)
 
 		Dim ConnessioneSQL As String = Db.LeggeImpostazioniDiBase()
@@ -401,6 +402,7 @@ Public Class looVF
 					ScriveLogGlobale(NomeFileLog, "Ritorno SQL 2: " & Rec)
 				End If
 			End If
+
 			If Not Rec.Eof Then
 				Dim y As Integer = Rec("progressivo").Value
 				Dim CategoriaLetta As String = ""
@@ -412,6 +414,13 @@ Public Class looVF
 				End If
 
 				Attuale = y
+
+				If idTipologia = 1 Then
+					UltimoMultimediaImm = y
+				Else
+					UltimoMultimediaVid = y
+				End If
+
 				ScriveLogGlobale(NomeFileLog, "Attuale MM: " & Attuale)
 
 				Ritorno = y & ";" & CategoriaLetta & ";" & Rec("Quante").Value & ";" & Rec("idCategoria").Value & ";" & Attuale & ";-1"
@@ -4965,8 +4974,11 @@ Public Class looVF
 			Dim Ritorno1280 As String = ""
 			Dim RitornoEssenziale As String = ""
 
+			If TuttiIMetodi = "S" Then QuanteImmagini = 100000
+
 			If ricercaPer1280 = "S" Or TuttiIMetodi = "S" Then
-				Ritorno1280 = TrovaImmagini1280(IIf(TutteLeCategorie = "S", "-1", idCategoria), Inizio, QuanteImmagini)
+				Dim Appoggio As String = TrovaImmagini1280(IIf(TutteLeCategorie = "S", "-1", idCategoria), Inizio, QuanteImmagini)
+				If Not Appoggio.Contains("ERROR") Then Ritorno1280 = Appoggio
 			End If
 			Ritorno1280 &= "|"
 
@@ -4981,40 +4993,46 @@ Public Class looVF
 			RitornoHashColore &= "|"
 
 			If ricercaPerData = "S" Or TuttiIMetodi = "S" Then
-				RitornoDataOra = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				Dim Appoggio As String = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "DataOra", "DATA ORA", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				If Not Appoggio.Contains("ERROR") Then RitornoDataOra = Appoggio
 			End If
 			RitornoDataOra &= "|"
 
 			If ricercaPerDimensioni = "S" Or TuttiIMetodi = "S" Then
-				RitornoDimensioni = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				Dim Appoggio As String = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "Concat(Width, 'x', height)", "DIMENSIONI", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				If Not Appoggio.Contains("ERROR") Then RitornoDimensioni = Appoggio
 			End If
 			RitornoDimensioni &= "|"
 
 			If ricercaPerEssenziale = "S" Or TuttiIMetodi = "S" Then
-				RitornoEssenziale = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "ESSENZIALE", Ordinamento)
+				Dim Appoggio As String = RitornaEssenziali(Server.MapPath("."), Db, ConnessioneSQL, idCategoria, Inizio, QuanteImmagini, TutteLeCategorie, "ESSENZIALE", Ordinamento)
+				If Not Appoggio.Contains("ERROR") Then RitornoEssenziale = Appoggio
 			End If
 			RitornoEssenziale &= "|"
 
 			If TuttiIMetodi = "S" Then
-				RitornoPunti &= RitornaTuttiIPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
+				RitornoPunti = RitornaTuttiIPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
 							  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento)
 			Else
 				If ricercaPerPunti = "S" Then
-					RitornoPunti &= RitornaPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
+					Dim Appoggio As String = RitornaPunti(Db, ConnessioneSQL, idCategoria, QuanteImmagini,
 							  Inizio, AndOr, TutteLeCategorie, Caratteri, Ordinamento,
 							  ricercaPerPuntiDiagonale, ricercaPerPuntiCornice,
 							  ricercaPerPuntiCorpo, ricercaPerNegativo, ricercaPerHash, "N", "PUNTI")
+					RitornoPunti = Appoggio
 				End If
 			End If
 			RitornoPunti &= "|"
 
 			If ricercaPerNomeUguale = "S" Or TuttiIMetodi = "S" Then
-				RitornoNomeUguale = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				Dim Appoggio As String = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.solonome", "NOME UGUALE", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				If Not Appoggio.Contains("ERROR") Then RitornoNomeUguale = Appoggio
 			End If
 			RitornoNomeUguale &= "|"
 
 			If ricercaPerPeso = "S" Or TuttiIMetodi = "S" Then
-				RitornoPeso = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				Dim Appoggio As String = RitornaUguaglianze(Server.MapPath("."), Db, ConnessioneSQL, "B.Dimensioni", "PESO", idCategoria, QuanteImmagini, Inizio, "", AndOr, TutteLeCategorie, Caratteri, Ordinamento, TuttiIMetodi)
+				If Not Appoggio.Contains("ERROR") Then RitornoPeso = Appoggio
 			End If
 			RitornoPeso &= "|"
 

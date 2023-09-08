@@ -1,0 +1,73 @@
+20230908133219: Cerca stringa 1280
+20230908133219: 
+20230908133219: -----------------------------------------------
+20230908133219: Ricerca per  1280 con categoria 29
+20230908133219: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 1280.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Inizio ciclo: True
+20230908133220: Cerca stringa 500
+20230908133220: 
+20230908133220: -----------------------------------------------
+20230908133220: Ricerca per  500 con categoria 29
+20230908133220: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 500.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Inizio ciclo: True
+20230908133220: Cerca stringa 400
+20230908133220: 
+20230908133220: -----------------------------------------------
+20230908133220: Ricerca per  400 con categoria 29
+20230908133220: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 400.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Inizio ciclo: True
+20230908133220: Cerca stringa 0001
+20230908133220: 
+20230908133220: -----------------------------------------------
+20230908133220: Ricerca per  0001 con categoria 29
+20230908133220: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 0001%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133220: Inizio ciclo: True
+20230908133255: Cerca stringa 1280
+20230908133255: 
+20230908133255: -----------------------------------------------
+20230908133255: Ricerca per  1280 con categoria 29
+20230908133255: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 1280.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133255: Inizio ciclo: True
+20230908133255: Cerca stringa 500
+20230908133255: 
+20230908133255: -----------------------------------------------
+20230908133255: Ricerca per  500 con categoria 29
+20230908133255: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 500.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133255: Inizio ciclo: True
+20230908133255: Cerca stringa 400
+20230908133255: 
+20230908133255: -----------------------------------------------
+20230908133255: Ricerca per  400 con categoria 29
+20230908133255: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 400.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133255: Inizio ciclo: True
+20230908133255: Cerca stringa 0001
+20230908133255: 
+20230908133255: -----------------------------------------------
+20230908133255: Ricerca per  0001 con categoria 29
+20230908133255: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 0001%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 0
+20230908133255: Inizio ciclo: True
+20230908133310: Cerca stringa 1280
+20230908133445: Cerca stringa 1280
+20230908133445: 
+20230908133445: -----------------------------------------------
+20230908133445: Ricerca per  1280 con categoria 29
+20230908133445: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 1280.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133449: Inizio ciclo: True
+20230908133449: Cerca stringa 500
+20230908133449: 
+20230908133449: -----------------------------------------------
+20230908133449: Ricerca per  500 con categoria 29
+20230908133449: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 500.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133449: Inizio ciclo: True
+20230908133449: Cerca stringa 400
+20230908133449: 
+20230908133449: -----------------------------------------------
+20230908133449: Ricerca per  400 con categoria 29
+20230908133449: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 400.%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133450: Inizio ciclo: True
+20230908133450: Cerca stringa 0001
+20230908133450: 
+20230908133450: -----------------------------------------------
+20230908133450: Ricerca per  0001 con categoria 29
+20230908133450: Select * From (Select ROW_NUMBER() OVER(Order BY solonome) As NumeroRiga, solonome, count(*) From dati where solonome Like '% 0001%' and idCategoria=29 group by solonome having count(*)>1) As A Where NumeroRiga > -1 And NumeroRiga < 100000
+20230908133450: Inizio ciclo: True
