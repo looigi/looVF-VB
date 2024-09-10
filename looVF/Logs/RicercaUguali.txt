@@ -1680,3 +1680,27 @@
 20230908133510: Ricerca di altro tipo
 20230908133510: Query di conteggio righe: Select Coalesce(Count(*),0) From ( Select B.Dimensioni As TipoRicerca FROM informazioniimmagini A Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo Where (B.eliminata='N' Or B.eliminata='n')  And A.idCategoria=29  And B.Dimensioni Is Not Null And B.Dimensioni <> '' Group By B.Dimensioni Having Count(*) > 1 ) As A
 20230908133510: Righe ritornate: 0
+20231002130126: -----------------------------------------
+20231002130126: Ricerca per categoria 4
+20231002130126: Ricerca di tipo stringa: STRINGA
+20231002130126: Query di conteggio: Select Coalesce(Count(*),0) FROM dati B Left Join categorie C On B.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia Where (B.eliminata='N' Or B.eliminata='n')  And B.idCategoria=4  And Instr(C.Percorso, '/Videos/') = 0  And (B.nomefile Like '%0001/%' ) 
+20231002130127: Righe rilevate: 1632
+20231002130130: Query di ritorno righe: Select * From (Select ROW_NUMBER() OVER(Order BY B.dimensioni, B.solonome) As NumeroRiga, B.*, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot From dati B left join categorie C On C.idtipologia = 1 And B.idCategoria = C.idcategoria left join preferiti d On d.idTipologia = 1 And B.idCategoria = d.idCategoria And B.progressivo=d.progressivo left join preferitiprot e On e.idTipologia = 1 And B.idCategoria = e.idCategoria And B.progressivo=e.progressivo Where (B.Eliminata='N' Or B.Eliminata='n')  And B.idCategoria=4   And (B.nomefile Like '%0001/%' ) ) As A Where NumeroRiga > -1 And NumeroRiga < 200 Order By Percorso
+20231002130348: -----------------------------------------
+20231002130348: Ricerca per categoria 4
+20231002130348: Ricerca di tipo stringa: STRINGA
+20231002130348: Query di conteggio: Select Coalesce(Count(*),0) FROM dati B Left Join categorie C On B.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia Where (B.eliminata='N' Or B.eliminata='n')  And B.idCategoria=4  And Instr(C.Percorso, '/Videos/') = 0  And (B.nomefile Like '%0001/%' ) 
+20231002130348: Righe rilevate: 1632
+20231002130350: Query di ritorno righe: Select * From (Select ROW_NUMBER() OVER(Order BY B.dimensioni, B.solonome) As NumeroRiga, B.*, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot From dati B left join categorie C On C.idtipologia = 1 And B.idCategoria = C.idcategoria left join preferiti d On d.idTipologia = 1 And B.idCategoria = d.idCategoria And B.progressivo=d.progressivo left join preferitiprot e On e.idTipologia = 1 And B.idCategoria = e.idCategoria And B.progressivo=e.progressivo Where (B.Eliminata='N' Or B.Eliminata='n')  And B.idCategoria=4   And (B.nomefile Like '%0001/%' ) ) As A Where NumeroRiga > -1 And NumeroRiga < 200 Order By Percorso
+20231002130417: -----------------------------------------
+20231002130417: Ricerca per categoria 4
+20231002130417: Ricerca di tipo stringa: STRINGA
+20231002130417: Query di conteggio: Select Coalesce(Count(*),0) FROM dati B Left Join categorie C On B.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia Where (B.eliminata='N' Or B.eliminata='n')  And B.idCategoria=4  And Instr(C.Percorso, '/Videos/') = 0  And (B.nomefile Like '%0001/%' ) 
+20231002130417: Righe rilevate: 1632
+20231002130419: Query di ritorno righe: Select * From (Select ROW_NUMBER() OVER(Order BY B.dimensioni, B.solonome) As NumeroRiga, B.*, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot From dati B left join categorie C On C.idtipologia = 1 And B.idCategoria = C.idcategoria left join preferiti d On d.idTipologia = 1 And B.idCategoria = d.idCategoria And B.progressivo=d.progressivo left join preferitiprot e On e.idTipologia = 1 And B.idCategoria = e.idCategoria And B.progressivo=e.progressivo Where (B.Eliminata='N' Or B.Eliminata='n')  And B.idCategoria=4   And (B.nomefile Like '%0001/%' ) ) As A Where NumeroRiga > -1 And NumeroRiga < 200 Order By Percorso
+20231002130454: -----------------------------------------
+20231002130454: Ricerca per categoria 4
+20231002130454: Ricerca di tipo stringa: STRINGA
+20231002130454: Query di conteggio: Select Coalesce(Count(*),0) FROM dati B Left Join categorie C On B.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia Where (B.eliminata='N' Or B.eliminata='n')  And B.idCategoria=4  And Instr(C.Percorso, '/Videos/') = 0  And (B.nomefile Like '%0001/%' ) 
+20231002130454: Righe rilevate: 1632
+20231002130455: Query di ritorno righe: Select * From (Select ROW_NUMBER() OVER(Order BY B.dimensioni, B.solonome) As NumeroRiga, B.*, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot From dati B left join categorie C On C.idtipologia = 1 And B.idCategoria = C.idcategoria left join preferiti d On d.idTipologia = 1 And B.idCategoria = d.idCategoria And B.progressivo=d.progressivo left join preferitiprot e On e.idTipologia = 1 And B.idCategoria = e.idCategoria And B.progressivo=e.progressivo Where (B.Eliminata='N' Or B.Eliminata='n')  And B.idCategoria=4   And (B.nomefile Like '%0001/%' ) ) As A Where NumeroRiga > -1 And NumeroRiga < 200 Order By Percorso

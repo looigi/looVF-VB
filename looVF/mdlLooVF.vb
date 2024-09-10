@@ -20,6 +20,10 @@ Module mdlLooVF
 	Public timerConvI As New Timers.Timer
 	Public timerConvP As New Timers.Timer
 	Public timerConvE As New Timers.Timer
+	Public timerConvR As New Timers.Timer
+	Public CategoriaImpostata As String
+	Public idTipologiaImpostata As String
+	Public SoloTest As String
 	Public VecchiaRicerca As String = ""
 	Public VecchioQuante As Long
 	Public UltimoMultimediaImm As Long
@@ -199,7 +203,7 @@ Module mdlLooVF
 		Dim RicercaCategoria As String = ""
 
 		If TutteLeCategorie = "N" Or TutteLeCategorie = "" Then
-			RicercaCategoria = " And A.idCategoria=" & idCategoria & " "
+			RicercaCategoria = " And B.idCategoria=" & idCategoria & " "
 			ScriveLogGlobale(NomeFileLog, "Ricerca per categoria " & idCategoria)
 		Else
 			ScriveLogGlobale(NomeFileLog, "Ricerca per tutte le categorie")
@@ -248,9 +252,9 @@ Module mdlLooVF
 				End If
 			End If
 
-			Sql = "Select Coalesce(Count(*),0) FROM informazioniimmagini A " &
-				"Left Join dati B On B.idtipologia = 1 And A.idCategoria = B.idcategoria And A.idMultimedia = B.progressivo " &
-				"Left Join categorie C On A.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &
+			Sql = "Select Coalesce(Count(*),0) FROM " & ' informazioniimmagini A " &
+				"dati B " &
+				"Left Join categorie C On B.idCategoria = C.idcategoria And C.idtipologia = B.idTipologia " &
 				"Where (B.eliminata='N' Or B.eliminata='n') " & RicercaCategoria & " And Instr(C.Percorso, '/Videos/') = 0 " &
 				" " & StringonaRicerca & " "
 			ScriveLogGlobale(NomeFileLog, "Query di conteggio: " & Sql)
@@ -273,16 +277,15 @@ Module mdlLooVF
 				'End If
 
 				Sql = "Select * From (" &
-					"Select ROW_NUMBER() OVER(Order BY B.dimensioni, A.Width, A.Height, B.solonome) As NumeroRiga, A.*, B.nomefile, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot, B.solonome, B.Dimensioni " &
-					"From informazioniimmagini A " &
-					"left join dati B On B.idtipologia = 1 And A.idCategoria = B.idCategoria And A.idMultimedia=B.progressivo " &
-					"left join categorie C On C.idtipologia = 1 And A.idCategoria = C.idcategoria " &
-					"left join preferiti d On d.idTipologia = 1 And A.idCategoria = d.idCategoria And A.idMultimedia=d.progressivo " &
-					"left join preferitiprot e On e.idTipologia = 1 And A.idCategoria = e.idCategoria And A.idMultimedia=e.progressivo " &
-					"Where (A.Eliminata='N' Or A.Eliminata='n') And (B.Eliminata='N' Or B.Eliminata='n') " & RicercaCategoria & " " &
+					"Select ROW_NUMBER() OVER(Order BY B.dimensioni, B.solonome) As NumeroRiga, B.*, C.percorso, C.protetta, Coalesce(d.progressivo, '') As preferito, Coalesce(e.progressivo, '') As preferitoprot " &
+					"From dati B " &
+					"left join categorie C On C.idtipologia = 1 And B.idCategoria = C.idcategoria " &
+					"left join preferiti d On d.idTipologia = 1 And B.idCategoria = d.idCategoria And B.progressivo=d.progressivo " &
+					"left join preferitiprot e On e.idTipologia = 1 And B.idCategoria = e.idCategoria And B.progressivo=e.progressivo " &
+					"Where (B.Eliminata='N' Or B.Eliminata='n') " & RicercaCategoria & " " &
 					" " & StringonaRicerca & " " &
-					") As A " & IIf(TuttiIMetodi = "S", "Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)), "") & " " &
-					"Order By " & Ordinamento & ", A.dimensioni, A.Width, A.Height"
+					") As A Where NumeroRiga > " & (Val(Inizio) - 1) & " And NumeroRiga < " & (Inizio + Val(QuanteImmagini)) & " " &
+					"Order By " & Ordinamento & ""
 				'Return Sql
 				ScriveLogGlobale(NomeFileLog, "Query di ritorno righe: " & Sql)
 
@@ -309,14 +312,14 @@ Module mdlLooVF
 							If Ok2 Then
 								Ritorno &= ScrittaRitorno & ";"
 								Ritorno &= Rec("idCategoria").Value & ";"
-								Ritorno &= Rec("idMultimedia").Value & ";"
-								Ritorno &= Rec("Sezione1").Value & ";"
-								Ritorno &= Rec("Punti").Value & ";"
-								Ritorno &= Rec("Width").Value & ";"
-								Ritorno &= Rec("Height").Value & ";"
-								Ritorno &= Rec("DataOra").Value & ";"
-								Ritorno &= Rec("PuntiDiagonale").Value & ";"
-								Ritorno &= Rec("PuntiCornice").Value & ";"
+								Ritorno &= Rec("Progressivo").Value & ";"
+								Ritorno &= "0;" 'Rec("Sezione1").Value & ";"
+								Ritorno &= "0;" 'Rec("Punti").Value & ";"
+								Ritorno &= "0;" ' & Rec("Width").Value & ";"
+								Ritorno &= "0;" ' Rec("Height").Value & ";"
+								Ritorno &= "0;" ' Rec("DataOra").Value & ";"
+								Ritorno &= "0;" ' Rec("PuntiDiagonale").Value & ";"
+								Ritorno &= "0;" ' Rec("PuntiCornice").Value & ";"
 								Ritorno &= N.Replace(";", "---PV---") & ";"
 								Ritorno &= P.Replace(";", "---PV---") & ";"
 								Ritorno &= Rec("Preferito").Value & ";"
@@ -324,7 +327,7 @@ Module mdlLooVF
 								Ritorno &= Rec("Protetta").Value & ";"
 								Ritorno &= Rec("SoloNome").Value & ";"
 								Ritorno &= Rec("Dimensioni").Value & ";"
-								Ritorno &= Rec("Sezione2").Value & ";"
+								Ritorno &= "0;" ' Rec("Sezione2").Value & ";"
 								Ritorno &= ";"
 								Ritorno &= ";"
 								Ritorno &= "§"

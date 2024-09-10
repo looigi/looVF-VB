@@ -1,0 +1,5 @@
+20230922161128: -----------------------------------------
+20230922161128: Eliminazione idTipologia 1 idCategoria 7 idMultimedia 187
+20230922161128: Nome File origine: /var/www/html/CartelleCondivise/Fotacce/Categorie/Carmen_Electra/Rows/SiteRips/AAA_Clamor/Carmen Electra/Carmen Electra1 0001_0001.jpg
+20230922161128: Nome File destinazione: /var/www/html/CartelleCondivise/Fotacce/Categorie/BackupCancellazioni/Categorie/Carmen_Electra/Rows/SiteRips/AAA_Clamor/Carmen Electra/Carmen Electra1 0001_0001.jpg
+20230922161135: File origine non esistente

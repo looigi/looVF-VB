@@ -1,0 +1,123 @@
+20230929132402: -----------------------------------------
+20230929132402: Categoria Passata:  Asiane
+20230929132402: Id Tipologia: 1
+20230929132402: Filtro: 
+20230929132402: Random: N
+20230929132402: Attuale MM Precedente: 10489
+20230929132402: Avanti: S
+20230929132402: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  And progressivo >10489 Order By Progressivo Limit 1 
+20230929132404: Ritorno SQL: MDB ERROR:You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'and progressivo >10489 order by progressivo limit 1' at line 1
+20230929132516: -----------------------------------------
+20230929132516: Categoria Passata:  Asiane
+20230929132516: Id Tipologia: 1
+20230929132516: Filtro: 
+20230929132516: Random: N
+20230929132516: Attuale MM Precedente: 10489
+20230929132516: Avanti: S
+20230929132516: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >10489 Order By Progressivo Limit 1 
+20230929132517: Attuale MM: 10490
+20230929152831: -----------------------------------------
+20230929152831: Categoria Passata:  Asiane
+20230929152831: Id Tipologia: 1
+20230929152831: Filtro: 
+20230929152831: Random: N
+20230929152831: Attuale MM Precedente: 51791
+20230929152831: Avanti: S
+20230929152831: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >51791 Order By Progressivo Limit 1 
+20230929152846: Non ho trovato nulla. Imposto altra query
+20230929152847: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  Limit 1 
+20230929153009: Ritorno SQL 2: MDB ERROR:You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'limit 1' at line 1
+20230929153026: -----------------------------------------
+20230929153027: Categoria Passata:  Asiane
+20230929153027: Id Tipologia: 1
+20230929153027: Filtro: 
+20230929153027: Random: N
+20230929153028: Attuale MM Precedente: 51791
+20230929153028: Avanti: S
+20230929153028: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >51791 Order By Progressivo Limit 1 
+20230929153721: -----------------------------------------
+20230929153721: Categoria Passata:  Asiane
+20230929153721: Id Tipologia: 1
+20230929153721: Filtro: 
+20230929153721: Random: N
+20230929153721: Attuale MM Precedente: 51791
+20230929153721: Avanti: S
+20230929153721: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >51791 Order By Progressivo Limit 1 
+20230929153736: Non ho trovato nulla. Imposto altra query
+20230929153736: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A  Limit 1 
+20230929153936: -----------------------------------------
+20230929153936: Categoria Passata:  Asiane
+20230929153936: Id Tipologia: 1
+20230929153937: Filtro: 
+20230929153937: Random: N
+20230929153937: Attuale MM Precedente: 51791
+20230929153937: Avanti: S
+20230929153937: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >51791 Order By Progressivo Limit 1 
+20230929153940: Non ho trovato nulla. Imposto altra query
+20230929153940: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A WLimit 1 
+20230929154009: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  )Limit 1 
+20230929154010: Ritorno SQL 2: MDB ERROR:Every derived table must have its own alias
+20230929154046: -----------------------------------------
+20230929154046: Categoria Passata:  Asiane
+20230929154046: Id Tipologia: 1
+20230929154046: Filtro: 
+20230929154046: Random: N
+20230929154046: Attuale MM Precedente: 51791
+20230929154046: Avanti: S
+20230929154046: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Where  progressivo >51791 Order By Progressivo Limit 1 
+20230929154048: Non ho trovato nulla. Imposto altra query
+20230929154048: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Limit 1 
+20230929154132: Attuale MM: 2
+20230929161420: -----------------------------------------
+20230929161420: Categoria Passata:  Asiane
+20230929161420: Id Tipologia: 1
+20230929161420: Filtro: 
+20230929161420: Random: S
+20230929161420: Attuale MM Precedente: 5464
+20230929161420: Avanti: S
+20230929161420: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Order By Rand() Limit 1 
+20230929161421: Attuale MM: 11650
+20230929161431: -----------------------------------------
+20230929161431: Categoria Passata:  Asiane
+20230929161431: Id Tipologia: 1
+20230929161431: Filtro: 
+20230929161431: Random: N
+20230929161431: Attuale MM Precedente: 5464
+20230929161431: Avanti: S
+20230929161431: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A  And progressivo >5464 Order By Progressivo Limit 1 
+20230929161431: Ritorno SQL: MDB ERROR:You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'and progressivo >5464 order by progressivo limit 1' at line 1
+20230929161444: -----------------------------------------
+20230929161444: Categoria Passata:  Asiane
+20230929161444: Id Tipologia: 1
+20230929161444: Filtro: 
+20230929161444: Random: N
+20230929161444: Attuale MM Precedente: 5464
+20230929161444: Avanti: S
+20230929161444: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A  And progressivo >5464 Order By Progressivo Limit 1 
+20230929161515: -----------------------------------------
+20230929161515: Categoria Passata:  Asiane
+20230929161515: Id Tipologia: 1
+20230929161515: Filtro: 
+20230929161515: Random: N
+20230929161515: Attuale MM Precedente: 5464
+20230929161515: Avanti: S
+20230929161515: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A  Where progressivo >5464 Order By Progressivo Limit 1 
+20230929161526: Attuale MM: 5465
+20230929161534: -----------------------------------------
+20230929161534: Categoria Passata:  Asiane
+20230929161534: Id Tipologia: 1
+20230929161534: Filtro: 
+20230929161534: Random: S
+20230929161534: Attuale MM Precedente: 5464
+20230929161534: Avanti: S
+20230929161534: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A Order By Rand() Limit 1 
+20230929161536: Attuale MM: 7930
+20230929161549: -----------------------------------------
+20230929161549: Categoria Passata:  Asiane
+20230929161549: Id Tipologia: 1
+20230929161549: Filtro: 
+20230929161549: Random: N
+20230929161549: Attuale MM Precedente: 5464
+20230929161549: Avanti: S
+20230929161549: SQL: Select * From (Select ROW_Number() Over (Order By Progressivo) As NumeroRiga, A.*, 0 As Quante , B.Categoria From dati A Left Join categorie B On A.idcategoria = B.idcategoria And A.idtipologia = B.idtipologia    Where B.Categoria='Asiane' And A.idTipologia = 1 And (Eliminata = 'N' Or Eliminata = 'n') And Upper(nomeFile) Not Like '%.NOMEDIA%'  ) As A  Where progressivo >5464 Order By Progressivo Limit 1 
+20230929161551: Attuale MM: 5465
