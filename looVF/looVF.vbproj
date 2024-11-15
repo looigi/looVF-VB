@@ -122,6 +122,8 @@
     <Content Include="Exif\ExifMetadata.dll" />
     <Content Include="Exif\ExifMetadata.pdb" />
     <Content Include="ffmpeg.exe" />
+    <Content Include="looRefreshImmagini.asmx" />
+    <Content Include="looVideo.asmx" />
     <Content Include="modifiche.asmx" />
     <Content Include="looVF.asmx" />
     <Content Include="PercorsiImmagini.txt" />
@@ -137,6 +139,14 @@
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="GestioneImmagini.vb" />
     <Compile Include="IIS.vb" />
+    <Compile Include="looRefreshImmagini.asmx.vb">
+      <DependentUpon>looRefreshImmagini.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="looVideo.asmx.vb">
+      <DependentUpon>looVideo.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="modifiche.asmx.vb">
       <DependentUpon>modifiche.asmx</DependentUpon>
       <SubType>Component</SubType>

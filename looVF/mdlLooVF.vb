@@ -894,4 +894,22 @@ Module mdlLooVF
 
 		Return Ritorno
 	End Function
+
+	Public Function convertImageToBase64(PathImmagine As String) As String
+		Dim image1 As Image = Image.FromFile(PathImmagine)
+		Dim bImage As Bitmap = image1
+		Dim MS As System.IO.MemoryStream = New MemoryStream()
+		bImage.Save(MS, ImageFormat.Jpeg)
+		Dim byteImage As Byte() = MS.ToArray()
+		Dim SigBase64 As String = Convert.ToBase64String(byteImage)
+
+		Return SigBase64
+	End Function
+
+	Public Function convertByteToImage(base64 As String) As System.Drawing.Image
+		Dim BA As Byte() = Convert.FromBase64String(base64)
+		Dim ms As MemoryStream = New MemoryStream(BA)
+		Dim image As System.Drawing.Image = System.Drawing.Image.FromStream(ms)
+		Return image
+	End Function
 End Module

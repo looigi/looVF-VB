@@ -6033,7 +6033,6 @@ Public Class looVF
 		Dim P As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
 		Dim pp() As String = P.Split(";")
 		Dim PathSfondi As String = pp(0).Replace(vbCrLf, "")
-		Dim PathSfondiDir As String = pp(1).Replace(vbCrLf, "")
 		Dim Ritorno As String = ""
 
 		Dim Immagine As String = ""
@@ -6042,24 +6041,88 @@ Public Class looVF
 			PathSfondi = PathSfondi.Replace("\", "/")
 			PathSfondi = PathSfondi.Replace("//", "/")
 			PathSfondi = PathSfondi.Replace("/\", "/")
-
-			PathSfondiDir = PathSfondiDir.Replace("\", "/")
-			PathSfondiDir = PathSfondiDir.Replace("//", "/")
-			PathSfondiDir = PathSfondiDir.Replace("/\", "/")
 		End If
 
-		gf.ScansionaDirectorySingola(PathSfondiDir)
+		gf.ScansionaDirectorySingola(PathSfondi)
 		Dim Filetti() As String = gf.RitornaFilesRilevati
 		Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
 
 		For i As Integer = 1 To qFiletti
 			Dim NomeImmagine As String = gf.TornaNomeFileDaPath(Filetti(i))
-			Dim PathImmagine As String = Filetti(i).Replace(PathSfondiDir & "/", "")
+			Dim PathImmagine As String = Filetti(i).Replace(PathSfondi & "/", "")
 			Dim Dimensione As Integer = gf.TornaDimensioneFile(Filetti(i))
 			Dim Data As String = gf.TornaDataDiCreazione(Filetti(i))
 
 			Ritorno &= NomeImmagine.Replace(";", "*PV*") & ";" & PathImmagine.Replace(";", "*PV*") & ";" & Dimensione & ";" & Data & "§"
 		Next
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ModificaImmagineWP(Immagine As String, DatiImmagine As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim P As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim pp() As String = P.Split(";")
+		Dim PathSfondi As String = pp(0).Replace(vbCrLf, "")
+		Dim PathSfondiDir As String = pp(1).Replace(vbCrLf, "")
+		Dim Ritorno As String = ""
+
+		If Not Immagine.Contains("www.sfondi.looigi.it") Then
+			Ritorno = StringaErrore & "File " & Immagine & " Non valido"
+		Else
+			' http://www.sfondi.looigi.it/Donne/Tarja/525b9a57746de0474e92113f05639cbc.jpg
+			Dim sImmagine As String = Immagine
+			sImmagine = sImmagine.Replace("-A-", "&")
+			sImmagine = sImmagine.Replace("-P-", "?")
+			sImmagine = sImmagine.Replace("-D-", ":")
+			sImmagine = sImmagine.Replace("-S-", "/")
+			sImmagine = sImmagine.Replace("-B-", "\")
+			sImmagine = sImmagine.Replace("http://www.sfondi.looigi.it", "")
+
+			Dim PathImmagine As String = PathSfondiDir & sImmagine
+
+			Try
+				Dim iImmagine As Image = convertByteToImage(DatiImmagine)
+
+				gf.EliminaFileFisico(PathImmagine)
+				Dim SaveImage As New Bitmap(iImmagine)
+				SaveImage.Save(PathImmagine, Imaging.ImageFormat.Jpeg)
+				SaveImage.Dispose()
+
+				Ritorno = PathImmagine
+			Catch ex As Exception
+				Ritorno = StringaErrore & ex.Message
+			End Try
+		End If
+
+		Return ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaImmagineWP(Immagine As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim P As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsiSfondi.txt")
+		Dim pp() As String = P.Split(";")
+		Dim PathSfondi As String = pp(0).Replace(vbCrLf, "")
+		Dim PathSfondiDir As String = pp(1).Replace(vbCrLf, "")
+		Dim Ritorno As String = ""
+		If Not Immagine.Contains("www.sfondi.looigi.it") Then
+			Ritorno = StringaErrore & "File " & Immagine & " Non valido"
+		Else
+			Dim sImmagine As String = Immagine
+			sImmagine = sImmagine.Replace("-A-", "&")
+			sImmagine = sImmagine.Replace("-P-", "?")
+			sImmagine = sImmagine.Replace("-D-", ":")
+			sImmagine = sImmagine.Replace("-S-", "/")
+			sImmagine = sImmagine.Replace("-B-", "\")
+			sImmagine = sImmagine.Replace("http://www.sfondi.looigi.it", "")
+
+			Dim PathImmagine As String = PathSfondiDir & sImmagine
+			gf.EliminaFileFisico(PathImmagine)
+
+			Ritorno = "OK"
+		End If
 
 		Return Ritorno
 	End Function

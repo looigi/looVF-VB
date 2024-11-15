@@ -40,6 +40,36 @@ Public Class clsGestioneDB
 		Return Connessione
 	End Function
 
+	Public Function LeggeImpostazioniDiBaseVideo() As String
+		Dim Connessione As String = ""
+
+		' Impostazioni di base
+		Dim ListaConnessioni As ConnectionStringSettingsCollection = ConfigurationManager.ConnectionStrings
+
+		If ListaConnessioni.Count <> 0 Then
+			' Get the collection elements. 
+			For Each Connessioni As ConnectionStringSettings In ListaConnessioni
+				Dim Nome As String = Connessioni.Name
+				Dim Provider As String = Connessioni.ProviderName
+				Dim connectionString As String = Connessioni.ConnectionString
+
+				If TipoDB = "SQLSERVER" Then
+					If Nome = "SQLConnectionStringLOCALElooVideo" Then
+						Connessione = "Provider=" & Provider & ";" & connectionString
+						Exit For
+					End If
+				Else
+					If Nome = "SQLConnectionStringLOCALElooVideo" Then
+						Connessione = connectionString
+						Exit For
+					End If
+				End If
+			Next
+		End If
+
+		Return Connessione
+	End Function
+
 	Public Function ApreDB(ByVal Connessione As String) As Object
 		' Routine che apre il DB e vede se ci sono errori
 		Dim Conn As Object
